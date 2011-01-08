@@ -7,6 +7,7 @@
 
 #include "../mwworld/refdata.hpp"
 #include <OgreMath.h>
+#include <Ogre.h>
 
 namespace Ogre
 {
@@ -41,7 +42,9 @@ namespace MWRender
     /// insert a mesh related to the most recent insertBegin call.
 	virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements, bool translateFirst) = 0;
 	virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements) = 0;
-    virtual void insertMesh(const std::string &mesh) = 0;
+    virtual void insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base) = 0;
+	virtual void insertMesh(const std::string &mesh) = 0;
+	virtual Ogre::Entity* insertBase(const std::string &mesh) = 0;
 
 	virtual void scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeName[], int elements) = 0;
 

@@ -903,6 +903,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 	stack--;
 }
 
+
 void NIFLoader::loadResource(Resource *resource)
 {
 	if(skincounter == 1000)
@@ -1099,8 +1100,8 @@ void NIFLoader::loadResource(Resource *resource)
     }
 
     // set skeleton
-//     if (!skel.isNull())
-//         mesh->setSkeletonName(getSkeletonName());
+  if (!skel.isNull())
+        mesh->_notifySkeleton(skel);
 }
 
 MeshPtr NIFLoader::load(const std::string &name, 
@@ -1124,6 +1125,11 @@ MeshPtr NIFLoader::load(const std::string &name,
 	return resize;
 }
 	
+
+Ogre::SkeletonPtr NIFLoader::getSkeleton()
+{
+	return skel;
+}
 
 /* More code currently not in use, from the old D source. This was
    used in the first attempt at loading NIF meshes, where each submesh

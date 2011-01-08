@@ -87,6 +87,7 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
 	}
 	   parent->scale(axis);
 }
+
 void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName, std::string sceneParent[], int elements)
 {
 	insertMesh(mesh, vec, axis, angle, sceneNodeName,  sceneParent, elements, true);
@@ -106,7 +107,9 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 
   MeshPtr good2 = NIFLoader::load(mesh);
 
-  MovableObject *ent = scene.getMgr()->createEntity(mesh);
+
+  Entity *ent = scene.getMgr()->createEntity(mesh);
+  
   //ent->extr
 	
 	//  MovableObject *ent2 = scene.getMgr()->createEntity(bounds
@@ -176,6 +179,27 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 			MeshPtr foot = good2->clone(beastfoot4);
 			good2->reload();
 		}
+}
+
+void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base){
+	std::cout << "TESTING";
+	MeshPtr good2 = NIFLoader::load(mesh);
+
+	Entity *ent = scene.getMgr()->createEntity(mesh);
+
+	base->attachObjectToBone(bonename, ent);
+	//ent->attachObjectToBone(
+}
+
+Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh)
+{
+	 assert (insert);
+
+  NIFLoader::load(mesh);
+  Entity *ent = scene.getMgr()->createEntity(mesh);
+  insert->attachObject(ent);
+  return  ent;
+
 }
 
 void InteriorCellRender::insertMesh(const std::string &mesh)

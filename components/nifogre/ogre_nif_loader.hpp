@@ -81,6 +81,8 @@ class NIFLoader : Ogre::ManualResourceLoader
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
 
+		Ogre::SkeletonPtr getSkeleton();
+
     private:
         NIFLoader() : resourceGroup("General") { skincounter = 0; resourceName = ""; anim = false;}
         NIFLoader(NIFLoader& n) {}

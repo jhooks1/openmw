@@ -63,12 +63,15 @@ namespace MWRender
 
     /// start inserting a new reference.
     virtual void insertBegin (ESM::CellRef &ref);
-
+	virtual Ogre::Entity* insertBase(const std::string &mesh);
     /// insert a mesh related to the most recent insertBegin call.
+	virtual void insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base);
 	virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec,  Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements);
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements, bool translateFirst);
 	
 	virtual void insertMesh(const std::string &mesh);
+	
+
 	 virtual void rotateMesh(Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName[], int elements);
 	 virtual void scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeName[], int elements);
 
