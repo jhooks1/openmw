@@ -181,23 +181,34 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 		}
 }
 
-void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base){
-	std::cout << "TESTING";
+void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	MeshPtr good2 = NIFLoader::load(mesh);
 
 	Entity *ent = scene.getMgr()->createEntity(mesh);
 
-	base->attachObjectToBone(bonename, ent);
+	if(base->getSkeleton()->getBone(bonename))
+		std::cout << "BONEEXISTS";
+
+	base->attachObjectToBone(bonename, ent,quat, trans);
 	//ent->attachObjectToBone(
 }
+void InteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 
-Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh)
+	base->attachObjectToBone(bonename, part ,quat, trans);
+}
+
+Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attach)
 {
 	 assert (insert);
 
   NIFLoader::load(mesh);
   Entity *ent = scene.getMgr()->createEntity(mesh);
-  insert->attachObject(ent);
+  ent->setDisplaySkeleton(true);
+  if(attach)
+  {
+
+      insert->attachObject(ent);
+  }
   return  ent;
 
 }
@@ -209,6 +220,7 @@ void InteriorCellRender::insertMesh(const std::string &mesh)
   NIFLoader::load(mesh);
   MovableObject *ent = scene.getMgr()->createEntity(mesh);
   insert->attachObject(ent);
+  //insert->showBoundingBox(true);
 }
 
 // insert a light related to the most recent insertBegin call.

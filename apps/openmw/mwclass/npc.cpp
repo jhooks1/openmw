@@ -53,7 +53,7 @@ namespace MWClass
             environment.mWorld->getStore().bodyParts.find(hairID)->model;
 
         MWRender::Rendering rendering (cellRender, ref->ref);
-		Ogre::Entity* base = cellRender.insertBase("meshes\\base_anim.nif");
+		Ogre::Entity* base = cellRender.insertBase("meshes\\base_anim.nif", true);
         
         const ESM::BodyPart *bodyPart =
             environment.mWorld->getStore().bodyParts.search (bodyRaceID + "chest");
@@ -75,17 +75,19 @@ namespace MWClass
 		int uppernumbers = 0;
 		int neckNumbers = 0;
 		
+		Ogre::Quaternion q = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0,1,0)); //1,0,0
         if (bodyPart){
 			//Ogre::Bone *chest = skeleton->getBone("Chest");
 		    //if(chest){
+			//Ogre::Entity* baseChest = cellRender.insertBase("meshes\\" + bodyPart->model, false);
 			    //cellRender.insertMesh("meshes\\" + bodyPart->model, "Chest", base);
 			
 
 			//Using all the same body parts now because offsets are not implemented
-				cellRender.insertMesh("meshes\\" + bodyPart->model, "Bip01 Spine", base);
-				cellRender.insertMesh("meshes\\" + bodyPart->model, "Bip01 Spine1", base);
-				cellRender.insertMesh("meshes\\" + bodyPart->model, "Bip01 Spine2", base);
-				cellRender.insertMesh("meshes\\" + bodyPart->model, "Bip01 L Thigh", base);
+				cellRender.insertMesh("meshes\\" + bodyPart->model, "Bip01 Spine1", base, q);
+				//cellRender.insertMesh(baseChest, "Chest", base, q);
+				//cellRender.insertMesh("meshes\\" + bodyPart->model, "Bip01 Pelvis", base, q);
+				//cellRender.insertMesh("meshes\\" + bodyPart->model, "Chest", base, q);
 			//}
            /*cellRender.insertMesh("meshes\\" + bodyPart->model, pos, axis, angle, npcName + "chest", addresses, numbers, true);   //2 0
 		   addresses2[numbers] = npcName + "chest";
@@ -114,10 +116,13 @@ namespace MWClass
 
 		//std::cout << "RACE" << bodyRaceID << "\n";
 
-		Ogre::Vector3 pos2 = Ogre::Vector3( 0, .5, 75);
+		Ogre::Vector3 pos2 = Ogre::Vector3(90, 5, 4);     //5
 		std::string upperarmpath[2] = {npcName + "chest", npcName + "upper arm"};
 		
+		Ogre::Quaternion p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0)); //1,0,0
+		q  = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
         if (groin){
+			cellRender.insertMesh("meshes\\" + groin->model, "Bip01 Pelvis", base, p * q, pos2);
             //cellRender.insertMesh("meshes\\" + groin->model, pos2, axis, Ogre::Radian(3.14), npcName + "groin", addresses, numbers);
 			
 			addresses2[numbers] = npcName + "groin";

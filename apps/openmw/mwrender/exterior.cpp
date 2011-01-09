@@ -95,7 +95,12 @@ void ExteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
   
 }
 */
-void ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base){
+
+void ExteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+
+	base->attachObjectToBone(bonename, part ,quat, trans);
+}
+void ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	std::cout << "Testing";
 }
 
@@ -183,16 +188,18 @@ void ExteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 		}
 }
 // insert a mesh related to the most recent insertBegin call.
-Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh)
+Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attach)
 {
 	 assert (insert);
 
   NIFLoader::load(mesh);
   Entity *ent = scene.getMgr()->createEntity(mesh);
-  insert->attachObject(ent);
+  if(attach)
+       insert->attachObject(ent);
   return  ent;
 
 }
+
 
 
 void ExteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeName[], int elements)
