@@ -25,6 +25,8 @@
 #define _NIF_DATA_H_
 
 #include "controlled.hpp"
+#include <iostream>
+#include <Ogre.h>
 
 namespace Nif
 {
@@ -433,19 +435,76 @@ public:
 
 class NiKeyframeData : public Record
 {
+	
+	//Rotations
+	std::vector<Ogre::Quaternion> quats;
+	std::vector<Ogre::Vector3> tbc;
+	std::vector<float> rottime;
+
+	//Translations
+	std::vector<Ogre::Vector3> translist1;
+	std::vector<Ogre::Vector3> translist2;
+	std::vector<Ogre::Vector3> translist3;
+	std::vector<float> transtime;
+
 public:
   void read(NIFFile *nif)
   {
     // Rotations first
     int count = nif->getInt();
+	//std::vector<Ogre::Quaternion> quat(count);
+	//std::vector<float> rottime(count);
     if(count)
       {
+
+		//TYPE1  LINEAR_KEY
+		//TYPE2  QUADRATIC_KEY
+		//TYPE3  TBC_KEY
+		//TYPE4  XYZ_ROTATION_KEY
+		//TYPE5  UNKNOWN_KEY
         int type = nif->getInt();
+		    //std::cout << "Count: " << count << "Type: " << type << "\n";
 
         if(type == 1)
-          nif->skip(count*4*5); // time + quaternion
+		{
+			//We need to actually read in these values instead of skipping them
+			//nif->skip(count*4*5); // time + quaternion
+			for (int i = 0; i < count; i++) {
+			    float time = nif->getFloat();
+			    float w = nif->getFloat();
+			    float x = nif->getFloat();
+			    float y = nif->getFloat();
+			    float z = nif->getFloat();
+				Ogre::Quaternion quat = Ogre::Quaternion(Ogre::Real(w), Ogre::Real(x), Ogre::Real(y), Ogre::Real(z));
+				quats.push_back(quat);
+				rottime.push_back(time);
+				//if(time == 0.0 || time > 355.5) 
+					// std::cout <<"Time:" << time << "W:" << w <<"X:" << x << "Y:" << y << "Z:" << z << "\n";
+			}
+		}
         else if(type == 3)
-          nif->skip(count*4*8); // rot1 + tension+bias+continuity
+		{                  //Example - node 116 in base_anim.nif
+			for (int i = 0; i < count; i++) {
+			    float time = nif->getFloat();
+			    float w = nif->getFloat();
+			    float x = nif->getFloat();
+			    float y = nif->getFloat();
+			    float z = nif->getFloat();
+
+				float tbcx = nif->getFloat();
+				float tbcy = nif->getFloat();
+				float tbcz = nif->getFloat();
+				Ogre::Quaternion quat = Ogre::Quaternion(Ogre::Real(w), Ogre::Real(x), Ogre::Real(y), Ogre::Real(z));
+				Ogre::Vector3 vec = Ogre::Vector3(tbcx, tbcy, tbcz);
+				quats.push_back(quat);
+				rottime.push_back(time);
+				tbc.push_back(vec);
+				//if(time == 0.0 || time > 355.5) 
+					// std::cout <<"Time:" << time << "W:" << w <<"X:" << x << "Y:" << y << "Z:" << z << "\n";
+			}
+
+          //nif->skip(count*4*8); // rot1 + tension+bias+continuity
+		}
         else if(type == 4)
           {
             for(int j=0;j<count;j++)
@@ -465,16 +524,52 @@ public:
           }
         else nif->fail("Unknown rotation type in NiKeyframeData");
       }
+	//first = false;
 
     // Then translation
     count = nif->getInt();
+	
     if(count)
       {
         int type = nif->getInt();
 
-        if(type == 1) nif->getFloatLen(count*4); // time + translation
+		//std::cout << "TransCount:" << count << " Type: " << type << "\n";
+        if(type == 1) {
+			for (int i = 0; i < count; i++) {
+				float time = nif->getFloat();
+				float x = nif->getFloat();
+				float y = nif->getFloat();
+				float z = nif->getFloat();
+				Ogre::Vector3 trans = Ogre::Vector3(x, y, z);
+				translist1.push_back(trans);
+				transtime.push_back(time);
+			}
+			//nif->getFloatLen(count*4); // time + translation
+		}
         else if(type == 2)
-          nif->getFloatLen(count*10); // trans1 + forward + backward
+		{                                        //Example - node 116 in base_anim.nif
+			for (int i = 0; i < count; i++) {
+				float time = nif->getFloat();
+				float x = nif->getFloat();
+				float y = nif->getFloat();
+				float z = nif->getFloat();
+				float x2 = nif->getFloat();
+				float y2 = nif->getFloat();
+				float z2 = nif->getFloat();
+				float x3 = nif->getFloat();
+				float y3 = nif->getFloat();
+				float z3 = nif->getFloat();
+				Ogre::Vector3 trans = Ogre::Vector3(x, y, z);
+				Ogre::Vector3 trans2 = Ogre::Vector3(x2, y2, z2);
+				Ogre::Vector3 trans3 = Ogre::Vector3(x3, y3, z3);
+				transtime.push_back(time);
+				translist1.push_back(trans);
+				translist2.push_back(trans2);
+				translist3.push_back(trans3);
+			}
+			
+			//nif->getFloatLen(count*10); // trans1 + forward + backward
+		}
         else if(type == 3)
           nif->getFloatLen(count*7); // trans1 + tension,bias,continuity
         else nif->fail("Unknown translation type");

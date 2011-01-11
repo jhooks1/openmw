@@ -86,6 +86,7 @@ enum RecordType
 struct Record
 {
   // Record type and type name
+	
   int recType;
   SString recName;
 
