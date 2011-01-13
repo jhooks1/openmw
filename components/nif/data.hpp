@@ -459,12 +459,14 @@ class NiKeyframeData : public Record
 	int stype;
 
 public:
+
   void read(NIFFile *nif)
   {
     // Rotations first
     int count = nif->getInt();
 	//std::vector<Ogre::Quaternion> quat(count);
 	//std::vector<float> rottime(count);
+	std::cout << "r";
     if(count)
       {
 
@@ -625,7 +627,18 @@ public:
         
 		}
       }
+	  else 
+		  stype = 0;
   }
+  	int getRtype(){
+		return rtype;
+	}
+	int getStype(){
+		return stype;
+	}
+	int getTtype(){
+		return ttype;
+	}
 };
 
 } // Namespace

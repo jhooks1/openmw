@@ -762,7 +762,14 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
     }
 
     Bone *bone = 0;
-
+	
+	//Nif::Controller *go = (node->controller).getPtr();
+	//Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(go);
+	/*if(f != NULL)
+	{
+		std::cout << "Controller's Rtype:" <<  f->data->getRtype() << "Stype: " << f->data->getStype() << "Ttype:" << f->data->getTtype() << "\n";
+		//std::cout << "The target rec: " << f->target->recName.toString() << "\n";
+	}
 	//Contains the actual rotation, scale, and translation coordinate data
 	if(node->recType == RC_NiKeyframeData)
 	{
@@ -773,7 +780,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 	{
 		std::cout <<"Keyframe Controller\n";
 	}
-
+	*/
     // create skeleton or add bones
     if (node->recType == RC_NiNode)
     {
@@ -1091,6 +1098,18 @@ void NIFLoader::loadResource(Resource *resource)
     // Handle the node
     handleNode(node, 0, NULL, bounds, 0);
 
+	Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(5));
+	if(f != NULL)
+	{
+		Nif::NiKeyframeDataPtr data = f->data;
+		std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
+		std::cout << "The target rec: " << f->target->recName.toString() << "\n";
+		Ogre::Animation* animcore = skel->createAnimation("WholeThing", f->timeStop);
+		Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+		std::cout << "The name:" << node->name.toString() << "\n";
+	}
+
+
     // set the bounding value.
     if (bounds.isValid())
     {
@@ -1102,6 +1121,8 @@ void NIFLoader::loadResource(Resource *resource)
     // set skeleton
   if (!skel.isNull())
         mesh->_notifySkeleton(skel);
+
+  
 }
 
 MeshPtr NIFLoader::load(const std::string &name, 
