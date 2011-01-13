@@ -764,14 +764,14 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
     Bone *bone = 0;
 
 	//Contains the actual rotation, scale, and translation coordinate data
-	if(node->recType == RC_NiKeyframeData && anim)
+	if(node->recType == RC_NiKeyframeData)
 	{
-
+		std::cout << "Keyframe\n";
 	}
 	//Indicates the node that the data applies to
-	if(node->recType == RC_NiKeyframeController && anim)
+	if(node->recType == RC_NiKeyframeController)
 	{
-
+		std::cout <<"Keyframe Controller\n";
 	}
 
     // create skeleton or add bones
