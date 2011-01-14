@@ -1098,15 +1098,35 @@ void NIFLoader::loadResource(Resource *resource)
     // Handle the node
     handleNode(node, 0, NULL, bounds, 0);
 
-	Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(5));
+	short handle = 0;
+	for(int i = 0; i < nif.numRecords(); i++)
+	{
+	Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(i));
 	if(f != NULL)
 	{
 		Nif::NiKeyframeDataPtr data = f->data;
 		std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
 		std::cout << "The target rec: " << f->target->recName.toString() << "\n";
-		Ogre::Animation* animcore = skel->createAnimation("WholeThing", f->timeStop);
+		if(animcore == 0){
+			std::cout <<"Creating WholeThing\n";
+			animcore = skel->createAnimation("WholeThing", f->timeStop);
+		}
+		 
 		Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
-		std::cout << "The name:" << node->name.toString() << "\n";
+		Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
+		
+		std::vector<Ogre::Quaternion> quats = data->getQuat();
+		std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
+		std::vector<float> rtime = data->getrTime();
+		std::vector<float>::iterator rtimeiter = rtime.begin();
+		if(data->getRtype() >= 1)
+		{
+			
+		}
+
+
+		std::cout << "The name:" << node->name.toString() << "f\n";
+	}
 	}
 
 

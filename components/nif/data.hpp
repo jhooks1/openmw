@@ -639,6 +639,44 @@ public:
 	int getTtype(){
 		return ttype;
 	}
+	std::vector<Ogre::Quaternion> getQuat(){
+		return quats;
+	}
+	std::vector<Ogre::Vector3> getrTbc(){
+		return tbc;
+	}
+	std::vector<float> getrTime(){
+		return rottime;
+	}
+
+	std::vector<Ogre::Vector3> getTranslist1(){
+		return translist1;
+	}
+	std::vector<Ogre::Vector3> getTranslist2(){
+		return translist2;
+	}
+	std::vector<Ogre::Vector3> getTranslist3(){
+		return translist3;
+	}
+	std::vector<float> gettTime(){
+		return transtime;
+	}
+	std::vector<float> getScalefactor(){
+		return scalefactor;
+	}
+	std::vector<float> getForwards(){
+		return forwards;
+	}
+	std::vector<float> getBackwards(){
+		return backwards;
+	}
+	std::vector<Ogre::Vector3> getScaleTbc(){
+		return tbcscale;
+	}
+
+	std::vector<float> getsTime(){
+		return scaletime;
+	}
 };
 
 } // Namespace
