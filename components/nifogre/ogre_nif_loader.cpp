@@ -1094,6 +1094,14 @@ void NIFLoader::loadResource(Resource *resource)
              r->recName.toString() + ". Skipping file.");
         return;
     }
+	/*
+	Bone* bone = skel->getBone("Bip01 R Thigh");
+	if (bone)
+	{
+		bone->setManuallyControlled(true);
+		bone->setScale(Ogre::Vector3(1,-1,1));
+		
+	}*/
 
     // Handle the node
     handleNode(node, 0, NULL, bounds, 0);
@@ -1119,9 +1127,62 @@ void NIFLoader::loadResource(Resource *resource)
 		std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
 		std::vector<float> rtime = data->getrTime();
 		std::vector<float>::iterator rtimeiter = rtime.begin();
-		if(data->getRtype() >= 1)
+		
+		for (int i = 0 ; i < rtime.size(); i++)
 		{
-			
+			if(data->getRtype() >= 1 && data->getRtype() <= 5)
+			{
+			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*rtimeiter);
+			    mKey->setRotation(*quatIter);
+
+			    quatIter++;
+			    rtimeiter++;
+			}
+		}
+
+		mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
+
+		std::vector<float> stime = data->getsTime();
+		std::vector<float>::iterator stimeiter = stime.begin();
+
+		std::vector<float> sfactor = data->getScalefactor();
+		std::vector<float>::iterator sfactoriter = sfactor.begin();
+		for (int i = 0 ; i < stime.size(); i++)
+		{
+			if(data->getStype() >= 1 && data->getStype() <= 5)
+			{
+			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*stimeiter);
+			    mKey->setScale(Ogre::Vector3(*sfactoriter, *sfactoriter, *sfactoriter));
+
+			    sfactoriter++;
+			    stimeiter++;
+			}
+		}
+
+		mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
+		std::vector<float> ttime = data->gettTime();
+		std::vector<float>::iterator ttimeiter = ttime.begin();
+		std::vector<Ogre::Vector3> translist1  = data->getTranslist1();
+		std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+		std::vector<Ogre::Vector3> translist2  = data->getTranslist2();
+		std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+		std::vector<Ogre::Vector3> translist3  = data->getTranslist3();
+		std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+		for (int i = 0 ; i < ttime.size(); i++)
+		{
+			if(data->getTtype() >= 1 && data->getTtype() <= 5)
+			{
+			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
+				Ogre::Vector3 standard = *transiter;
+				if(data->getTtype() == 2)
+					standard = *transiter *  *transiter2  *  *transiter3;
+
+				mKey->setTranslate(standard);
+				transiter++;
+				transiter2++;
+				transiter3++;
+			    ttimeiter++;
+			}
 		}
 
 

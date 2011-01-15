@@ -183,8 +183,10 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 
 void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	MeshPtr good2 = NIFLoader::load(mesh);
+	
 
 	Entity *ent = scene.getMgr()->createEntity(mesh);
+	ent->setDisplaySkeleton(true);
 
 	if(base->getSkeleton()->getBone(bonename))
 		std::cout << "BONEEXISTS";

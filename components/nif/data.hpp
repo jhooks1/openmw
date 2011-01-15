@@ -446,6 +446,7 @@ class NiKeyframeData : public Record
 	std::vector<Ogre::Vector3> translist1;
 	std::vector<Ogre::Vector3> translist2;
 	std::vector<Ogre::Vector3> translist3;
+	std::vector<Ogre::Vector3> transtbc;
 	std::vector<float> transtime;
 	int ttype;
 
@@ -583,8 +584,23 @@ public:
 			
 			//nif->getFloatLen(count*10); // trans1 + forward + backward
 		}
-        else if(ttype == 3)
-          nif->getFloatLen(count*7); // trans1 + tension,bias,continuity
+        else if(ttype == 3){
+			for (int i = 0; i < count; i++) {
+				float time = nif->getFloat();
+				float x = nif->getFloat();
+				float y = nif->getFloat();
+				float z = nif->getFloat();
+				float t = nif->getFloat();
+				float b = nif->getFloat();
+				float c = nif->getFloat();
+				Ogre::Vector3 trans = Ogre::Vector3(x, y, z);
+				Ogre::Vector3 tbc = Ogre::Vector3(t, b, c);
+				translist1.push_back(trans);
+				transtbc.push_back(tbc);
+				transtime.push_back(time);
+			}
+          //nif->getFloatLen(count*7); // trans1 + tension,bias,continuity
+		}
         else nif->fail("Unknown translation type");
       }
 

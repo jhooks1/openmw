@@ -133,8 +133,12 @@ namespace MWClass
 			//std::cout << "TAIL\n";
 		}
 		
+		q = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
+		p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0));
 		//addresses[1] = npcName + "groin";
 		if(upperleg){
+			cellRender.insertMesh("meshes\\" + upperleg->model, "Bip01 R Thigh", base, q * p);
+			cellRender.insertMesh("meshes\\" + upperleg->model, "Bip01 L Thigh", base, q * p);
 		//cellRender.insertMesh ("meshes\\" + upperleg->model, Ogre::Vector3( 6, 0, -16), axis, Ogre::Radian(3.14), npcName + "upper leg", addresses, numbers); //-18
 		//cellRender.insertMesh ("meshes\\" + upperleg->model, Ogre::Vector3( -6, 0, -16), axis, Ogre::Radian(0), npcName + "upper leg2", addresses2, numbers);
 		addresses2[numbers] = npcName + "upper leg2";
