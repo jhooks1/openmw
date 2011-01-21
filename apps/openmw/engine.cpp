@@ -87,10 +87,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
 		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
-		if(!mAnimationState->getLoop())
 			mAnimationState->setLoop(true);
-		if(mAnimationState->getEnabled())
-			 mAnimationState->setEnabled(true);
+			 //mAnimationState->setEnabled(true);           //Uncomment to enable animation - CURRENTLY CRASHES OPENMW
 		std::cout << "TimePosition:" << mAnimationState->getTimePosition() << "\n";
 		mAnimationState->addTime(evt.timeSinceLastFrame);
 		npcdataiter++;
