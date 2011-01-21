@@ -1135,12 +1135,14 @@ void NIFLoader::loadResource(Resource *resource)
 			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*rtimeiter);
 			    mKey->setRotation(*quatIter);
 
+
 			    quatIter++;
 			    rtimeiter++;
 			}
 		}
-
-		mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
+		
+		/*
+		//mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
 
 		std::vector<float> stime = data->getsTime();
 		std::vector<float>::iterator stimeiter = stime.begin();
@@ -1159,7 +1161,7 @@ void NIFLoader::loadResource(Resource *resource)
 			}
 		}
 
-		mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
+		//mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
 		std::vector<float> ttime = data->gettTime();
 		std::vector<float>::iterator ttimeiter = ttime.begin();
 		std::vector<Ogre::Vector3> translist1  = data->getTranslist1();
@@ -1183,7 +1185,8 @@ void NIFLoader::loadResource(Resource *resource)
 				transiter3++;
 			    ttimeiter++;
 			}
-		}
+		}*/
+		
 
 
 		std::cout << "The name:" << node->name.toString() << "f\n";
