@@ -74,10 +74,28 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	}
 
 	std::string effect;
-
+	
 
 
 	MWWorld::Ptr::CellStore *current = mEnvironment.mWorld->getPlayerPos().getPlayer().getCell();
+
+	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
+	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
+	for(int i = 0; i < npcdata.size(); i++)
+	{
+		//std::cout << "Testing" << i < "\n";
+		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
+		Ogre::Entity* npcmodel = item.model;
+		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
+		if(!mAnimationState->getLoop())
+			mAnimationState->setLoop(true);
+		if(mAnimationState->getEnabled())
+			 mAnimationState->setEnabled(true);
+		std::cout << "TimePosition:" << mAnimationState->getTimePosition() << "\n";
+		mAnimationState->addTime(evt.timeSinceLastFrame);
+		npcdataiter++;
+	}
+	
 	//If the region has changed
 	if(!(current->cell->data.flags & current->cell->Interior) && timer.elapsed() >= 10){
 			timer.restart();
