@@ -1127,19 +1127,172 @@ void NIFLoader::loadResource(Resource *resource)
 		std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
 		std::vector<float> rtime = data->getrTime();
 		std::vector<float>::iterator rtimeiter = rtime.begin();
+
+		std::vector<float> ttime = data->gettTime();
+		std::vector<float>::iterator ttimeiter = ttime.begin();
+		std::vector<Ogre::Vector3> translist1  = data->getTranslist1();
+		std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+		std::vector<Ogre::Vector3> translist2  = data->getTranslist2();
+		std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+		std::vector<Ogre::Vector3> translist3  = data->getTranslist3();
+		std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
 		
-		for (int i = 0 ; i < rtime.size(); i++)
+
+		float tleft = 0;
+		float rleft = 0.0;
+		float ttotal = 0.0;
+		float rtotal = 0;
+		Ogre::TransformKeyFrame* mKey;
+		float tused = 0.0;
+		float rused = 0.0;
+		Ogre::Quaternion lastquat;
+		Ogre::Vector3 lasttrans;
+		bool rend = false;
+		bool tend = false;
+		for (int j = 0 ; j < rtime.size() + ttime.size(); j++)
 		{
-			if(data->getRtype() >= 1 && data->getRtype() <= 5)
+			//std::cout << "inloop" << j << "\n";
+			if(data->getRtype() >= 1 && data->getRtype() <= 5 && *rtimeiter <= *ttimeiter && !rend)          
 			{
-			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*rtimeiter);
-			    mKey->setRotation(*quatIter);
+				rleft = 0;
+				//std::cout << "A rotation" << *rtimeiter << "\n";
+				if(rtimeiter == rtime.end())
+					rend = true;
+			    mKey = mTrack->createNodeKeyFrame(*rtimeiter);
+			   
+				float oldtime = *rtimeiter;
+				float newtime = *ttimeiter;
+				if(*(rtimeiter+1) < *ttimeiter)
+					newtime = *(rtimeiter+1);
+				
+
+			    lastquat = *quatIter;
+			    
+				quatIter++;
+					rtotal = *(rtimeiter+1) - oldtime;
+					rleft = rtotal;
+
+					if(*rtimeiter == *ttimeiter && data->getTtype() >= 1 && data->getTtype() <= 5 )
+					{
+						rleft = 0;
+						if(ttimeiter == ttime.end())
+							tend = true;
+						//std::cout << "An equivalent translation\n";
+						ttotal = *(ttimeiter+1) - oldtime;
+						lasttrans = *transiter;
+						if(data->getTtype() == 2)
+						{
+							lasttrans *= *transiter2 * *transiter3;
+							transiter2++;
+							transiter3++;
+						}
+						tleft = ttotal;
+						transiter++;
+						
+						ttimeiter++;
+						j++;
+					}
+					rtimeiter++;
 
 
-			    quatIter++;
-			    rtimeiter++;
+				
+
+
+				rused = (newtime - oldtime) / rtotal;    //Percent of quat used from now to the next key
+
+				if(rused > rleft / rtotal)
+					rused = rleft / rtotal;
+
+				if(rused > 1)
+					rused = 1;
+
+				if (rused = 1)
+					rleft = 0;
+				else
+					 rleft -= rtotal * rused;
+
+				 mKey->setRotation(lastquat * rused);
+				
+
+				if(tleft > 0)
+				{
+						tused = (newtime - oldtime) / ttotal;
+						tleft -= ttotal * tused;
+						if(tused > tleft / ttotal)
+							tused = tleft / ttotal;
+						if(tused > 1)
+							tused = 1;
+						mKey->setTranslate(lasttrans * tused);
+				}
+
 			}
+
+
+
+
+			else if(data->getTtype() >= 1 && data->getTtype() <= 5 && *ttimeiter < *rtimeiter && !tend)          
+			{
+				tleft = 0.0;
+				std::cout << "A translation" << *ttimeiter << "\n";
+				if(ttimeiter == ttime.end())
+					tend = true;
+			    mKey = mTrack->createNodeKeyFrame(*ttimeiter);
+			   
+				float oldtime = *ttimeiter;
+				float newtime = *rtimeiter;
+				if(*(ttimeiter+1) < *rtimeiter)
+					newtime = *(ttimeiter+1);
+
+				
+
+			    lasttrans = *transiter;
+			    ttimeiter++;
+				transiter++;
+				if(data->getTtype() == 2)
+						{
+							lasttrans *= *transiter2 * *transiter3;
+							transiter2++;
+							transiter3++;
+						}
+					ttotal = *ttimeiter - oldtime;
+
+					tleft = ttotal;
+				
+
+
+				tused = (newtime - oldtime) / ttotal;    //Percent of translation used from now to the next key
+
+				if(tused > tleft / ttotal)
+					tused = tleft / ttotal;
+
+				if(tused > 1)
+					tused = 1;
+
+				if (tused = 1)
+					tleft = 0;
+				else
+					 tleft -= ttotal * tused;
+
+				 mKey->setTranslate(lasttrans * tused);
+				
+
+				if(rleft > 0)
+				{
+						rused = (newtime - oldtime) / rtotal;
+						rleft -= rtotal * rused;
+						if(rused > rleft / rtotal)
+							rused = rleft / rtotal;
+						if(rused > 1)
+							rused = 1;
+						mKey->setRotation(lastquat * rused);
+				}
+
+			}
+			
+
 		}
+		std::cout << "We reached the end\n";
+
 		
 		/*
 		//mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
