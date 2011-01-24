@@ -800,8 +800,6 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if (!skel.isNull())     //if there is a skeleton
         {
             std::string name = node->name.toString();
-			if (anim)
-				std::cout << "BONE:" << name << "\n";
 			//if (isBeast && isChest)
 			//	std::cout << "NAME: " << name << "\n";
             // Quick-n-dirty workaround for the fact that several
@@ -1143,16 +1141,79 @@ void NIFLoader::loadResource(Resource *resource)
 		float ttotal = 0.0;
 		float rtotal = 0;
 		Ogre::TransformKeyFrame* mKey;
+		Ogre::TransformKeyFrame* mKey2;
 		float tused = 0.0;
 		float rused = 0.0;
 		Ogre::Quaternion lastquat;
 		Ogre::Vector3 lasttrans;
 		bool rend = false;
 		bool tend = false;
+		
 		for (int j = 0 ; j < rtime.size() + ttime.size(); j++)
 		{
+			if(data->getTtype() >= 1 && data->getTtype() <= 5 && *ttimeiter < *rtimeiter && !tend)          
+			{
+				tleft = 0.0;
+				std::cout << "A translation" << *ttimeiter << "\n";
+				if(ttimeiter == ttime.end())
+					tend = true;
+			    mKey2 = mTrack->createNodeKeyFrame(*ttimeiter);
+			   
+				float oldtime = *ttimeiter;
+				float newtime = *rtimeiter;
+				ttimeiter++;
+				if(*(ttimeiter) < *rtimeiter)
+					newtime = *(ttimeiter);
+
+				
+
+			    lasttrans = *transiter;
+			    //ttimeiter++;
+				transiter++;
+				if(data->getTtype() == 2)
+						{
+							lasttrans *= *transiter2 * *transiter3;
+							transiter2++;
+							transiter3++;
+						}
+					ttotal = *ttimeiter - oldtime;
+
+					tleft = ttotal;
+				
+
+
+				tused = (newtime - oldtime) / ttotal;    //Percent of translation used from now to the next key
+
+				/*if(tused > tleft / ttotal)
+					tused = tleft / ttotal;
+
+				if(tused > 1)
+					tused = 1;
+
+				if (tused = 1)
+					tleft = 0;*/
+				//else
+					 tleft -= (ttotal * tused);
+
+				
+				
+
+				if(rleft > 0)
+				{
+						rused = (newtime - oldtime) / rtotal;
+						
+						if(rused > rleft / rtotal)
+							rused = rleft / rtotal;
+						if(rused > 1)
+							rused = 1;
+						rleft -= (rtotal * rused);
+						mKey->setRotation(lastquat * rused);
+				}
+				 mKey->setTranslate(lasttrans*tused);
+
+			}
 			//std::cout << "inloop" << j << "\n";
-			if(data->getRtype() >= 1 && data->getRtype() <= 5 && *rtimeiter <= *ttimeiter && !rend)          
+			else if(data->getRtype() >= 1 && data->getRtype() <= 5 && *rtimeiter <= *ttimeiter && !rend)          
 			{
 				rleft = 0;
 				//std::cout << "A rotation" << *rtimeiter << "\n";
@@ -1162,19 +1223,19 @@ void NIFLoader::loadResource(Resource *resource)
 			   
 				float oldtime = *rtimeiter;
 				float newtime = *ttimeiter;
-				if(*(rtimeiter+1) < *ttimeiter)
-					newtime = *(rtimeiter+1);
+				rtimeiter++;
+				if(*(rtimeiter) < *ttimeiter)
+					newtime = *(rtimeiter);
 				
 
 			    lastquat = *quatIter;
 			    
 				quatIter++;
-					rtotal = *(rtimeiter+1) - oldtime;
+					rtotal = *(rtimeiter) - oldtime;
 					rleft = rtotal;
 
-					if(*rtimeiter == *ttimeiter && data->getTtype() >= 1 && data->getTtype() <= 5 )
+					if(*rtimeiter == *ttimeiter && data->getTtype() >= 1 && data->getTtype() <= 5 && !tend)
 					{
-						rleft = 0;
 						if(ttimeiter == ttime.end())
 							tend = true;
 						//std::cout << "An equivalent translation\n";
@@ -1192,7 +1253,6 @@ void NIFLoader::loadResource(Resource *resource)
 						ttimeiter++;
 						j++;
 					}
-					rtimeiter++;
 
 
 				
@@ -1211,88 +1271,45 @@ void NIFLoader::loadResource(Resource *resource)
 				else
 					 rleft -= rtotal * rused;
 
-				 mKey->setRotation(lastquat * rused);
+				 
 				
 
 				if(tleft > 0)
 				{
 						tused = (newtime - oldtime) / ttotal;
-						tleft -= ttotal * tused;
+						
 						if(tused > tleft / ttotal)
 							tused = tleft / ttotal;
 						if(tused > 1)
 							tused = 1;
+						tleft -= ttotal * tused;
+						//Ogre::Vector3 test = Ogre::Vector3(lasttrans.x * tused, lasttrans.y * tused, lasttrans.z * tused);
 						mKey->setTranslate(lasttrans * tused);
 				}
-
-			}
-
-
-
-
-			else if(data->getTtype() >= 1 && data->getTtype() <= 5 && *ttimeiter < *rtimeiter && !tend)          
-			{
-				tleft = 0.0;
-				std::cout << "A translation" << *ttimeiter << "\n";
-				if(ttimeiter == ttime.end())
-					tend = true;
-			    mKey = mTrack->createNodeKeyFrame(*ttimeiter);
-			   
-				float oldtime = *ttimeiter;
-				float newtime = *rtimeiter;
-				if(*(ttimeiter+1) < *rtimeiter)
-					newtime = *(ttimeiter+1);
-
-				
-
-			    lasttrans = *transiter;
-			    ttimeiter++;
-				transiter++;
-				if(data->getTtype() == 2)
-						{
-							lasttrans *= *transiter2 * *transiter3;
-							transiter2++;
-							transiter3++;
-						}
-					ttotal = *ttimeiter - oldtime;
-
-					tleft = ttotal;
-				
-
-
-				tused = (newtime - oldtime) / ttotal;    //Percent of translation used from now to the next key
-
-				if(tused > tleft / ttotal)
-					tused = tleft / ttotal;
-
-				if(tused > 1)
-					tused = 1;
-
-				if (tused = 1)
-					tleft = 0;
-				else
-					 tleft -= ttotal * tused;
-
-				 mKey->setTranslate(lasttrans * tused);
-				
-
-				if(rleft > 0)
-				{
-						rused = (newtime - oldtime) / rtotal;
-						rleft -= rtotal * rused;
-						if(rused > rleft / rtotal)
-							rused = rleft / rtotal;
-						if(rused > 1)
-							rused = 1;
-						mKey->setRotation(lastquat * rused);
-				}
+				mKey->setRotation(lastquat * rused);
 
 			}
 			
 
 		}
-		std::cout << "We reached the end\n";
 
+		std::cout << "We reached the end\n";
+		/*for (int i = 0 ; i < ttime.size(); i++)
+		{
+			if(data->getTtype() >= 1 && data->getTtype() <= 5)
+			{
+			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
+				Ogre::Vector3 standard = *transiter;
+				if(data->getTtype() == 2)
+					standard = *transiter *  *transiter2  *  *transiter3;
+
+				mKey->setTranslate(standard);
+				transiter++;
+				transiter2++;
+				transiter3++;
+			    ttimeiter++;
+			}
+		}*/
 		
 		/*
 		//mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));

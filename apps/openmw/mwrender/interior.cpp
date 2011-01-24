@@ -199,7 +199,7 @@ void InteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogr
 	base->attachObjectToBone(bonename, part ,quat, trans);
 }
 
-Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attach)
+Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attach, std::string name)
 {
 	 assert (insert);
 
@@ -208,8 +208,11 @@ Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attac
   ent->setDisplaySkeleton(true);
   if(attach)
   {
+		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(1, 0, 0)); //1,0,0
+			npcPart = insert->createChildSceneNode(name, Vector3::ZERO, q);
 
-      insert->attachObject(ent);
+
+      npcPart->attachObject(ent);
   }
   return  ent;
 

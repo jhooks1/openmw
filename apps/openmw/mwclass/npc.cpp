@@ -53,7 +53,7 @@ namespace MWClass
             environment.mWorld->getStore().bodyParts.find(hairID)->model;
 
         MWRender::Rendering rendering (cellRender, ref->ref);
-		ref->model = cellRender.insertBase("meshes\\base_anim.nif", true);
+		ref->model = cellRender.insertBase("meshes\\base_anim.nif", true, npcName);
         
         const ESM::BodyPart *bodyPart =
             environment.mWorld->getStore().bodyParts.search (bodyRaceID + "chest");
@@ -137,8 +137,8 @@ namespace MWClass
 		p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0));
 		//addresses[1] = npcName + "groin";
 		if(upperleg){
-			cellRender.insertMesh("meshes\\" + upperleg->model, "Bip01 R Thigh", ref->model, q * p);
-			cellRender.insertMesh("meshes\\" + upperleg->model, "Bip01 L Thigh", ref->model, q * p);
+			cellRender.insertMesh("meshes\\" + upperleg->model, "Bip01 R Calf", ref->model, q * p,Ogre::Vector3(-105, 0, 0));
+			cellRender.insertMesh("meshes\\" + upperleg->model, "Bip01 L Calf", ref->model, q * p,Ogre::Vector3(-105, 0, 0));
 		//cellRender.insertMesh ("meshes\\" + upperleg->model, Ogre::Vector3( 6, 0, -16), axis, Ogre::Radian(3.14), npcName + "upper leg", addresses, numbers); //-18
 		//cellRender.insertMesh ("meshes\\" + upperleg->model, Ogre::Vector3( -6, 0, -16), axis, Ogre::Radian(0), npcName + "upper leg2", addresses2, numbers);
 		addresses2[numbers] = npcName + "upper leg2";

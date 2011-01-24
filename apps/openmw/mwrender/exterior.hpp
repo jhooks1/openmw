@@ -63,7 +63,7 @@ namespace MWRender
 
     /// start inserting a new reference.
     virtual void insertBegin (ESM::CellRef &ref);
-	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach);
+	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach, std::string name);
     /// insert a mesh related to the most recent insertBegin call.
 	virtual void insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
 	virtual void insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);

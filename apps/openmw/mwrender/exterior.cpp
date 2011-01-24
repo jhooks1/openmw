@@ -188,7 +188,7 @@ void ExteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 		}
 }
 // insert a mesh related to the most recent insertBegin call.
-Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attach)
+Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attach, std::string name)
 {
 	 assert (insert);
 

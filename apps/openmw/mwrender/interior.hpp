@@ -52,7 +52,7 @@ namespace MWRender
     /// The scene node that contains all objects belonging to this
     /// cell.
     Ogre::SceneNode *base;
-
+	int number;
     Ogre::SceneNode *insert;
 	Ogre::SceneNode *npcPart;
 
@@ -73,7 +73,7 @@ namespace MWRender
     virtual void insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
 	/// insert a light related to the most recent insertBegin call.
     virtual void insertLight(float r, float g, float b, float radius);
-	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach);
+	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach, std::string name);
 
     /// finish inserting a new reference and return a handle to it.
     virtual std::string insertEnd (bool Enable);
@@ -91,7 +91,7 @@ namespace MWRender
 
     InteriorCellRender(ESMS::CellStore<MWWorld::RefData> &_cell, MWWorld::Environment& environment,
         MWScene &_scene)
-    : cell(_cell), mEnvironment (environment), scene(_scene), base(NULL), insert(NULL), ambientMode (0) {}
+    : cell(_cell), mEnvironment (environment), scene(_scene), base(NULL), insert(NULL), ambientMode (0) {number = 0;}
 
     virtual ~InteriorCellRender() { destroy(); }
 
