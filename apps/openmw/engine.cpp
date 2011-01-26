@@ -86,12 +86,35 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		//std::cout << "Testing" << i < "\n";
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
+		npcmodel->getSkeleton()->setBlendMode(Ogre::SkeletonAnimationBlendMode::ANIMBLEND_AVERAGE);    //ANIMBLEND_AVERAGE
 		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
-			mAnimationState->setLoop(true);
+		mAnimationState->setWeight(.5);
+			//mAnimationState->setLoop(true);
 
-			 mAnimationState->setEnabled(true);           //Uncomment to enable animation - CURRENTLY CRASHES OPENMW
+			 mAnimationState->setEnabled(true);           
+			 
+
+			 
+
+			 Ogre::AnimationState *mAnimationState2 = npcmodel->getAnimationState("WholeThing2");
+			//mAnimationState2->setLoop(true);
+			mAnimationState2->setWeight(.5);
+			mAnimationState2->setEnabled(true); 
+			 
+			  mAnimationState2->createBlendMask(34,1);
+			 mAnimationState->createBlendMask(34,1);
+			 for(int j = 0; j < 34; j++)
+			 {
+				mAnimationState->setBlendMaskEntry(j,1);
+				mAnimationState2->setBlendMaskEntry(j,1);
+			 }
+			
+
 		std::cout << "TimePosition:" << mAnimationState->getTimePosition() << "\n";
+		
+		mAnimationState2->addTime(evt.timeSinceLastFrame);
 		mAnimationState->addTime(evt.timeSinceLastFrame);
+		//mAnimationState2->setEnabled(true); 
 		npcdataiter++;
 	}
 	

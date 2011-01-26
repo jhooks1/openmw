@@ -137,7 +137,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 		int numbers;
 		int stack;
 		Ogre::Animation* animcore;
-		
+		Ogre::Animation* animcore2;
 
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;

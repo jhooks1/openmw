@@ -63,35 +63,9 @@ void InteriorCellRender::insertBegin (ESM::CellRef &ref)
 }
 
 // insert a mesh related to the most recent insertBegin call.
-void InteriorCellRender::rotateMesh(Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName[], int elements)
-{
-	assert(insert);
-	Ogre::SceneNode *parent = insert;
-	 //std::cout << "ELEMENTS:" << elements;
-	for (int i = 0; i < elements; i++){
-	   if(sceneNodeName[i] != "" && parent->getChild(sceneNodeName[i]))
-		   parent = dynamic_cast<Ogre::SceneNode*> (parent->getChild(sceneNodeName[i]));
-	}
-	   parent->rotate(axis, angle);
-}
-// insert a mesh related to the most recent insertBegin call.
 
-void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeName[], int elements)
-{
-	assert(insert);
-	Ogre::SceneNode *parent = insert;
-	 //std::cout << "ELEMENTS:" << elements;
-	for (int i = 0; i < elements; i++){
-	   if(sceneNodeName[i] != "" && parent->getChild(sceneNodeName[i]))
-		   parent = dynamic_cast<Ogre::SceneNode*> (parent->getChild(sceneNodeName[i]));
-	}
-	   parent->scale(axis);
-}
 
-void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName, std::string sceneParent[], int elements)
-{
-	insertMesh(mesh, vec, axis, angle, sceneNodeName,  sceneParent, elements, true);
-}
+/*
 void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName, std::string sceneParent[], int elements, bool translateFirst){
 
 	   assert (insert);
@@ -179,7 +153,7 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
 			MeshPtr foot = good2->clone(beastfoot4);
 			good2->reload();
 		}
-}
+}*/
 
 void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	MeshPtr good2 = NIFLoader::load(mesh);
@@ -208,7 +182,7 @@ Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attac
   ent->setDisplaySkeleton(true);
   if(attach)
   {
-		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(1, 0, 0)); //1,0,0
+		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(0, 0, 0)); //1,0,0
 			npcPart = insert->createChildSceneNode(name, Vector3::ZERO, q);
 
 
