@@ -89,15 +89,15 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		npcmodel->getSkeleton()->setBlendMode(Ogre::SkeletonAnimationBlendMode::ANIMBLEND_AVERAGE);    //ANIMBLEND_AVERAGE
 		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
 		mAnimationState->setWeight(.5);
-			//mAnimationState->setLoop(true);
+			mAnimationState->setLoop(true);
 
-			 mAnimationState->setEnabled(true);           
+			mAnimationState->setEnabled(true);           
 			 
 
 			 
-
+			
 			 Ogre::AnimationState *mAnimationState2 = npcmodel->getAnimationState("WholeThing2");
-			//mAnimationState2->setLoop(true);
+			mAnimationState2->setLoop(true);
 			mAnimationState2->setWeight(.5);
 			mAnimationState2->setEnabled(true); 
 			 

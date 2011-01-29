@@ -182,7 +182,7 @@ Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attac
   ent->setDisplaySkeleton(true);
   if(attach)
   {
-		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(0, 0, 0)); //1,0,0
+		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(1, 0, 0)); //-3.14 / 2
 			npcPart = insert->createChildSceneNode(name, Vector3::ZERO, q);
 
 

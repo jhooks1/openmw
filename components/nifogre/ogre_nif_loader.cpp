@@ -763,24 +763,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
     Bone *bone = 0;
 	
-	//Nif::Controller *go = (node->controller).getPtr();
-	//Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(go);
-	/*if(f != NULL)
-	{
-		std::cout << "Controller's Rtype:" <<  f->data->getRtype() << "Stype: " << f->data->getStype() << "Ttype:" << f->data->getTtype() << "\n";
-		//std::cout << "The target rec: " << f->target->recName.toString() << "\n";
-	}
-	//Contains the actual rotation, scale, and translation coordinate data
-	if(node->recType == RC_NiKeyframeData)
-	{
-		std::cout << "Keyframe\n";
-	}
-	//Indicates the node that the data applies to
-	if(node->recType == RC_NiKeyframeController)
-	{
-		std::cout <<"Keyframe Controller\n";
-	}
-	*/
+	
     // create skeleton or add bones
     if (node->recType == RC_NiNode)
     {
@@ -815,12 +798,23 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
                 bone->setPosition(convertVector3(node->trafo->pos));
                 bone->setOrientation(convertRotation(node->trafo->rotation));
             }
+			else
+			{
+				bone = skel->getBone(name);
+				if (parentBone)
+                  parentBone->addChild(bone);
+				bone->setInheritOrientation(true);
+                bone->setPosition(convertVector3(node->trafo->pos));
+                bone->setOrientation(convertRotation(node->trafo->rotation));
+			}
+				
         }
     }
 
     // Apply the parent transformation to this node. We overwrite the
     // existing data with the final transformation.
-    if (trafo)
+   
+	if (trafo)
     {
         // Get a non-const reference to the node's data, since we're
         // overwriting it. TODO: Is this necessary?
@@ -1113,14 +1107,17 @@ void NIFLoader::loadResource(Resource *resource)
 	{
 		Nif::NiKeyframeDataPtr data = f->data;
 		std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
-		std::cout << "The target rec: " << f->target->recName.toString() << "\n";
+		
 		if(animcore == 0){
 			std::cout <<"Creating WholeThing\n";
 			animcore = skel->createAnimation("WholeThing", f->timeStop);
+			animcore2 = skel->createAnimation("WholeThing2", f->timeStop);
 		}
 		 
 		Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
-		Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
+			std::cout << "The target rec: " << node->name.toString() << "\n";
+		Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle, skel->getBone(node->name.toString()));
+		Ogre::NodeAnimationTrack* mTrack2 = animcore2->createNodeTrack(handle++, skel->getBone(node->name.toString()));
 		
 		std::vector<Ogre::Quaternion> quats = data->getQuat();
 		std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
@@ -1165,29 +1162,25 @@ void NIFLoader::loadResource(Resource *resource)
 			    ttimeiter++;
 			}
 		}
+		for (int j = 0 ; j < rtime.size(); j++)
+		{
+			if(data->getRtype() >= 1 && data->getRtype() <= 5)
+			{
+			    Ogre::TransformKeyFrame* mKey2 = mTrack2->createNodeKeyFrame(*rtimeiter);
+				Ogre::Quaternion standard = *quatIter;
 
+				mKey2->setRotation(standard);
+				quatIter++;
+			    rtimeiter++;
+			}
+		}
 	
 			
 
 		
 
 		std::cout << "We reached the end\n";
-		/*for (int i = 0 ; i < ttime.size(); i++)
-		{
-			if(data->getTtype() >= 1 && data->getTtype() <= 5)
-			{
-			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
-				Ogre::Vector3 standard = *transiter;
-				if(data->getTtype() == 2)
-					standard = *transiter *  *transiter2  *  *transiter3;
 
-				mKey->setTranslate(standard);
-				transiter++;
-				transiter2++;
-				transiter3++;
-			    ttimeiter++;
-			}
-		}*/
 		
 		/*
 		//mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
@@ -1208,108 +1201,12 @@ void NIFLoader::loadResource(Resource *resource)
 			    stimeiter++;
 			}
 		}
-
-		//mTrack = animcore->createNodeTrack(handle++, skel->getBone(node->name.toString()));
-		std::vector<float> ttime = data->gettTime();
-		std::vector<float>::iterator ttimeiter = ttime.begin();
-		std::vector<Ogre::Vector3> translist1  = data->getTranslist1();
-		std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
-		std::vector<Ogre::Vector3> translist2  = data->getTranslist2();
-		std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
-		std::vector<Ogre::Vector3> translist3  = data->getTranslist3();
-		std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
-		for (int i = 0 ; i < ttime.size(); i++)
-		{
-			if(data->getTtype() >= 1 && data->getTtype() <= 5)
-			{
-			    Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
-				Ogre::Vector3 standard = *transiter;
-				if(data->getTtype() == 2)
-					standard = *transiter *  *transiter2  *  *transiter3;
-
-				mKey->setTranslate(standard);
-				transiter++;
-				transiter2++;
-				transiter3++;
-			    ttimeiter++;
-			}
-		}*/
-		
+		*/
 
 
-		std::cout << "The name:" << node->name.toString() << "f\n";
 	}
 	}
-	std::cout << "HANDLETEST:" << handle;
-	handle = 0;
-	for(int i = 0; i < nif.numRecords(); i++)
-	{
-
-	Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(i));
-	if(f != NULL)
-	{
-		//std::cout << "INSECONDLOOP\n";
-		Nif::NiKeyframeDataPtr data = f->data;
-		//std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
-		//std::cout << "The target rec: " << f->target->recName.toString() << "\n";
-		if(animcore2 == 0){
-			//std::cout <<"Creating WholeThing\n";
-			animcore2 = skel->createAnimation("WholeThing2", f->timeStop);
-		}
-		 
-		Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
-		Ogre::NodeAnimationTrack* mTrack2 = animcore2->createNodeTrack(handle++, skel->getBone(node->name.toString()));
-		
-		std::vector<Ogre::Quaternion> quats = data->getQuat();
-		std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
-		std::vector<float> rtime = data->getrTime();
-		std::vector<float>::iterator rtimeiter = rtime.begin();
-
-		std::vector<float> ttime = data->gettTime();
-		std::vector<float>::iterator ttimeiter = ttime.begin();
-		std::vector<Ogre::Vector3> translist1  = data->getTranslist1();
-		std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
-		std::vector<Ogre::Vector3> translist2  = data->getTranslist2();
-		std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
-		std::vector<Ogre::Vector3> translist3  = data->getTranslist3();
-		std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
-		
-
-		float tleft = 0;
-		float rleft = 0.0;
-		float ttotal = 0.0;
-		float rtotal = 0;
-		Ogre::TransformKeyFrame* mKey;
-		Ogre::TransformKeyFrame* mKey2;
-		float tused = 0.0;
-		float rused = 0.0;
-		Ogre::Quaternion lastquat;
-		Ogre::Vector3 lasttrans;
-		bool rend = false;
-		bool tend = false;
-
-		for (int j = 0 ; j < rtime.size(); j++)
-		{
-			if(data->getRtype() >= 1 && data->getRtype() <= 5)
-			{
-			    Ogre::TransformKeyFrame* mKey = mTrack2->createNodeKeyFrame(*rtimeiter);
-				Ogre::Quaternion standard = *quatIter;
-
-				mKey->setRotation(standard);
-				quatIter++;
-			    rtimeiter++;
-			}
-		}
 	
-			
-
-		
-
-
-
-		//std::cout << "The name:" << node->name.toString() << "f\n";
-	}
-	}
 
     // set the bounding value.
     if (bounds.isValid())
@@ -1321,8 +1218,9 @@ void NIFLoader::loadResource(Resource *resource)
 
     // set skeleton
   if (!skel.isNull())
+  {
         mesh->_notifySkeleton(skel);
-
+  }
   
 }
 
