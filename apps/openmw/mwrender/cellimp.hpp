@@ -43,7 +43,11 @@ namespace MWRender
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements, bool translateFirst) = 0;
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements) = 0;
     virtual void insertMesh(const std::string &mesh) = 0;
-	//virtual Ogre::Entity* insertAndDeliverMesh(const std::string &mesh) = 0;
+	virtual Ogre::Entity* insertAndDeliverMesh(const std::string &mesh) = 0;
+	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach, std::string name) = 0;
+	
+    virtual void insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO) = 0;
+	 virtual void insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO) = 0;
 
     virtual void scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeName[], int elements) = 0;
 

@@ -89,6 +89,46 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
     }
        parent->scale(axis);
 }
+void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+	MeshPtr good2 = NIFLoader::load(mesh);
+	Entity *ent = scene.getMgr()->createEntity(mesh);
+	ent->setDisplaySkeleton(true);
+
+	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
+
+
+	//if(base->getSkeleton()->getBone(bonename))
+		//std::cout << "BONEEXISTS";
+	//NIFLoader::combineResources(base, ent, bonename);
+	//std::cout << "DOINGMESH\n";
+		
+	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
+	//ent->attachObjectToBone(
+}
+void InteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+	base->attachObjectToBone(bonename, part ,quat, trans);
+}
+
+Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attach, std::string name)
+{
+	 assert (insert);
+
+  NIFLoader::load(mesh);
+  Entity *ent = scene.getMgr()->createEntity(mesh);
+  ent->setDisplaySkeleton(true);
+  if(attach)
+  {
+		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(1, 0, 0)); //-3.14 / 2
+			npcPart = insert->createChildSceneNode(name, Vector3::ZERO, q);
+
+
+      npcPart->attachObject(ent);
+  }
+  return  ent;
+
+}
+
+
 void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName, std::string sceneParent[], int elements)
 {
     insertMesh(mesh, vec, axis, angle, sceneNodeName,  sceneParent, elements, true);
@@ -180,7 +220,7 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec, 
         }
 }
 
-/*
+
 Ogre::Entity* InteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
 {
 	
@@ -194,7 +234,7 @@ Ogre::Entity* InteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
       insert->attachObject(ent);
   return  ent;
 
-}*/
+}
 
 
 void InteriorCellRender::insertMesh(const std::string &mesh)

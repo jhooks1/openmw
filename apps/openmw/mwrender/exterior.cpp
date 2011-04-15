@@ -194,6 +194,27 @@ void ExteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
        parent->scale(axis);
 }
 
+void ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+	MeshPtr good2 = NIFLoader::load(mesh);
+	Entity *ent = mScene.getMgr()->createEntity(mesh);
+	ent->setDisplaySkeleton(true);
+
+	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
+
+
+	//if(base->getSkeleton()->getBone(bonename))
+	//	std::cout << "BONEEXISTS";
+	//NIFLoader::combineResources(base, ent, bonename);
+	//std::cout << "DOINGMESH\n";
+		
+	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
+	//ent->attachObjectToBone(
+}
+void ExteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+	
+	base->attachObjectToBone(bonename, part ,quat, trans);
+}
+
 // insert a mesh related to the most recent insertBegin call.
 
 
@@ -273,7 +294,25 @@ std::string ExteriorCellRender::insertEnd (bool enable)
   return handle;
 }
 
-/*
+Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attach, std::string name)
+{
+	 assert (insert);
+
+  NIFLoader::load(mesh);
+  Entity *ent = mScene.getMgr()->createEntity(mesh);
+  ent->setDisplaySkeleton(true);
+  if(attach)
+  {
+		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(1, 0, 0)); //-3.14 / 2
+			mNpcPart = mInsert->createChildSceneNode(name, Vector3::ZERO, q);
+
+
+      mNpcPart->attachObject(ent);
+  }
+  return  ent;
+
+}
+
 Ogre::Entity* ExteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
 {
 	 assert (insert);
@@ -286,7 +325,7 @@ Ogre::Entity* ExteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
       mInsert->attachObject(ent);
   return  ent;
 
-}*/
+}
 
 // configure lighting according to cell
 
