@@ -34,7 +34,7 @@ namespace MWClass
         if (!model.empty())
         {
             MWRender::Rendering rendering (cellRender, ref->ref);
-           cellRender.insertMesh("meshes\\" + model);
+           ref->model = cellRender.insertAndDeliverMesh("meshes\\" + model);
             cellRender.insertActorPhysics();
             ref->mData.setHandle (rendering.end (ref->mData.isEnabled()));
         }

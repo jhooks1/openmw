@@ -91,10 +91,11 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
     std::string effect;
 
     MWWorld::Ptr::CellStore *current = mEnvironment.mWorld->getPlayer().getPlayer().getCell();
-	/*
+	
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List creatureData = (current->creatures).list;
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
+	
 	for(int i = 0; i < creatureData.size(); i++)
 	{
 		//std::cout << "Testing" << i < "\n";
@@ -121,7 +122,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			 
 			  mAnimationState2->createBlendMask(creaturemodel->getSkeleton()->getNumBones(),1);
 			 mAnimationState->createBlendMask(creaturemodel->getSkeleton()->getNumBones(),1);
-			 for(int j = 2; j < creaturemodel->getSkeleton()->getNumBones(); j++)
+			 for(int j = 1; j < creaturemodel->getSkeleton()->getNumBones(); j++)
 			 {
 				mAnimationState->setBlendMaskEntry(j,1);
 				mAnimationState2->setBlendMaskEntry(j,1);
@@ -134,7 +135,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		//npcmodel->_updateAnimation();
 		//mAnimationState2->setEnabled(true); 
 		creaturedataiter++;
-	}*/
+	}
 
 
 
