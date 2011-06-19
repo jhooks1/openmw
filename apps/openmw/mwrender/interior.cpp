@@ -228,6 +228,32 @@ Ogre::Entity* InteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
 
   NIFLoader::load(mesh);
   Entity *ent = scene.getMgr()->createEntity(mesh);
+
+				//mesh->_updateAnimation();
+  
+  /*
+std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAllanim();
+Ogre::SkeletonInstance* skel = ent->getSkeleton();
+
+for (std::vector<Nif::NiKeyframeData>::iterator allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
+		{
+			//std::cout << "loop\n";
+			
+			if(skel->hasBone(allanimiter->getBonename())){
+
+				Ogre::Bone *bone = skel->getBone(allanimiter->getBonename());
+			if(allanimiter->getBonename() == "Bip01 L Calf" || allanimiter->getBonename() == "Bip01 L Foot")
+					bone->yaw(Ogre::Degree(40));
+				skel->_updateTransforms();
+				skel->getManualBonesDirty();
+				ent->getAllAnimationStates()->_notifyDirty();
+				ent->_updateAnimation();
+			}
+
+		}
+ 
+ */
+
   ent->setDisplaySkeleton(true);
 
 

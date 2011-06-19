@@ -435,7 +435,7 @@ public:
 
 class NiKeyframeData : public Record
 {
-	
+	std::string bonename;
 	//Rotations
 	std::vector<Ogre::Quaternion> quats;
 	std::vector<Ogre::Vector3> tbc;
@@ -459,8 +459,45 @@ class NiKeyframeData : public Record
 	std::vector<Ogre::Vector3> tbcscale;
 	int stype;
 
-public:
 
+	//Variables for processing animation
+	int rindexI;
+    int rindexJ;
+	int tindexI;
+    int tindexJ;
+	float time;
+
+	
+	
+
+public:
+	void clone(NiKeyframeData c)
+	{
+		quats = c.getQuat();
+		tbc = c.getrTbc();
+		rottime = c.getrTime();
+
+		//types
+		ttype = c.getTtype();
+		rtype = c.getRtype();
+		stype = c.getStype();
+
+
+		translist1 = c.getTranslist1();
+		translist2 =	c.getTranslist2();	
+        translist3 = c.getTranslist3();
+
+	    transtime = c.gettTime();
+	   
+	    bonename = c.getBonename();
+
+
+	}
+
+	void setBonename(std::string bone)
+	{
+		bonename = bone;
+	}
   void read(NIFFile *nif)
   {
     // Rotations first
@@ -693,6 +730,23 @@ public:
 	std::vector<float> getsTime(){
 		return scaletime;
 	}
+	std::string getBonename(){ return bonename;
+	}
+
+	/*int getrindexI(){return rindexI;}
+	int getrindexJ(){return rindexJ;}
+	int gettindexI(){return tindexI;}
+	int gettindexJ(){return tindexJ;}
+	float getTime(){return time;}
+
+	void setrindexI(int index){rindexI = index;}
+	void setrindexJ(int index){rindexJ = index;}
+	void settindexI(int index){tindexI = index;}
+	void settindexJ(int index){tindexJ = index;}
+	void setTime(float t){time = t;}
+	void addTime(float t){time += t;}*/
+
+
 };
 
 

@@ -28,6 +28,14 @@
 #include <OgreMesh.h>
 #include <assert.h>
 #include <string>
+#include "../nif/nif_file.hpp"
+#include "../nif/node.hpp"
+#include "../nif/data.hpp"
+#include "../nif/property.hpp"
+#include "../nif/controller.hpp"
+#include "../nif/extra.hpp"
+//#include "../nif/data.hpp"
+
 
 
 class BoundsFinder;
@@ -67,7 +75,9 @@ namespace Mangle
 class NIFLoader : Ogre::ManualResourceLoader
 {
     public:
+		std::vector<int> numTracks;
         static int numberOfMeshes;
+		
         static NIFLoader& getSingleton();
         static NIFLoader* getSingletonPtr();
 
@@ -75,8 +85,11 @@ class NIFLoader : Ogre::ManualResourceLoader
 
         static Ogre::MeshPtr load(const std::string &name, 
                                     const std::string &group="General");
-
-
+		std::vector<Nif::NiKeyframeData> getAllanim();
+		Ogre::SkeletonPtr getmSkel();
+		Ogre::Mesh* getMesh();
+		//static std::vector getNumTracks();
+		//static int getNumTracks();
         
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
@@ -84,6 +97,8 @@ class NIFLoader : Ogre::ManualResourceLoader
     private:
         NIFLoader() : resourceGroup("General") { skincounter = 0; resourceName = "";}
         NIFLoader(NIFLoader& n) {}
+
+		void handleAnimationNode(Nif::Node *node, Nif::NiKeyframeDataPtr data);
 
         void warn(std::string msg);
         void fail(std::string msg);
@@ -132,14 +147,18 @@ class NIFLoader : Ogre::ManualResourceLoader
         int numbers;
         int stack;
 		bool anim;
-		int handle2;
+		short handle;
 		Ogre::Animation* animcore;
 		Ogre::Animation* animcore2;
+		//static std::vector numTracks;
+		int test;
+		std::vector<Nif::NiKeyframeData> allanim;
         
 
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;
         Ogre::SkeletonPtr mSkel;
+		
 };
 
 #endif

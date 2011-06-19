@@ -14,7 +14,19 @@
 #include "mwworld/environment.hpp"
 #include "mwworld/ptr.hpp"
 #include <boost/timer.hpp>
-
+#include <components/nif/nif_file.hpp>
+#include <components/nif/node.hpp>
+#include <components/nif/data.hpp>
+#include <components/nif/property.hpp>
+#include <components/nif/controller.hpp>
+#include <components/nif/extra.hpp>
+struct aindex{
+	float time;
+	std::vector<int>rindexI;
+	std::vector<int>rindexJ;
+	std::vector<int>tindexI;
+	std::vector<int>tindexJ;
+};
 
 namespace Compiler
 {
@@ -70,6 +82,17 @@ namespace OMW
             bool mUseSound;
             bool mCompileAll;
             int total;
+			bool first;
+			std::vector<aindex> creaturea;
+			std::vector<aindex> npca;
+			std::vector<std::vector<float>::iterator> example;
+			std::vector<int> sindex;
+			std::vector<int> tindex;
+			std::vector<int> rindex;
+			std::vector<int>::iterator siter;
+			std::vector<int>::iterator titer;
+			std::vector<int>::iterator riter;
+			float lastTime;
 
             MWWorld::Environment mEnvironment;
             MWScript::ScriptManager *mScriptManager;
@@ -92,6 +115,10 @@ namespace OMW
             /// \note This function works recursively.
 
             void addResourcesDirectory (const boost::filesystem::path& path);
+
+			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, float &time, int &rindexI, int &rindexJ, int &tindexI, int &tindexJ );
+
+			bool timeIndex( float time, std::vector<float> times, int & i, int & j, float & x );
 
             /// Load all BSA files in data directory.
             void loadBSA();

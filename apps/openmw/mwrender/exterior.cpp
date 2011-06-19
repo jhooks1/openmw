@@ -296,7 +296,7 @@ std::string ExteriorCellRender::insertEnd (bool enable)
 
 Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attach, std::string name)
 {
-	 assert (insert);
+	 assert (mInsert);
 
   NIFLoader::load(mesh);
   Entity *ent = mScene.getMgr()->createEntity(mesh);
@@ -315,7 +315,7 @@ Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attac
 
 Ogre::Entity* ExteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
 {
-	 assert (insert);
+	 assert (mInsert);
 
   NIFLoader::load(mesh);
   Entity *ent = mScene.getMgr()->createEntity(mesh);

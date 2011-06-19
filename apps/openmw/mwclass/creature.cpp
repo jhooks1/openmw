@@ -2,6 +2,7 @@
 #include "creature.hpp"
 
 #include <components/esm/loadcrea.hpp>
+#include <components/nifogre/ogre_nif_loader.hpp>
 
 #include "../mwmechanics/creaturestats.hpp"
 
@@ -35,10 +36,16 @@ namespace MWClass
         {
             MWRender::Rendering rendering (cellRender, ref->ref);
            ref->model = cellRender.insertAndDeliverMesh("meshes\\" + model);
+		   
+		   int v = NIFLoader::getSingleton().numTracks.size();
             cellRender.insertActorPhysics();
             ref->mData.setHandle (rendering.end (ref->mData.isEnabled()));
         }
-    }
+		ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
+	
+	
+	
+	}
 
     void Creature::enable (const MWWorld::Ptr& ptr, MWWorld::Environment& environment) const
     {

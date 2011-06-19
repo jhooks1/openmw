@@ -10,6 +10,7 @@
 #include <Ogre.h>
 
 #include "components/esm/records.hpp"
+#include <components/nifogre/ogre_nif_loader.hpp>
 #include <components/esm_store/cell_store.hpp>
 #include <components/misc/fileops.hpp>
 #include <components/bsa/bsa_archive.hpp>
@@ -33,6 +34,13 @@
 #include "mwworld/environment.hpp"
 #include "mwworld/class.hpp"
 #include "mwworld/player.hpp"
+#include <components/nif/nif_file.hpp>
+#include <components/nif/node.hpp>
+#include <components/nif/data.hpp>
+#include <components/nif/property.hpp>
+#include <components/nif/controller.hpp>
+#include <components/nif/extra.hpp>
+//#include <components/nifogre/ogre_nif_loader.hpp>
 
 #include "mwclass/classes.hpp"
 
@@ -54,6 +62,10 @@
 
 //using namespace ESM;
 
+//each creature/npc is assigned one aindex
+
+
+
 void OMW::Engine::executeLocalScripts()
 {
     for (MWWorld::World::ScriptList::const_iterator iter (
@@ -74,6 +86,122 @@ void OMW::Engine::executeLocalScripts()
     mIgnoreLocalPtr = MWWorld::Ptr();
 }
 
+void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI, int &rindexJ, int &tindexI, int &tindexJ){
+	//std::cout << "i";
+	Ogre::SkeletonInstance *skel = ent.getSkeleton();
+	if(skel->hasBone(data.getBonename())){
+		//std::cout << "INHERE\n";
+	Ogre::Bone* bone = skel->getBone(data.getBonename());
+		float x;
+		
+		
+
+
+		std::vector<float> ttime = data.gettTime();
+		std::vector<float>::iterator ttimeiter = ttime.begin();
+		std::vector<Ogre::Vector3> translist1  = data.getTranslist1();
+		//std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+		std::vector<Ogre::Vector3> translist2  = data.getTranslist2();
+		//std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+		std::vector<Ogre::Vector3> translist3  = data.getTranslist3();
+
+		timeIndex(time, ttime, tindexI, tindexJ, x);
+		Ogre::Vector3 v1 = translist1[tindexI];
+		Ogre::Vector3 v2 = translist1[tindexJ];
+		Ogre::Vector3 t = v1 + (v2 - v1) * x;
+		//bone->translate(t);
+
+		std::vector<Ogre::Quaternion> quats = data.getQuat();
+		//std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin() + rpos;
+		std::vector<float> rtime = data.getrTime();
+		//std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
+		timeIndex(time, rtime, rindexI, rindexJ, x);
+
+		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ]);
+		//bone->yaw(Ogre::Degree(10));
+		bone->rotate(r);
+
+		//std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+		/*data.setrindexI(rindexi);
+		data.setrindexJ(rindexj);
+		data.settindexI(tindexi);
+		data.settindexJ(tindexj);*/
+
+		//ent.getAllAnimationStates()->_notifyDirty();
+		skel->getManualBonesDirty();
+				skel->_updateTransforms();
+				
+				ent.getAllAnimationStates()->_notifyDirty();
+				ent._updateAnimation();
+	}
+		
+				
+				//Ogre::Vector3 standard = *transiter;
+				//if(data->getTtype() == 2)
+				//	standard = *transiter *  *transiter2  *  *transiter3;
+
+	
+	
+	   
+    
+}
+
+bool OMW::Engine::timeIndex( float time, std::vector<float> times, int & i, int & j, float & x ){
+	int count;
+	if (  (count = times.size()) > 0 )
+	{
+		if ( time <= times[0] )
+		{
+			i = j = 0;
+			x = 0.0;
+			return true;
+		}
+		if ( time >= times[count - 1] )
+		{
+			i = j = count - 1;
+			x = 0.0;
+			return true;
+		}
+		
+		if ( i < 0 || i >= count )
+			i = 0;
+		
+		float tI = times[i];
+		if ( time > tI )
+		{
+			j = i + 1;
+			float tJ;
+			while ( time >= ( tJ = times[j]) )
+			{
+				i = j++;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else if ( time < tI )
+		{
+			j = i - 1;
+			float tJ;
+			while ( time <= ( tJ = times[j] ) )
+			{
+				i = j--;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else
+		{
+			j = i;
+			x = 0.0;
+			return true;
+		}
+	}
+	else
+		return false;
+
+}
 
 bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 {
@@ -92,50 +220,158 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
     MWWorld::Ptr::CellStore *current = mEnvironment.mWorld->getPlayer().getPlayer().getCell();
 	
+	
+	
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List creatureData = (current->creatures).list;
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
 	
+	
 	for(int i = 0; i < creatureData.size(); i++)
 	{
+		//std::cout << "Creature encounter\n";
 		//std::cout << "Testing" << i < "\n";
 		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
 		Ogre::Entity* creaturemodel = item.model;
-
-		if(evt.timeSinceLastFrame == 0)
-			creaturemodel->getSkeleton()->setBindingPose();
-		creaturemodel->getSkeleton()->setBlendMode(Ogre::SkeletonAnimationBlendMode::ANIMBLEND_AVERAGE);    //ANIMBLEND_AVERAGE
-		Ogre::AnimationState *mAnimationState = creaturemodel->getAnimationState("WholeThing");
-		mAnimationState->setWeight(.5);
-			mAnimationState->setLoop(true);
-			//npcmodel->getSkeleton()->
-
-			mAnimationState->setEnabled(true);           
-			 
-
-			 
-			
-			 Ogre::AnimationState *mAnimationState2 = creaturemodel->getAnimationState("WholeThing2");
-			mAnimationState2->setLoop(true);
-			mAnimationState2->setWeight(.5);
-			mAnimationState2->setEnabled(true); 
-			 
-			  mAnimationState2->createBlendMask(creaturemodel->getSkeleton()->getNumBones(),1);
-			 mAnimationState->createBlendMask(creaturemodel->getSkeleton()->getNumBones(),1);
-			 for(int j = 1; j < creaturemodel->getSkeleton()->getNumBones(); j++)
-			 {
-				mAnimationState->setBlendMaskEntry(j,1);
-				mAnimationState2->setBlendMaskEntry(j,1);
-			 }
-			  // set skeleton
-		std::cout << "TimePosition:" << mAnimationState->getTimePosition() << "\n";
+		std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
+		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
 		
-		mAnimationState->addTime(evt.timeSinceLastFrame);
-		mAnimationState2->addTime(evt.timeSinceLastFrame);
-		//npcmodel->_updateAnimation();
-		//mAnimationState2->setEnabled(true); 
+		if(creaturea.size() == i)
+		{
+			aindex a;
+			a.time = 0.0;
+			for(int i = 0; i < allanim.size(); i++){
+				a.rindexI.push_back(0);
+				a.rindexJ.push_back(0);
+				a.tindexI.push_back(0);
+				a.tindexJ.push_back(0);
+			}
+			creaturea.push_back(a);
+		}
+
+		aindex& r = creaturea[i];
+
+	
+		//std::cout << "s\n";
+
+		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
+		{
+			int o = 0;
+			//std::cout << "loop\n";
+			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.rindexJ[o], r.tindexI[o], r.tindexJ[o]);
+			/*
+			if(creaturemodel->getSkeleton()->hasBone(allanimiter->getBonename())){
+				
+				//creaturemodel->getSkeleton()->getBone(allanimiter->getBonename())->yaw(Ogre::Degree(10));
+
+				creaturemodel->getSkeleton()->getManualBonesDirty();
+				creaturemodel->getSkeleton()->_updateTransforms();
+				
+				creaturemodel->getAllAnimationStates()->_notifyDirty();
+				creaturemodel->_updateAnimation();
+			}*/
+			/*
+			if(first)
+			{
+			    std::cout << "Size:" << allanimiter->getQuat().size() << "\n";
+			    std::cout << "Bonename" << allanimiter->getBonename() << "\n";
+				std::vector<Ogre::Quaternion>::iterator quatiter = allanimiter->getQuat().begin();
+				for (; quatiter != allanimiter->getQuat().end(); quatiter++)
+					std::cout << "X:" << quatiter->x << "Y:" << quatiter->y << "Z:" << quatiter->z << "W:" << quatiter->w << "\n";
+
+			    first = false;
+			}*/
+
+
+			o++;
+			//allanimiter++;
+			//riter++;
+		}
+
+	
 		creaturedataiter++;
 	}
+	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
+	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
+
+
+	for(int i = 0; i < 1; i++)
+	{
+		
+		//std::cout <<" NPC\n";
+		//std::cout << "Creature encounter\n";
+		//std::cout << "Testing" << i < "\n";
+		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
+		Ogre::Entity* npcmodel = item.model;
+		std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
+		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
+		if(npca.size() == i)
+		{
+			aindex a;
+			a.time = 0.0;
+			for(int i = 0; i < allanim.size(); i++){
+				a.rindexI.push_back(0);
+				a.rindexJ.push_back(0);
+				a.tindexI.push_back(0);
+				a.tindexJ.push_back(0);
+			}
+			npca.push_back(a);
+		}
+
+		aindex& r = npca[i];
+
+		int to = r.time + evt.timeSinceLastFrame;
+		if( to > ((int) r.time))
+			std::cout << "TimePosition: " << r.time << "\n";
+
+		r.time += evt.timeSinceLastFrame;
+		//std::cout << "s\n";
+	   
+		
+		
+		int o = 0;
+		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
+		{
+			//std::cout << "loop\n";
+			
+			//std::cout << "TimePosition2: " << r.time;
+			
+			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o], r.rindexJ[o], r.tindexI[o], r.tindexJ[o]);
+			/*
+			if(npcmodel->getSkeleton()->hasBone(allanimiter->getBonename())){
+				
+				//creaturemodel->getSkeleton()->getBone(allanimiter->getBonename())->yaw(Ogre::Degree(10));
+
+				npcmodel->getSkeleton()->getManualBonesDirty();
+				npcmodel->getSkeleton()->_updateTransforms();
+				
+				npcmodel->getAllAnimationStates()->_notifyDirty();
+				npcmodel->_updateAnimation();
+			}*/
+			/*
+			if(first)
+			{
+			    std::cout << "Size:" << allanimiter->getQuat().size() << "\n";
+			    std::cout << "Bonename" << allanimiter->getBonename() << "\n";
+				std::vector<Ogre::Quaternion>::iterator quatiter = allanimiter->getQuat().begin();
+				for (; quatiter != allanimiter->getQuat().end(); quatiter++)
+					std::cout << "X:" << quatiter->x << "Y:" << quatiter->y << "Z:" << quatiter->z << "W:" << quatiter->w << "\n";
+
+			    first = false;
+			}*/
+
+
+
+			//allanimiter++;
+			//riter++;
+			o++;
+		}
+
+	
+		npcdataiter++;
+	}
+
+	
 
 
 
@@ -266,6 +502,7 @@ OMW::Engine::Engine()
   , mScriptContext (0)
   , mGuiManager (0)
 {
+	lastTime = 0;
     MWClass::registerClasses();
 }
 
@@ -363,6 +600,7 @@ void OMW::Engine::setNewGame()
 
 void OMW::Engine::go()
 {
+	first= true;
     assert (!mEnvironment.mWorld);
     assert (!mDataDir.empty());
     assert (!mCellName.empty());

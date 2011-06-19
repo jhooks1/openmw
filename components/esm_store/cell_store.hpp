@@ -11,8 +11,12 @@
  */
 
 #include "store.hpp"
-#include "components/esm/records.hpp"
-#include "components/esm/loadcell.hpp"
+#include "components/nif/nif_file.hpp"
+#include "components/nif/node.hpp"
+#include "components/nif/data.hpp"
+#include "components/nif/property.hpp"
+#include "components/nif/controller.hpp"
+#include "components/nif/extra.hpp"
 #include <list>
 #include <Ogre.h>
 
@@ -29,6 +33,14 @@ namespace ESMS
   {
     // The object that this instance is based on.
     const X* base;
+	std::vector<Nif::NiKeyframeData> allanim;
+	float time;
+	std::vector<int> rindexI;
+	std::vector<int> rindexJ;
+	std::vector<int> tindexI;
+	std::vector<int> tindexJ;
+
+	
 
 	Ogre::Entity *model;
 
