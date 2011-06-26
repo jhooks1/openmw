@@ -105,11 +105,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 		//std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
 		std::vector<Ogre::Vector3> translist3  = data.getTranslist3();
 
-		timeIndex(time, ttime, tindexI, tindexJ, x);
-		Ogre::Vector3 v1 = translist1[tindexI];
-		Ogre::Vector3 v2 = translist1[tindexJ];
-		Ogre::Vector3 t = v1 + (v2 - v1) * x;
-		//bone->translate(t);
+		
 
 		std::vector<Ogre::Quaternion> quats = data.getQuat();
 		//std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin() + rpos;
@@ -117,9 +113,20 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 		//std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
 		timeIndex(time, rtime, rindexI, rindexJ, x);
 
-		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ]);
+		Ogre::Node::TransformSpace s = Ogre::Node::TransformSpace(Ogre::Node::TS_LOCAL);
+		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
 		//bone->yaw(Ogre::Degree(10));
-		bone->rotate(r);
+		bone->setOrientation(r);
+
+		timeIndex(time, ttime, tindexI, tindexJ, x);
+		Ogre::Vector3 v1 = translist1[tindexI];
+		Ogre::Vector3 v2 = translist1[tindexJ];
+		Ogre::Vector3 t = v1 + (v2 - v1) * x;
+
+		
+		bone->setPosition(t);
+		
+			
 
 		//std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
 		/*data.setrindexI(rindexi);
@@ -287,6 +294,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			//allanimiter++;
 			//riter++;
 		}
+		
 
 	
 		creaturedataiter++;
@@ -366,6 +374,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			//riter++;
 			o++;
 		}
+
+		
 
 	
 		npcdataiter++;

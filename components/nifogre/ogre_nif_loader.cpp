@@ -801,6 +801,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         Transformation &final = *((Transformation*)node->trafo);
 
         // For both position and rotation we have that:
+		// Computes C = B + AxC*scale
         // final_vector = old_vector + old_rotation*new_vector*old_scale
         vectorMulAdd(trafo->rotation, trafo->pos, final.pos.array, trafo->scale);
         vectorMulAdd(trafo->rotation, trafo->velocity, final.velocity.array, trafo->scale);
