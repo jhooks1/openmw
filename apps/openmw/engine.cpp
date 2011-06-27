@@ -86,7 +86,7 @@ void OMW::Engine::executeLocalScripts()
     mIgnoreLocalPtr = MWWorld::Ptr();
 }
 
-void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI, int &rindexJ, int &tindexI, int &tindexJ){
+void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI){
 	//std::cout << "i";
 	Ogre::SkeletonInstance *skel = ent.getSkeleton();
 	if(skel->hasBone(data.getBonename())){
@@ -111,6 +111,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 		//std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin() + rpos;
 		std::vector<float> rtime = data.getrTime();
 		//std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
+		int rindexJ = 0;
 		timeIndex(time, rtime, rindexI, rindexJ, x);
 
 		Ogre::Node::TransformSpace s = Ogre::Node::TransformSpace(Ogre::Node::TS_LOCAL);
@@ -118,6 +119,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 		//bone->yaw(Ogre::Degree(10));
 		bone->setOrientation(r);
 
+		int tindexJ = 0;
 		timeIndex(time, ttime, tindexI, tindexJ, x);
 		Ogre::Vector3 v1 = translist1[tindexI];
 		Ogre::Vector3 v2 = translist1[tindexJ];
@@ -233,8 +235,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
 	
-	
-	for(int i = 0; i < creatureData.size(); i++)
+	if(creatureData.size() > 0){
+	for(int i = 0; i < 1; i++)
 	{
 		//std::cout << "Creature encounter\n";
 		//std::cout << "Testing" << i < "\n";
@@ -247,11 +249,11 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		{
 			aindex a;
 			a.time = 0.0;
-			for(int i = 0; i < allanim.size(); i++){
+			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
-				a.rindexJ.push_back(0);
+				//a.rindexJ.push_back(0);
 				a.tindexI.push_back(0);
-				a.tindexJ.push_back(0);
+				//a.tindexJ.push_back(0);
 			}
 			creaturea.push_back(a);
 		}
@@ -259,56 +261,30 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		aindex& r = creaturea[i];
 
 	
-		//std::cout << "s\n";
-
+		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
-			int o = 0;
-			//std::cout << "loop\n";
-			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.rindexJ[o], r.tindexI[o], r.tindexJ[o]);
-			/*
-			if(creaturemodel->getSkeleton()->hasBone(allanimiter->getBonename())){
-				
-				//creaturemodel->getSkeleton()->getBone(allanimiter->getBonename())->yaw(Ogre::Degree(10));
-
-				creaturemodel->getSkeleton()->getManualBonesDirty();
-				creaturemodel->getSkeleton()->_updateTransforms();
-				
-				creaturemodel->getAllAnimationStates()->_notifyDirty();
-				creaturemodel->_updateAnimation();
-			}*/
-			/*
-			if(first)
-			{
-			    std::cout << "Size:" << allanimiter->getQuat().size() << "\n";
-			    std::cout << "Bonename" << allanimiter->getBonename() << "\n";
-				std::vector<Ogre::Quaternion>::iterator quatiter = allanimiter->getQuat().begin();
-				for (; quatiter != allanimiter->getQuat().end(); quatiter++)
-					std::cout << "X:" << quatiter->x << "Y:" << quatiter->y << "Z:" << quatiter->z << "W:" << quatiter->w << "\n";
-
-			    first = false;
-			}*/
+			
+			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o]);
+			
 
 
 			o++;
-			//allanimiter++;
-			//riter++;
 		}
 		
 
 	
 		creaturedataiter++;
 	}
+	}
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
 
-
+	if(npcdata.size() > 0){
+	//For now we only want to render one npc, rendering more slows us down
 	for(int i = 0; i < 1; i++)
 	{
 		
-		//std::cout <<" NPC\n";
-		//std::cout << "Creature encounter\n";
-		//std::cout << "Testing" << i < "\n";
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
 		std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
@@ -317,11 +293,11 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		{
 			aindex a;
 			a.time = 0.0;
-			for(int i = 0; i < allanim.size(); i++){
+			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
-				a.rindexJ.push_back(0);
+				//a.rindexJ.push_back(0);
 				a.tindexI.push_back(0);
-				a.tindexJ.push_back(0);
+				//a.tindexJ.push_back(0);
 			}
 			npca.push_back(a);
 		}
@@ -340,22 +316,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
-			//std::cout << "loop\n";
 			
-			//std::cout << "TimePosition2: " << r.time;
-			
-			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o], r.rindexJ[o], r.tindexI[o], r.tindexJ[o]);
-			/*
-			if(npcmodel->getSkeleton()->hasBone(allanimiter->getBonename())){
-				
-				//creaturemodel->getSkeleton()->getBone(allanimiter->getBonename())->yaw(Ogre::Degree(10));
-
-				npcmodel->getSkeleton()->getManualBonesDirty();
-				npcmodel->getSkeleton()->_updateTransforms();
-				
-				npcmodel->getAllAnimationStates()->_notifyDirty();
-				npcmodel->_updateAnimation();
-			}*/
+			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o]);
 			/*
 			if(first)
 			{
@@ -368,10 +330,6 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			    first = false;
 			}*/
 
-
-
-			//allanimiter++;
-			//riter++;
 			o++;
 		}
 
@@ -379,6 +337,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 	
 		npcdataiter++;
+	}
 	}
 
 	

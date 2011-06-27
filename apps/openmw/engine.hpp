@@ -23,9 +23,7 @@
 struct aindex{
 	float time;
 	std::vector<int>rindexI;
-	std::vector<int>rindexJ;
 	std::vector<int>tindexI;
-	std::vector<int>tindexJ;
 };
 
 namespace Compiler
@@ -116,7 +114,7 @@ namespace OMW
 
             void addResourcesDirectory (const boost::filesystem::path& path);
 
-			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, float &time, int &rindexI, int &rindexJ, int &tindexI, int &tindexJ );
+			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, float &time, int &rindexI, int &tindexI );
 
 			bool timeIndex( float time, std::vector<float> times, int & i, int & j, float & x );
 

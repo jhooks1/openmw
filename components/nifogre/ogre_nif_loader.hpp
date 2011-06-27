@@ -86,10 +86,6 @@ class NIFLoader : Ogre::ManualResourceLoader
         static Ogre::MeshPtr load(const std::string &name, 
                                     const std::string &group="General");
 		std::vector<Nif::NiKeyframeData> getAllanim();
-		Ogre::SkeletonPtr getmSkel();
-		Ogre::Mesh* getMesh();
-		//static std::vector getNumTracks();
-		//static int getNumTracks();
         
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
@@ -98,7 +94,6 @@ class NIFLoader : Ogre::ManualResourceLoader
         NIFLoader() : resourceGroup("General") { skincounter = 0; resourceName = "";}
         NIFLoader(NIFLoader& n) {}
 
-		void handleAnimationNode(Nif::Node *node, Nif::NiKeyframeDataPtr data);
 
         void warn(std::string msg);
         void fail(std::string msg);
