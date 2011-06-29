@@ -2,11 +2,13 @@
 #define GAME_MWCLASS_NPC_H
 
 #include "../mwworld/class.hpp"
+#include "MmTransformTool.h"
 
 namespace MWClass
 {
     class Npc : public MWWorld::Class
     {
+
         public:
 
             virtual std::string getId (const MWWorld::Ptr& ptr) const;
@@ -64,6 +66,8 @@ namespace MWClass
             /// stance and stats).
 
             static void registerSelf();
+		
+		
     };
 }
 

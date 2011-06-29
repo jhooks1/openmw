@@ -6,6 +6,8 @@
 #include "components/esm_store/cell_store.hpp"
 
 #include "../mwworld/refdata.hpp"
+#include "../mwclass/MmTransformTool.h"
+#include "../mwclass/MmTransformToolFactory.h"
 #include <OgreMath.h>
 #include <Ogre.h>
 
@@ -32,7 +34,8 @@ namespace MWRender
   class CellRenderImp
   {
   public:
-    CellRenderImp() {}
+    CellRenderImp() {TransformToolFactory fact;
+		mTool = static_cast<TransformTool*>(fact.createTool());}
     virtual ~CellRenderImp() {}
 
     /// start inserting a new reference.
@@ -43,6 +46,7 @@ namespace MWRender
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements, bool translateFirst) = 0;
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements) = 0;
     virtual void insertMesh(const std::string &mesh) = 0;
+	virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec) = 0;
 	virtual Ogre::Entity* insertAndDeliverMesh(const std::string &mesh) = 0;
 	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach, std::string name) = 0;
 	
@@ -62,6 +66,7 @@ namespace MWRender
     virtual std::string insertEnd (bool Enable) = 0;
 
     void insertCell(ESMS::CellStore<MWWorld::RefData> &cell, MWWorld::Environment& environment);
+	TransformTool* mTool;
 
   };
 

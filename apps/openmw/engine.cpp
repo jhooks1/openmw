@@ -94,8 +94,8 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 	Ogre::Bone* bone = skel->getBone(data.getBonename());
 		float x;
 		
-		
-
+		//Ogre::SceneNode* s = ent.getParentSceneNode();
+		//s->showBoundingBox(true);
 
 		std::vector<float> ttime = data.gettTime();
 		std::vector<float>::iterator ttimeiter = ttime.begin();
@@ -113,22 +113,29 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 		//std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
 		int rindexJ = 0;
 		timeIndex(time, rtime, rindexI, rindexJ, x);
-
-		Ogre::Node::TransformSpace s = Ogre::Node::TransformSpace(Ogre::Node::TS_LOCAL);
-		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
-		//bone->yaw(Ogre::Degree(10));
-		bone->setOrientation(r);
+		
 
 		int tindexJ = 0;
+
+		Ogre::Vector3 old = bone->getPosition();
 		timeIndex(time, ttime, tindexI, tindexJ, x);
 		Ogre::Vector3 v1 = translist1[tindexI];
 		Ogre::Vector3 v2 = translist1[tindexJ];
 		Ogre::Vector3 t = v1 + (v2 - v1) * x;
 
-		
 		bone->setPosition(t);
+		/*
+		if(data.getBonename() == "Bip01")
+		{
+
+			Ogre::Vector3 t2 =(v2 - v1) * x;
+			s->translate(t2);
+		}*/
 		
-			
+		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
+		//bone->yaw(Ogre::Degree(10));
+
+		bone->setOrientation(r);
 
 		//std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
 		/*data.setrindexI(rindexi);

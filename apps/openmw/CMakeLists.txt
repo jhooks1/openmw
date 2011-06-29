@@ -151,7 +151,12 @@ set(GAMEWORLD_HEADER
     )
 source_group(apps\\openmw\\mwworld FILES ${GAMEWORLD} ${GAMEWORLD_HEADER})
 
+
+
 set(GAMECLASS
+    mwclass/MmTransformToolFactory.cpp
+    mwclass/MmTransformTool.cpp
+    mwclass/MmTool.cpp
     mwclass/classes.cpp
     mwclass/activator.cpp
     mwclass/creature.cpp
@@ -175,6 +180,10 @@ set(GAMECLASS
     mwclass/static.cpp
     )
 set(GAMECLASS_HEADER
+    mwclass/MmTransformToolFactory.h
+    mwclass/MmTool.h
+    mwclass/MeshMagickPrerequisites.h
+    mwclass/MmTransformTool.h
     mwclass/classes.hpp
     mwclass/activator.hpp
     mwclass/creature.hpp
@@ -198,6 +207,7 @@ set(GAMECLASS_HEADER
     mwclass/static.hpp
     mwclass/containerutil.hpp
     )
+
 source_group(apps\\openmw\\mwclass FILES ${GAMECLASS} ${GAMECLASS_HEADER})
 
 set(GAMEMECHANICS

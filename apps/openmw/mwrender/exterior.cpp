@@ -230,6 +230,18 @@ void ExteriorCellRender::insertMesh(const std::string &mesh)
         mInsertMesh = mesh;
 }
 
+void ExteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
+{
+	assert (insert);
+
+  MeshPtr flip = NIFLoader::load(mesh);
+  MovableObject *ent = mScene.getMgr()->createEntity(mesh);
+  mInsert->attachObject(ent);
+
+    if (mInsertMesh.empty())
+        mInsertMesh = mesh;
+}
+
 void ExteriorCellRender::insertObjectPhysics()
 {
     if (!mInsertMesh.empty())

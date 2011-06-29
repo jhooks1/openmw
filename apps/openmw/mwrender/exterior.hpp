@@ -73,6 +73,7 @@ namespace MWRender
 	virtual void insertMesh(const std::string &mesh, std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
     virtual void insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
     virtual void insertMesh(const std::string &mesh);
+	virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec);
 	virtual Ogre::Entity* insertBase(const std::string &mesh, bool attach, std::string name);
 	virtual Ogre::Entity* insertAndDeliverMesh(const std::string &mesh);
      virtual void rotateMesh(Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName[], int elements);
