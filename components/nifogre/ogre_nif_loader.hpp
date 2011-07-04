@@ -34,6 +34,8 @@
 #include "../nif/property.hpp"
 #include "../nif/controller.hpp"
 #include "../nif/extra.hpp"
+#include <meshmagick\MeshMagick.h>
+
 //#include "../nif/data.hpp"
 
 
@@ -72,6 +74,20 @@ namespace Mangle
     very resource intensive, and can safely be done for a large number
     of meshes at load time.
  */
+class ScaleLoader : Ogre::ManualResourceLoader
+{
+public:
+	static ScaleLoader& getSingleton();
+        static ScaleLoader* getSingletonPtr();
+		virtual void loadResource(Ogre::Resource *resource);
+
+private:
+	// pointer to the ogre mesh which is currently build
+        Ogre::MeshPtr mesh;
+        Ogre::SkeletonPtr mSkel;
+
+	
+};
 class NIFLoader : Ogre::ManualResourceLoader
 {
     public:
@@ -85,14 +101,47 @@ class NIFLoader : Ogre::ManualResourceLoader
 
         static Ogre::MeshPtr load(const std::string &name, 
                                     const std::string &group="General");
+
+		static Ogre::MeshPtr loadMirror(const std::string &name,  Ogre::Vector3 vec,
+                                    const std::string &group="General");
+
+		    static Ogre::AxisAlignedBox getMeshAabb(Ogre::MeshPtr mesh,
+            const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
+		static Ogre::AxisAlignedBox getMeshAabb(Ogre::Mesh* mesh,
+			const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
+
+        static Ogre::AxisAlignedBox getVertexDataAabb(Ogre::VertexData* vd,
+            const Ogre::Matrix4& transform = Ogre::Matrix4::IDENTITY);
+
+
+		void setFlip(bool fl);
+		void setVector(Ogre::Vector3 vec);
 		std::vector<Nif::NiKeyframeData> getAllanim();
         
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
 
     private:
-        NIFLoader() : resourceGroup("General") { skincounter = 0; resourceName = "";}
+        NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
+          mUpdateBoundingBox(true),
+          mFlipVertexWinding(false)
+		{ skincounter = 0; resourceName = "";}
+
         NIFLoader(NIFLoader& n) {}
+
+		//MeshMagick stuff
+		void processMeshFile();
+		void processSkeleton(Ogre::Skeleton* skeleton);
+		void calculateTransform();
+		void processMesh();
+		void processPose(Ogre::Pose* pose);
+		void processVertexData(Ogre::VertexData* vertexData);
+        void processPositionElement(Ogre::VertexData* vertexData,
+            const Ogre::VertexElement* vertexElem);
+        void processDirectionElement(Ogre::VertexData* vertexData,
+            const Ogre::VertexElement* vertexElem);
+
+		 void processIndexData(Ogre::IndexData* indexData);
 
 
         void warn(std::string msg);
@@ -131,6 +180,8 @@ class NIFLoader : Ogre::ManualResourceLoader
         // extension from .tga to .dds if the texture is missing.
         Mangle::VFS::OgreVFS *vfs;
 
+
+//		TransformTool* mTool;
         std::string resourceName;
         std::string resourceGroup;
         int skincounter;
@@ -148,12 +199,22 @@ class NIFLoader : Ogre::ManualResourceLoader
 		//static std::vector numTracks;
 		int test;
 		std::vector<Nif::NiKeyframeData> allanim;
-        
+		bool flip;
+		Ogre::Vector3 vector; 
+
+		  Ogre::Matrix4 mTransform;
+        Ogre::AxisAlignedBox mBoundingBox;
+
+		 bool mNormaliseNormals;
+        bool mUpdateBoundingBox;
+        bool mFlipVertexWinding;
 
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;
         Ogre::SkeletonPtr mSkel;
 		
 };
+
+
 
 #endif

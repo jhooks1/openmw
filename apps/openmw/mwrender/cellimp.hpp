@@ -6,8 +6,6 @@
 #include "components/esm_store/cell_store.hpp"
 
 #include "../mwworld/refdata.hpp"
-#include "../mwclass/MmTransformTool.h"
-#include "../mwclass/MmTransformToolFactory.h"
 #include <OgreMath.h>
 #include <Ogre.h>
 
@@ -34,8 +32,7 @@ namespace MWRender
   class CellRenderImp
   {
   public:
-    CellRenderImp() {TransformToolFactory fact;
-		mTool = static_cast<TransformTool*>(fact.createTool());}
+    CellRenderImp() { go=0;}
     virtual ~CellRenderImp() {}
 
     /// start inserting a new reference.
@@ -66,8 +63,7 @@ namespace MWRender
     virtual std::string insertEnd (bool Enable) = 0;
 
     void insertCell(ESMS::CellStore<MWWorld::RefData> &cell, MWWorld::Environment& environment);
-	TransformTool* mTool;
-
+	int go;
   };
 
     /// Exception-safe rendering

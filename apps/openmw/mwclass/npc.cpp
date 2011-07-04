@@ -16,7 +16,6 @@
 
 #include "../mwmechanics/mechanicsmanager.hpp"
 #include <OgreSceneNode.h>
-#include "MmTransformToolFactory.h"
 
 
 namespace

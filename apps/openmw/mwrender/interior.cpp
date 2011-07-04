@@ -279,8 +279,9 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
 {
 	assert (insert);
 
-  MeshPtr flip = NIFLoader::load(mesh);
-  mTool->processMeshFile(flip, vec);
+  MeshPtr flip = NIFLoader::loadMirror(mesh, Ogre::Vector3(50, 50, 50));
+  //mTool->processMeshFile(flip, vec);
+  //ScaleLoader::getSingletonPtr()->loadResource(flip.get());
   //flip = NIFLoader::load("meshes\\b\\b_n_argonian_f_knee.nif");
   MovableObject *ent = scene.getMgr()->createEntity(mesh);
   insert->attachObject(ent);

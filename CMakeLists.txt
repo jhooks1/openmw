@@ -51,6 +51,10 @@ IF(EXISTS "${CMAKE_SOURCE_DIR}/prebuilt/vc100-mt-gd/ogre_1_7_1")
     set(AUDIERE_INCLUDE_DIR "${PREBUILT_DIR}/audiere-1.9.4/include")
     set(AUDIERE_LIBRARY "${PREBUILT_DIR}/audiere-1.9.4/lib/audiere.lib")
 
+    set(MESHMAGICK_INCLUDE_DIR "${PREBUILT_DIR}/meshmagick")
+    set(MESHMAGICK_LIBRARY "${PREBUILT_DIR}/meshmagick/lib/meshmagick_lib.lib")
+    set(MESHMAGICK_LIBRARYADD "${PREBUILT_DIR}/meshmagick/lib/meshmagick.lib")
+
     set(ENV{OPENALDIR} "${PREBUILT_DIR}/OpenAL 1.1 SDK")
 
 ELSE()
@@ -90,7 +94,8 @@ source_group(components\\nif FILES ${NIF} ${NIF_HEADER})
 set(NIFOGRE
     ${COMP_DIR}/nifogre/ogre_nif_loader.cpp)
 set(NIFOGRE_HEADER
-    ${COMP_DIR}/nifogre/ogre_nif_loader.hpp)
+    ${COMP_DIR}/nifogre/ogre_nif_loader.hpp
+    ${COMP_DIR}/nifogre/MeshMagick.h)
 source_group(components\\nifogre FILES ${NIFOGRE} ${NIFOGRE_HEADER})
 
 set(NIFBULLET
@@ -255,6 +260,7 @@ endif (APPLE)
 find_package(OGRE REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem program_options thread)
 find_package(OIS REQUIRED)
+find_package(MeshMagick REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(Bullet REQUIRED)
 include_directories("."
@@ -264,6 +270,7 @@ include_directories("."
     ${CMAKE_HOME_DIRECTORY}/extern/caelum/include
     ${CMAKE_HOME_DIRECTORY}/extern/mygui_3.0.1/MyGUIEngine/include
     ${CMAKE_HOME_DIRECTORY}/extern/mygui_3.0.1/OgrePlatform/include
+    ${CMAKE_HOME_DIRECTORY}/extern/meshmagick/include
     ${OPENAL_INCLUDE_DIR}
     ${UUID_INCLUDE_DIR}
     ${LIBDIR}
@@ -273,6 +280,7 @@ link_directories(${Boost_LIBRARY_DIRS} ${OGRE_LIB_DIR})
 
 add_subdirectory( extern/caelum )
 add_subdirectory( extern/mygui_3.0.1 )
+
 
 # Make sure that certain libraries are used as static libraries
 # This is in effect turns off __declspec (dllexport) for windows

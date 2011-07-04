@@ -50,6 +50,27 @@ typedef unsigned char ubyte;
 using namespace Ogre;
 using namespace Nif;
 using namespace Mangle::VFS;
+using namespace meshmagick;
+
+
+
+ScaleLoader& ScaleLoader::getSingleton()
+{
+    static ScaleLoader instance;
+    return instance;
+}
+
+ScaleLoader* ScaleLoader::getSingletonPtr()
+{
+    return &getSingleton();
+}
+
+void ScaleLoader::loadResource(Ogre::Resource* Resource){
+	 Ogre::Mesh* in = dynamic_cast<Mesh*>(Resource);
+	 std::string name = in->getName() + "1";
+	mesh = MeshManager::getSingleton().createManual(name, "General", ScaleLoader::getSingletonPtr());
+}
+
 
 NIFLoader& NIFLoader::getSingleton()
 {
@@ -355,7 +376,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     HardwareVertexBufferSharedPtr vbuf =
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
-            numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+            numVerts, HardwareBuffer::HBU_DYNAMIC);
     vbuf->writeData(0, vbuf->getSizeInBytes(), data->vertices.ptr, true);
     
     VertexBufferBinding* bind = sub->vertexData->vertexBufferBinding;
@@ -367,7 +388,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT3, VES_NORMAL);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT3),
-                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
         vbuf->writeData(0, vbuf->getSizeInBytes(), data->normals.ptr, true);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -388,7 +409,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
         vbuf->writeData(0, vbuf->getSizeInBytes(), &colorsRGB.front(), true);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -399,7 +420,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
 
         vbuf->writeData(0, vbuf->getSizeInBytes(), data->uvlist.ptr, true);
         bind->setBinding(nextBuf++, vbuf);
@@ -412,7 +433,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
                                             createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
                                                               numFaces,
-                                                              HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+                                                              HardwareBuffer::HBU_DYNAMIC);
         ibuf->writeData(0, ibuf->getSizeInBytes(), data->triangles.ptr, true);
         sub->indexData->indexBuffer = ibuf;
         sub->indexData->indexCount = numFaces;
@@ -892,13 +913,31 @@ std::vector<Nif::NiKeyframeData> NIFLoader::getAllanim(){
 		return allanim;
 }
 
+void NIFLoader::setFlip(bool fl){
+	flip = fl;
+}
+void NIFLoader::setVector(Ogre::Vector3 vec)
+{
+	vector = vec;
+}
 void NIFLoader::loadResource(Resource *resource)
 {
+
+	/*if(mTool == NULL)
+	{
+		std::cout << "Creating TransformTool\n";
+		TransformToolFactory fact;
+		mTool = static_cast<TransformTool*>(fact.createTool());
+
+	}*/
+	//std::cout << "IN load resource" << resource->getName();
     if(skincounter == 1000)
         skincounter = 0;
     stack = 0;
     counter = 0;
     std::string name = resource->getName();
+	if(flip)
+		std::cout << "FLIP: " << name << "\n";
     if(resourceName.compare(name) != 0)
     {
         skincounter = 0;
@@ -1104,6 +1143,28 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	}
 	
+	if(flip)
+	{
+		/*
+		StatefulMeshSerializer* meshSerializer =
+            new StatefulMeshSerializer();
+		meshSerializer->saveMesh("ogrehead.mesh", mesh, false);
+		MeshPtr ptr = meshSerializer->loadMesh("ogrehead.mesh");
+		mesh = ptr.get();*/
+		std::cout << "Calling flip\n";
+//		Ogre::MeshPtr p = new Ogre::MeshPtr(mesh);
+		MeshMagick mm;
+     TransformTool* transformTool = mm.getTransformTool();
+	 //Ogre::Mesh m = *mesh;
+	 Ogre::MeshPtr ptr = Ogre::MeshPtr(mesh);
+	 
+     transformTool->transform(ptr, Matrix4::getScale(vector), false);
+	 mesh = ptr.get();
+
+		
+		//mesh = ptr.get();
+
+	}
     // set skeleton
   if (!mSkel.isNull())
   {
@@ -1119,6 +1180,7 @@ MeshPtr NIFLoader::load(const std::string &name,
 {
     MeshManager *m = MeshManager::getSingletonPtr();
     // Check if the resource already exists
+	//std::cout << "IN Load" << name << "\n";
     ResourcePtr ptr = m->getByName(name, group);
     MeshPtr resize;
     
@@ -1142,6 +1204,414 @@ MeshPtr NIFLoader::load(const std::string &name,
     }
     else // Nope, create a new one.
     {
+		NIFLoader::getSingletonPtr()->setFlip(false);
+        resize = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+        //cout <<"EXISTING" << name << "\n";
+        
+        //if(pieces > 1)
+            //cout << "Creating it\n";
+        
+        
+        //resize->load();
+        //resize->reload();
+        //return 0;
+         ResourcePtr ptr = m->getByName(name, group);
+         resize = MeshPtr(ptr);
+        
+        //NIFLoader::getSingletonPtr()->
+        /*ResourcePtr ptr = m->getByName(name, group);
+    if (!ptr.isNull()){
+        if(pieces > 1)
+            cout << "It exists\n";
+        resize = MeshPtr(ptr);*/
+        //return resize;
+    }
+    return resize;
+}
+
+void NIFLoader::processVertexData(VertexData* vertexData)
+    {
+		std::cout << "Process Vertex\n";
+        const VertexElement* position =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
+        if (position != NULL)
+        {
+            processPositionElement(vertexData, position);
+        }
+
+        const VertexElement* normal =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_NORMAL);
+        if (normal != NULL)
+        {
+            processDirectionElement(vertexData, normal);
+        }
+
+        const VertexElement* binormal =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_BINORMAL);
+        if (binormal != NULL)
+        {
+            processDirectionElement(vertexData, binormal);
+        }
+
+        const VertexElement* tangent =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_TANGENT);
+        if (tangent != NULL)
+        {
+            processDirectionElement(vertexData, tangent);
+        }
+    }
+
+
+    void NIFLoader::processDirectionElement(VertexData* vertexData,
+        const VertexElement* vertexElem)
+    {
+        // We only want to apply rotation to normal, binormal and tangent, so extract it.
+        Quaternion rotation = mTransform.extractQuaternion();
+        rotation.normalise();
+
+        Ogre::HardwareVertexBufferSharedPtr buffer =
+            vertexData->vertexBufferBinding->getBuffer(vertexElem->getSource());
+
+        unsigned char* data =
+            static_cast<unsigned char*>(buffer->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
+        for (size_t i = 0; i < vertexData->vertexCount; ++i)
+        {
+            Real* ptr;
+            vertexElem->baseVertexPointerToElement(data, &ptr);
+
+            Vector3 vertex(ptr);
+            vertex = rotation * vertex;
+            if (mNormaliseNormals)
+            {
+                vertex.normalise();
+            }
+            ptr[0] = vertex.x;
+            ptr[1] = vertex.y;
+            ptr[2] = vertex.z;
+
+            data += buffer->getVertexSize();
+        }
+        buffer->unlock();
+    }
+
+		void NIFLoader::processIndexData(IndexData* indexData)
+	{
+		std::cout << "IndexData\n";
+		if (!mFlipVertexWinding)
+		{
+			// Nothing to do.
+			return;
+		}
+
+		if (indexData->indexCount % 3 != 0)
+		{
+            printf("Index number is not a multiple of 3, no vertex winding flipping possible. Skipped.");
+            return;
+		}
+		std::cout << "Flipping index order for vertex winding flipping.\n";
+		//print("Flipping index order for vertex winding flipping.", V_HIGH);
+		Ogre::HardwareIndexBufferSharedPtr buffer = indexData->indexBuffer;
+		unsigned char* data =
+               static_cast<unsigned char*>(buffer->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
+
+		if(buffer->getType() == Ogre::HardwareIndexBuffer::IT_16BIT)
+		{
+			// 16 bit
+			std::cout << "using 16bit indices\n";
+			//print("using 16bit indices", V_HIGH);
+
+			for (size_t i = 0; i < indexData->indexCount; i+=3)
+			{
+				uint16* i0 = (uint16*)(data+0 * buffer->getIndexSize());
+				uint16* i2 = (uint16*)(data+2 * buffer->getIndexSize());
+
+				// flip
+				uint16 tmp = *i0;
+				*i0 = *i2;
+				*i2 = tmp;
+
+				data += 3 * buffer->getIndexSize();
+			}
+		}
+		else
+		{
+			// 32 bit
+			//print("using 32bit indices", V_HIGH);
+
+			std::cout << "using 32bit indices\n";
+			for (size_t i = 0; i < indexData->indexCount; i+=3)
+			{
+				uint32* i0 = (uint32*)(data+0 * buffer->getIndexSize());
+				uint32* i2 = (uint32*)(data+2 * buffer->getIndexSize());
+
+				// flip
+				uint32 tmp = *i0;
+				*i0 = *i2;
+				*i2 = tmp;
+
+				data += 3 * buffer->getIndexSize();
+			}
+		}
+
+		buffer->unlock();
+	}
+
+    void NIFLoader::processPose(Pose* pose)
+    {
+        Matrix3 m3x3;
+        mTransform.extract3x3Matrix(m3x3);
+
+        Pose::VertexOffsetIterator it = pose->getVertexOffsetIterator();
+        while (it.hasMoreElements())
+        {
+            Vector3 offset = it.peekNextValue();
+            Vector3 newOffset = m3x3 * offset;
+            *it.peekNextValuePtr() = newOffset;
+            it.moveNext();
+        }
+    }
+
+	 void NIFLoader::processPositionElement(VertexData* vertexData,
+        const VertexElement* vertexElem)
+    {
+        Ogre::HardwareVertexBufferSharedPtr buffer =
+            vertexData->vertexBufferBinding->getBuffer(vertexElem->getSource());
+
+        unsigned char* data =
+            static_cast<unsigned char*>(buffer->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
+        for (size_t i = 0; i < vertexData->vertexCount; ++i)
+        {
+            Real* ptr;
+            vertexElem->baseVertexPointerToElement(data, &ptr);
+
+            Vector3 vertex(ptr);
+            vertex = mTransform * vertex;
+            ptr[0] = vertex.x;
+            ptr[1] = vertex.y;
+            ptr[2] = vertex.z;
+            mBoundingBox.merge(vertex);
+
+            data += buffer->getVertexSize();
+        }
+        buffer->unlock();
+    }
+
+ void NIFLoader::processMesh()
+    {
+		std::cout << "Processing mesh";
+        mBoundingBox.setNull();
+
+        if (mesh->sharedVertexData != NULL)
+        {
+            processVertexData(mesh->sharedVertexData);
+        }
+
+        for(int i = 0;i < mesh->getNumSubMeshes();i++)
+        {
+            SubMesh* submesh = mesh->getSubMesh(i);
+            if (submesh->vertexData != NULL)
+            {
+                processVertexData(submesh->vertexData);
+            }
+            if (submesh->indexData != NULL)
+            {
+            	processIndexData(submesh->indexData);
+            }
+        }
+
+        // Process poses, if there are any
+        for (unsigned short i = 0; i < mesh->getPoseCount(); ++i)
+        {
+            processPose(mesh->getPose(i));
+        }
+
+        // If there are vertex animations, process these too.
+        if (mesh->hasVertexAnimation())
+        {
+            // Then process morph targets
+            unsigned short count = mesh->getNumAnimations();
+            for (unsigned short i = 0; i < count; ++i)
+            {
+                Animation* anim = mesh->getAnimation(i);
+                Animation::VertexTrackIterator it = anim->getVertexTrackIterator();
+                while (it.hasMoreElements())
+                {
+                    VertexAnimationTrack* track = it.getNext();
+                    if (track->getAnimationType() == VAT_MORPH)
+                    {
+                        for (unsigned short i = 0; i < track->getNumKeyFrames(); ++i)
+                        {
+                            //processVertexMorphKeyFrame(track->getVertexMorphKeyFrame(i),
+                             //   track->getAssociatedVertexData()->vertexCount);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (mUpdateBoundingBox)
+        {
+            mesh->_setBounds(mBoundingBox, false);
+        }
+    }
+
+  void NIFLoader::calculateTransform()
+    {
+        // Calculate transform
+        Matrix4 transform = Matrix4::IDENTITY;
+
+		std::cout << "Calculating transformation...";
+
+                transform = Matrix4::getScale(vector) * transform;
+				std::cout << "Apply scaling \n";
+                
+
+		//ignore, if no mesh given. Without we can't do this op.
+            
+
+                //String alignment = any_cast<String>(it->second);
+                Vector3 translate = Vector3::ZERO;
+                // Apply current transform to the mesh, to get the bounding box to
+                // base te translation on.
+                AxisAlignedBox aabb = NIFLoader::getMeshAabb(mesh, transform);
+                if (false)
+                {
+                    translate = Vector3(-aabb.getMinimum().x, 0, 0);
+                }
+                else if (true)
+                {
+                    translate = Vector3(-aabb.getCenter().x, 0, 0);
+                }
+                else if (false)
+                {
+                    translate = Vector3(-aabb.getMaximum().x, 0, 0);
+                }
+
+                transform = Matrix4::getTrans(translate) * transform;
+
+
+        // Check whether we have to flip vertex winding.
+        // We do have to, if we changed our right hand base.
+        // We can test it by using the cross product from X and Y and see, if it is a non-negative
+        // projection on Z. Actually it should be exactly Z, as we don't do non-uniform scaling yet,
+        // but the test is cheap either way.
+        Matrix3 m3;
+        transform.extract3x3Matrix(m3);
+        if (m3.GetColumn(0).crossProduct(m3.GetColumn(1)).dotProduct(m3.GetColumn(2)) < 0)
+        {
+        	mFlipVertexWinding = true;
+        }
+
+        mTransform = transform;
+		std::cout << "final transform \n";
+        //print("final transform " + StringConverter::toString(mTransform), V_HIGH);
+    }
+
+
+	AxisAlignedBox NIFLoader::getMeshAabb(MeshPtr mesh, const Matrix4& transform)
+	{
+		return getMeshAabb(mesh.get(), transform);
+	}
+    AxisAlignedBox NIFLoader::getMeshAabb(Mesh* mesh, const Matrix4& transform)
+    {
+        AxisAlignedBox aabb;
+        if (mesh->sharedVertexData != 0)
+        {
+            aabb.merge(getVertexDataAabb(mesh->sharedVertexData, transform));
+        }
+        for (unsigned int i = 0; i < mesh->getNumSubMeshes(); ++i)
+        {
+            SubMesh* sm = mesh->getSubMesh(i);
+            if (sm->vertexData != 0)
+            {
+                aabb.merge(getVertexDataAabb(sm->vertexData, transform));
+            }
+        }
+
+        return aabb;
+    }
+
+    AxisAlignedBox NIFLoader::getVertexDataAabb(VertexData* vd, const Matrix4& transform)
+    {
+        AxisAlignedBox aabb;
+
+        const VertexElement* ve = vd->vertexDeclaration->findElementBySemantic(VES_POSITION);
+        HardwareVertexBufferSharedPtr vb = vd->vertexBufferBinding->getBuffer(ve->getSource());
+
+        unsigned char* data = static_cast<unsigned char*>(
+            vb->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
+
+        for (size_t i = 0; i < vd->vertexCount; ++i)
+        {
+            float* v;
+            ve->baseVertexPointerToElement(data, &v);
+            aabb.merge(transform * Vector3(v[0], v[1], v[2]));
+
+            data += vb->getVertexSize();
+        }
+        vb->unlock();
+
+        return aabb;
+    }
+
+
+
+  void NIFLoader::processMeshFile()
+    {
+		std::cout << "Loading mesh\n";
+
+       std::cout << "Processing mesh...";
+       // print("Processing mesh...");
+        calculateTransform();
+        processMesh();
+		if (mesh->hasSkeleton())
+		{
+//			processSkeleton(mesh->getSkeleton());
+		}
+      
+		/*
+        if (mFollowSkeletonLink && mesh->hasSkeleton())
+        {
+            // In this case keep file name and also keep already determined transform
+            String skeletonFileName = ToolUtils::getSkeletonFileName(mesh, inFile);
+            processSkeletonFile(skeletonFileName, skeletonFileName, false);
+        }*/
+    }
+
+
+
+
+MeshPtr NIFLoader::loadMirror(const std::string &name, Ogre::Vector3 vec, 
+                         const std::string &group)
+{
+    MeshManager *m = MeshManager::getSingletonPtr();
+    // Check if the resource already exists
+	//std::cout << "IN Load" << name << "\n";
+    ResourcePtr ptr = m->getByName(name, group);
+    MeshPtr resize;
+    
+    const std::string beast1 ="meshes\\b\\B_N_Khajiit_F_Skins.nif";
+    const std::string beast2 ="meshes\\b\\B_N_Khajiit_M_Skins.nif";
+    const std::string beast3 ="meshes\\b\\B_N_Argonian_F_Skins.nif";
+    const std::string beast4 ="meshes\\b\\B_N_Argonian_M_Skins.nif";
+
+    const std::string beasttail1 ="tail\\b\\B_N_Khajiit_F_Skins.nif";
+    const std::string beasttail2 ="tail\\b\\B_N_Khajiit_M_Skins.nif";
+    const std::string beasttail3 ="tail\\b\\B_N_Argonian_F_Skins.nif";
+    const std::string beasttail4 ="tail\\b\\B_N_Argonian_M_Skins.nif";
+
+    if (!ptr.isNull()){ 
+        
+        //if(pieces > 1)
+            //cout << "It exists\n";
+            resize = MeshPtr(ptr);
+        //resize->load();
+        //resize->reload();
+    }
+    else // Nope, create a new one.
+    {
+		NIFLoader::getSingletonPtr()->setVector(vec);
+		NIFLoader::getSingletonPtr()->setFlip(true);
         resize = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
         //cout <<"EXISTING" << name << "\n";
         

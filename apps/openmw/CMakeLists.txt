@@ -154,9 +154,6 @@ source_group(apps\\openmw\\mwworld FILES ${GAMEWORLD} ${GAMEWORLD_HEADER})
 
 
 set(GAMECLASS
-    mwclass/MmTransformToolFactory.cpp
-    mwclass/MmTransformTool.cpp
-    mwclass/MmTool.cpp
     mwclass/classes.cpp
     mwclass/activator.cpp
     mwclass/creature.cpp
@@ -180,10 +177,7 @@ set(GAMECLASS
     mwclass/static.cpp
     )
 set(GAMECLASS_HEADER
-    mwclass/MmTransformToolFactory.h
-    mwclass/MmTool.h
-    mwclass/MeshMagickPrerequisites.h
-    mwclass/MmTransformTool.h
+
     mwclass/classes.hpp
     mwclass/activator.hpp
     mwclass/creature.hpp
@@ -241,7 +235,7 @@ add_executable(openmw
 
 # Sound stuff - here so CMake doesn't stupidly recompile EVERYTHING
 # when we change the backend.
-include_directories(${SOUND_INPUT_INCLUDES} ${BULLET_INCLUDE_DIRS})
+include_directories(${SOUND_INPUT_INCLUDES} ${BULLET_INCLUDE_DIRS} )
 add_definitions(${SOUND_DEFINE})
 
 target_link_libraries(openmw
@@ -251,6 +245,8 @@ target_link_libraries(openmw
   ${OPENAL_LIBRARY}
   ${SOUND_INPUT_LIBRARY}
   ${BULLET_LIBRARIES}
+  ${MESHMAGICK_LIBRARY}
+  ${MESHMAGICK_LIBRARYADD}
   caelum
   MyGUIEngine
   MyGUIOgrePlatform

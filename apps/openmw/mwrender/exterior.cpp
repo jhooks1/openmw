@@ -232,7 +232,7 @@ void ExteriorCellRender::insertMesh(const std::string &mesh)
 
 void ExteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
 {
-	assert (insert);
+	assert (mInsert);
 
   MeshPtr flip = NIFLoader::load(mesh);
   MovableObject *ent = mScene.getMgr()->createEntity(mesh);
