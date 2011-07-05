@@ -24,7 +24,7 @@
 #ifndef _OGRE_NIF_LOADER_H_
 #define _OGRE_NIF_LOADER_H_
 
-#include <OgreResource.h>
+//#include <OgreResource.h>
 #include <OgreMesh.h>
 #include <assert.h>
 #include <string>
@@ -34,7 +34,9 @@
 #include "../nif/property.hpp"
 #include "../nif/controller.hpp"
 #include "../nif/extra.hpp"
-#include <meshmagick\MeshMagick.h>
+//#include <meshmagick\MeshMagick.h>
+#include "MeshMagick.h"
+
 
 //#include "../nif/data.hpp"
 

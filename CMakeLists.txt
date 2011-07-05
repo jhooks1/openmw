@@ -94,8 +94,7 @@ source_group(components\\nif FILES ${NIF} ${NIF_HEADER})
 set(NIFOGRE
     ${COMP_DIR}/nifogre/ogre_nif_loader.cpp)
 set(NIFOGRE_HEADER
-    ${COMP_DIR}/nifogre/ogre_nif_loader.hpp
-    ${COMP_DIR}/nifogre/MeshMagick.h)
+    ${COMP_DIR}/nifogre/ogre_nif_loader.hpp)
 source_group(components\\nifogre FILES ${NIFOGRE} ${NIFOGRE_HEADER})
 
 set(NIFBULLET
@@ -270,7 +269,7 @@ include_directories("."
     ${CMAKE_HOME_DIRECTORY}/extern/caelum/include
     ${CMAKE_HOME_DIRECTORY}/extern/mygui_3.0.1/MyGUIEngine/include
     ${CMAKE_HOME_DIRECTORY}/extern/mygui_3.0.1/OgrePlatform/include
-    ${CMAKE_HOME_DIRECTORY}/extern/meshmagick/include
+    ${CMAKE_HOME_DIRECTORY}/extern/mm/include
     ${OPENAL_INCLUDE_DIR}
     ${UUID_INCLUDE_DIR}
     ${LIBDIR}
@@ -280,6 +279,7 @@ link_directories(${Boost_LIBRARY_DIRS} ${OGRE_LIB_DIR})
 
 add_subdirectory( extern/caelum )
 add_subdirectory( extern/mygui_3.0.1 )
+add_subdirectory( extern/mm)
 
 
 # Make sure that certain libraries are used as static libraries
@@ -292,6 +292,7 @@ add_definitions(-DMYGUI_STATIC)
 # Caelum: extern/caelum/
 add_definitions(-DCAELUM_STATIC)
 
+add_definitions(-DMESHMAGICK_STATIC)
 # Specify build paths
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OpenMW_BINARY_DIR}")

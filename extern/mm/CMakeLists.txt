@@ -1,0 +1,17 @@
+project(MeshMagick)
+
+IF(MSVC)
+    add_definitions("-D_SCL_SECURE_NO_WARNINGS /wd4305 /wd4244" )
+ENDIF(MSVC)
+
+ADD_DEFINITIONS(-DMESHMAGICK_STATIC)
+INCLUDE_DIRECTORIES( 
+    ${CMAKE_HOME_DIRECTORY}/extern/mm/include 
+    ${OGRE_INCLUDE_DIR}/Ogre
+    )    
+
+file(GLOB_RECURSE MESHMAGICK_SRC src/*)
+file(GLOB_RECURSE MESHMAGICK_HDR include/*)
+
+set(SOURCES ${MESHMAGICK_SRC} ${MESHMAGICK_HDR})
+add_library(MeshMagick STATIC ${SOURCES})

@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include <libs/mangle/vfs/servers/ogre_vfs.hpp>
+#include "MeshMagick.h"
 
 using namespace MWRender;
 using namespace Ogre;
@@ -279,11 +280,25 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
 {
 	assert (insert);
 
+	std::cout << "BEFORE\n";
   MeshPtr flip = NIFLoader::loadMirror(mesh, Ogre::Vector3(50, 50, 50));
+  std::cout << "AFTER1\n";
+
+  meshmagick::MeshMagick mm;
+		meshmagick::TransformTool* transformTool = mm.getTransformTool();
+
+	  // transformTool = 
+		//mm.getTransformTool();
+	// Ogre::Mesh m = *mesh;
+	 
+    transformTool->transform(flip, Matrix4::getScale(vec), false);
+
   //mTool->processMeshFile(flip, vec);
   //ScaleLoader::getSingletonPtr()->loadResource(flip.get());
   //flip = NIFLoader::load("meshes\\b\\b_n_argonian_f_knee.nif");
   MovableObject *ent = scene.getMgr()->createEntity(mesh);
+  std::cout << "AFTER2\n";
+
   insert->attachObject(ent);
 
     if (mInsertMesh.empty())

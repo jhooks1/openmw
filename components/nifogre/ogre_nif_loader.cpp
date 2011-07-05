@@ -44,6 +44,7 @@
 // float infinity
 #include <limits>
 
+
 typedef unsigned char ubyte;
 
 //using namespace std;
@@ -376,7 +377,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     HardwareVertexBufferSharedPtr vbuf =
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
-            numVerts, HardwareBuffer::HBU_DYNAMIC);
+            numVerts, HardwareBuffer::HBU_STATIC);
     vbuf->writeData(0, vbuf->getSizeInBytes(), data->vertices.ptr, true);
     
     VertexBufferBinding* bind = sub->vertexData->vertexBufferBinding;
@@ -388,7 +389,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT3, VES_NORMAL);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT3),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+                   numVerts, HardwareBuffer::HBU_STATIC);
         vbuf->writeData(0, vbuf->getSizeInBytes(), data->normals.ptr, true);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -409,7 +410,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+                   numVerts, HardwareBuffer::HBU_STATIC);
         vbuf->writeData(0, vbuf->getSizeInBytes(), &colorsRGB.front(), true);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -420,7 +421,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+                   numVerts, HardwareBuffer::HBU_STATIC);
 
         vbuf->writeData(0, vbuf->getSizeInBytes(), data->uvlist.ptr, true);
         bind->setBinding(nextBuf++, vbuf);
@@ -433,7 +434,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
                                             createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
                                                               numFaces,
-                                                              HardwareBuffer::HBU_DYNAMIC);
+                                                              HardwareBuffer::HBU_STATIC);
         ibuf->writeData(0, ibuf->getSizeInBytes(), data->triangles.ptr, true);
         sub->indexData->indexBuffer = ibuf;
         sub->indexData->indexCount = numFaces;
@@ -1151,15 +1152,29 @@ void NIFLoader::loadResource(Resource *resource)
 		meshSerializer->saveMesh("ogrehead.mesh", mesh, false);
 		MeshPtr ptr = meshSerializer->loadMesh("ogrehead.mesh");
 		mesh = ptr.get();*/
+		/*
 		std::cout << "Calling flip\n";
-//		Ogre::MeshPtr p = new Ogre::MeshPtr(mesh);
-		MeshMagick mm;
-     TransformTool* transformTool = mm.getTransformTool();
-	 //Ogre::Mesh m = *mesh;
-	 Ogre::MeshPtr ptr = Ogre::MeshPtr(mesh);
+	Ogre::MeshPtr p = Ogre::MeshPtr(mesh);
+	meshmagick::MeshMagick mm;
+		meshmagick::TransformTool* transformTool = mm.getTransformTool();
+
 	 
-     transformTool->transform(ptr, Matrix4::getScale(vector), false);
-	 mesh = ptr.get();
+    transformTool->transform(p, Matrix4::getScale(vector), false);
+	Ogre::String nname = p->getName();
+	mesh = (p->clone(nname)).get();*/
+
+		//meshmagick::MeshMagick mm;
+		//meshmagick::TransformTool* transformTool = mm.getTransformTool();
+
+	  // transformTool = 
+		//mm.getTransformTool();
+	// Ogre::Mesh m = *mesh;
+	 
+    //transformTool->transform(p, Matrix4::getScale(vector), false);
+		
+	std::cout << "4\n";
+	//mesh = ptr.get();
+		//processMeshFile();
 
 		
 		//mesh = ptr.get();
@@ -1168,9 +1183,11 @@ void NIFLoader::loadResource(Resource *resource)
     // set skeleton
   if (!mSkel.isNull())
   {
-
+	  std::cout << "5\n";
         mesh->_notifySkeleton(mSkel);
+		std::cout << "6\n";
   }
+  std::cout << "7\n";
 }
 
 
@@ -1617,7 +1634,7 @@ MeshPtr NIFLoader::loadMirror(const std::string &name, Ogre::Vector3 vec,
         
         //if(pieces > 1)
             //cout << "Creating it\n";
-        
+   
         
         //resize->load();
         //resize->reload();
