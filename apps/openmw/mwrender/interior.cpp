@@ -14,10 +14,12 @@
 
 #include <libs/mangle/vfs/servers/ogre_vfs.hpp>
 #include "MeshMagick.h"
+#include "MmStatefulMeshSerializer.h"
 
 using namespace MWRender;
 using namespace Ogre;
 using namespace ESMS;
+
 
 bool InteriorCellRender::lightConst = false;
 float InteriorCellRender::lightConstValue = 0.0f;
@@ -280,24 +282,65 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
 {
 	assert (insert);
 
-	std::cout << "BEFORE\n";
-  MeshPtr flip = NIFLoader::loadMirror(mesh, Ogre::Vector3(50, 50, 50));
-  std::cout << "AFTER1\n";
+  MeshPtr flip = NIFLoader::loadMirror(mesh, vec);
 
-  meshmagick::MeshMagick mm;
-		meshmagick::TransformTool* transformTool = mm.getTransformTool();
+  MeshManager *m = MeshManager::getSingletonPtr();
+    // Check if the resource already exists
+	//std::cout << "IN Load" << name << "\n";
+    ResourcePtr ptr = m->getByName(mesh);
+    MeshPtr resize;
+
+		std::string meshone = mesh + "1";
+
+
+	if(!ptr.isNull())
+	{
+		MeshPtr resize = MeshPtr(ptr);
+		//meshmagick::MeshMagick mm;
+		//meshmagick::TransformTool* t = mm.getTransformTool();
+		if(resize->getNumSubMeshes() > 0)
+			//t->transform(resize, Matrix4::getScale(vec), true);
+		{
+			/*
+			std::cout << "c";
+			Ogre::Mesh::SubMeshIterator iter = resize->getSubMeshIterator();
+			while(iter.hasMoreElements())
+			{
+				
+				Ogre::SubMesh* sub = *iter.current();
+				std::cout << "Sub Count" << sub->vertexData->vertexCount << "\n";
+				//sub->
+				iter.moveNext();
+			}
+			std::cout << "after subs\n";
+			*/
+			
+		//serial.exportMesh(resize.get(), "one.mesh");
+		// serial.exportMesh(resize.get(), "two.mesh");
+		}
+		
+		//if(resize->getNumSubMeshes() > 0){
+		//meshmagick::StatefulMeshSerializer* meshSerializer;
+		//meshSerializer->setMesh(resize);
+		//}
+	}
+
+
+ 
 
 	  // transformTool = 
 		//mm.getTransformTool();
 	// Ogre::Mesh m = *mesh;
 	 
-    transformTool->transform(flip, Matrix4::getScale(vec), false);
+   
+		//transformTool->processMeshFile("yo.mesh", "dear.mesh");
+	//ScaleLoader::load(resize, meshone);
+
 
   //mTool->processMeshFile(flip, vec);
   //ScaleLoader::getSingletonPtr()->loadResource(flip.get());
   //flip = NIFLoader::load("meshes\\b\\b_n_argonian_f_knee.nif");
   MovableObject *ent = scene.getMgr()->createEntity(mesh);
-  std::cout << "AFTER2\n";
 
   insert->attachObject(ent);
 

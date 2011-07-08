@@ -81,12 +81,16 @@ class ScaleLoader : Ogre::ManualResourceLoader
 public:
 	static ScaleLoader& getSingleton();
         static ScaleLoader* getSingletonPtr();
+		   static Ogre::MeshPtr load(Ogre::MeshPtr inMesh, const std::string &name, 
+                                    const std::string &group="General");
 		virtual void loadResource(Ogre::Resource *resource);
+	    void setMesh(Ogre::Mesh* inMesh);
 
 private:
 	// pointer to the ogre mesh which is currently build
-        Ogre::MeshPtr mesh;
+        Ogre::Mesh *mesh;
         Ogre::SkeletonPtr mSkel;
+		
 
 	
 };
@@ -132,18 +136,9 @@ class NIFLoader : Ogre::ManualResourceLoader
         NIFLoader(NIFLoader& n) {}
 
 		//MeshMagick stuff
-		void processMeshFile();
 		void processSkeleton(Ogre::Skeleton* skeleton);
 		void calculateTransform();
-		void processMesh();
-		void processPose(Ogre::Pose* pose);
-		void processVertexData(Ogre::VertexData* vertexData);
-        void processPositionElement(Ogre::VertexData* vertexData,
-            const Ogre::VertexElement* vertexElem);
-        void processDirectionElement(Ogre::VertexData* vertexData,
-            const Ogre::VertexElement* vertexElem);
 
-		 void processIndexData(Ogre::IndexData* indexData);
 
 
         void warn(std::string msg);

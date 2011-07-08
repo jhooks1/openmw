@@ -135,7 +135,7 @@ namespace MWClass
 		Ogre::Quaternion p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0)); //1,0,0
 		q  = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
 
-		cellRender.insertMesh("meshes\\b\\b_n_breton_f_foot.nif", Ogre::Vector3(10,10,10));
+		cellRender.insertMesh("meshes\\b\\b_n_breton_f_foot.nif", Ogre::Vector3(1, -1, 1));
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
         if (groin){
 			//cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, e, blank);
