@@ -92,20 +92,20 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
     }
        parent->scale(axis);
 }
-void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans, Ogre::Vector3 scale){
 	MeshPtr good2 = NIFLoader::load(mesh);
 	Entity *ent = scene.getMgr()->createEntity(mesh);
-	ent->setDisplaySkeleton(true);
 
+	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
 	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
-
+				
 
 	//if(base->getSkeleton()->getBone(bonename))
 		//std::cout << "BONEEXISTS";
 	//NIFLoader::combineResources(base, ent, bonename);
 	//std::cout << "DOINGMESH\n";
 		
-	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
+	
 	//ent->attachObjectToBone(
 }
 void InteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
@@ -282,7 +282,9 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
 {
 	assert (insert);
 
-  MeshPtr flip = NIFLoader::loadMirror(mesh, vec);
+
+  MeshPtr flip = NIFLoader::load(mesh);
+
 
   MeshManager *m = MeshManager::getSingletonPtr();
     // Check if the resource already exists

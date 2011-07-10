@@ -76,24 +76,7 @@ namespace Mangle
     very resource intensive, and can safely be done for a large number
     of meshes at load time.
  */
-class ScaleLoader : Ogre::ManualResourceLoader
-{
-public:
-	static ScaleLoader& getSingleton();
-        static ScaleLoader* getSingletonPtr();
-		   static Ogre::MeshPtr load(Ogre::MeshPtr inMesh, const std::string &name, 
-                                    const std::string &group="General");
-		virtual void loadResource(Ogre::Resource *resource);
-	    void setMesh(Ogre::Mesh* inMesh);
 
-private:
-	// pointer to the ogre mesh which is currently build
-        Ogre::Mesh *mesh;
-        Ogre::SkeletonPtr mSkel;
-		
-
-	
-};
 class NIFLoader : Ogre::ManualResourceLoader
 {
     public:
@@ -130,7 +113,7 @@ class NIFLoader : Ogre::ManualResourceLoader
     private:
         NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
           mUpdateBoundingBox(true),
-          mFlipVertexWinding(false)
+          mFlipVertexWinding(false), counter(0)
 		{ skincounter = 0; resourceName = "";}
 
         NIFLoader(NIFLoader& n) {}

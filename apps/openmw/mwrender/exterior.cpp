@@ -194,7 +194,7 @@ void ExteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
        parent->scale(axis);
 }
 
-void ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+void ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans, Ogre::Vector3 scale){
 	MeshPtr good2 = NIFLoader::load(mesh);
 	Entity *ent = mScene.getMgr()->createEntity(mesh);
 	ent->setDisplaySkeleton(true);

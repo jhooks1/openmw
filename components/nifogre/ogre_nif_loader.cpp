@@ -51,73 +51,7 @@ typedef unsigned char ubyte;
 using namespace Ogre;
 using namespace Nif;
 using namespace Mangle::VFS;
-using namespace meshmagick;
 
-
-
-ScaleLoader& ScaleLoader::getSingleton()
-{
-    static ScaleLoader instance;
-    return instance;
-}
-
-ScaleLoader* ScaleLoader::getSingletonPtr()
-{
-    return &getSingleton();
-}
-MeshPtr ScaleLoader::load(MeshPtr inMesh, const std::string &name, 
-                         const std::string &group)
-{
-	std::cout << "In load scale\n";
-    MeshManager *m = MeshManager::getSingletonPtr();
-    // Check if the resource already exists
-	//std::cout << "IN Load" << name << "\n";
-    //ResourcePtr ptr = m->getByName(name, group);
-    MeshPtr resize;
-    
-    if (false){ 
-            ;//resize = MeshPtr(ptr);
-    }
-    else // Nope, create a new one.
-    {
-		std::cout << "f";
-        resize = MeshManager::getSingleton().createManual(name, group, ScaleLoader::getSingletonPtr());
-         //ResourcePtr ptr = m->getByName(name, group);
-		 //ScaleLoader::getSingletonPtr()->setMesh(inMesh.get());
-		std::cout << "d";
-		Ogre::SubMesh* s = resize->createSubMesh("test");
-		std::cout << "a" << inMesh->getNumSubMeshes() << "\n";
-		if(inMesh->getNumSubMeshes() > 0)
-		{
-			std::cout << "c";
-			Ogre::Mesh::SubMeshIterator iter = inMesh->getSubMeshIterator();
-			while(iter.hasMoreElements())
-			{
-				
-				Ogre::SubMesh* sub = *iter.current();
-				std::cout << "Sub Count" << sub->vertexData->vertexCount << "\n";
-				//sub->
-				iter.moveNext();
-			}
-			std::cout << "after subs\n";
-
-		}
-		std::cout << "SUBS" << inMesh->getNumSubMeshes() << "\n";
-    }
-    return resize;
-}
-
-void ScaleLoader::loadResource(Ogre::Resource* Resource){
-
-	 mesh = dynamic_cast<Mesh*>(Resource);
-	std::cout << "IN scaling load";
-	std::cout << "resourcename" << Resource->getName() << "\n";
-	// std::string name = in->getName() + "1";
-}
-void ScaleLoader::setMesh(Ogre::Mesh *inMesh)
-{
-	mesh = inMesh;
-}
 
 
 NIFLoader& NIFLoader::getSingleton()
@@ -439,7 +373,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 			int index = i * 3;
 			const float *pos = data->vertices.ptr + index;
 		    Ogre::Vector3 original = Ogre::Vector3(*pos  ,*(pos+1), *(pos+2));
-			//std::cout << "vectorfirst" << original << "\n";
+			//rstd::cout << "vectorfirst" << original << "\n";
 			original = mTransform * original;
 			mBoundingBox.merge(original);
 			datamod[index] = original.x;
@@ -1083,7 +1017,10 @@ void NIFLoader::loadResource(Resource *resource)
     if(skincounter == 1000)
         skincounter = 0;
     stack = 0;
-    counter = 0;
+	//If we already loaded a hand, and we try to load again, keep the counter the same
+	//The opposite hand will be loaded
+	if(isHands == 0)
+		counter = 0;
     std::string name = resource->getName();
     if(resourceName.compare(name) != 0)
     {
