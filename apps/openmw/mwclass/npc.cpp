@@ -134,7 +134,7 @@ namespace MWClass
 		std::string upperarmpath[2] = {npcName + "chest", npcName + "upper arm"};
 		
 		Ogre::Quaternion p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0)); //1,0,0
-		q  = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
+		q  = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 0, 1)); //1,0,0
 
 		cellRender.insertMesh("meshes\\b\\b_n_breton_f_foot.nif", Ogre::Vector3(3, 1, 3));
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
@@ -155,7 +155,7 @@ namespace MWClass
 		}
 		
 		q = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
-		p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0));
+		p = Ogre::Quaternion(Ogre::Radian(3.14 ), Ogre::Vector3(0, 0, 1));
 		//addresses[1] = npcName + "groin";
 		if(upperleg){
 			cellRender.insertMesh("meshes\\" + upperleg->model, "Left Upper Leg", ref->model, e, blank);
@@ -207,7 +207,7 @@ namespace MWClass
 		 
 		if (arm){
 			cellRender.insertMesh("meshes\\" + arm->model, "Right Upper Arm", ref->model, e, blank);
-				cellRender.insertMesh("meshes\\" + arm->model, "Left Upper Arm", ref->model, e, blank);
+				cellRender.insertMesh("meshes\\" + arm->model, "Left Upper Arm", ref->model, p, blank);
 			
 		    //cellRender.scaleMesh(Ogre::Vector3(1, -1, 1), upperleft, uppernumbers);        //1 -1 1
 		}
@@ -215,7 +215,7 @@ namespace MWClass
 		if (forearm)
 		{
 				cellRender.insertMesh("meshes\\" + forearm->model, "Right Forearm", ref->model, e, blank);
-					cellRender.insertMesh("meshes\\" + forearm->model, "Left Forearm", ref->model, e, blank);
+					cellRender.insertMesh("meshes\\" + forearm->model, "Left Forearm", ref->model, p, blank);
 		}
 		//else
 		//	std::cout << npcName << "has no forearm";
@@ -224,7 +224,7 @@ namespace MWClass
 
 			
 				cellRender.insertMesh("meshes\\" + wrist->model, "Right Wrist", ref->model, e, blank);
-					cellRender.insertMesh("meshes\\" + wrist->model, "Left Wrist", ref->model, e, blank);
+					cellRender.insertMesh("meshes\\" + wrist->model, "Left Wrist", ref->model, p, blank);
 			//cellRender.insertMesh("meshes\\" + wrist->model, "Right Wrist", ref->model, e, blank);
 			//		cellRender.insertMesh("meshes\\" + wrist->model, "Left Wrist", ref->model, e, blank);
 			if(upperleft[uppernumbers - 1].compare(npcName + "upper arm") == 0)
@@ -247,7 +247,9 @@ namespace MWClass
 		//not x                y moves parallel to ground
 		//                                        -150
 		Ogre::Vector3 handPos2 = Ogre::Vector3(0, -20, 100);
-		Ogre::Vector3 handPos = Ogre::Vector3(0, 20, -100);
+		Ogre::Vector3 handPos = Ogre::Vector3(-51, 2, -110);        //40,20, -100   //20
+		Ogre::Quaternion handRot = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 1, 0)); //1,0,0         //0,1,0
+		handRot = handRot * Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0)) *  Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0));
 		if(hand)
 		{
 			std::string pass;
@@ -256,7 +258,7 @@ namespace MWClass
 			else
 				pass = hand->model;
 
-			cellRender.insertMesh("meshes\\" + pass, "Left Hand", ref->model, e, handPos);
+			cellRender.insertMesh("meshes\\" + pass, "Left Hand", ref->model, handRot, handPos);
 			cellRender.insertMesh("meshes\\" + pass, "Right Hand", ref->model, e, handPos2);
 			
 			//cellRender.insertMesh("meshes\\" + pass, Ogre::Vector3(42, 1, -110), Ogre::Vector3(0, 0, 0), Ogre::Radian(3.14), npcName + "hand", upperleft, uppernumbers,false);   //0, 100, -100    0,0,120
@@ -280,7 +282,7 @@ namespace MWClass
 			else
 				pass =hands->model;	
 			
-			cellRender.insertMesh("meshes\\" + pass, "Left Hand", ref->model, e, handPos);
+			cellRender.insertMesh("meshes\\" + pass, "Left Hand", ref->model, handRot, handPos);
 			cellRender.insertMesh("meshes\\" + pass, "Right Hand", ref->model, e, handPos2);
 			
 

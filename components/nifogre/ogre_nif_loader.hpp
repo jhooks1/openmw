@@ -113,7 +113,7 @@ class NIFLoader : Ogre::ManualResourceLoader
     private:
         NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
           mUpdateBoundingBox(true),
-          mFlipVertexWinding(false), counter(0)
+          mFlipVertexWinding(false), counter(0), secondHand(false)
 		{ skincounter = 0; resourceName = "";}
 
         NIFLoader(NIFLoader& n) {}
@@ -184,7 +184,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 
 		  Ogre::Matrix4 mTransform;
         Ogre::AxisAlignedBox mBoundingBox;
-
+		bool secondHand;
 		 bool mNormaliseNormals;
         bool mUpdateBoundingBox;
         bool mFlipVertexWinding;

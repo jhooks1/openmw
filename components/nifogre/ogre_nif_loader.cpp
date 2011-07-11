@@ -979,6 +979,11 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             
                 counter++;
         }
+		/*
+		else if(isHands && counter > 2 && counter < 6){
+			handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+			counter++;
+		}*/
         /*if(isHands){
             //cout << "Handling Shape, Stack " << stack <<"\n";
             counter++;
@@ -1019,7 +1024,7 @@ void NIFLoader::loadResource(Resource *resource)
     stack = 0;
 	//If we already loaded a hand, and we try to load again, keep the counter the same
 	//The opposite hand will be loaded
-	if(isHands == 0)
+	//if(!isHands)
 		counter = 0;
     std::string name = resource->getName();
     if(resourceName.compare(name) != 0)
