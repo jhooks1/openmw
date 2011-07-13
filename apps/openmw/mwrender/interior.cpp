@@ -95,11 +95,13 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
 void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans, Ogre::Vector3 scale){
 	MeshPtr good2 = NIFLoader::load(mesh);
 	Entity *ent;
+	
 	/*
 	if(bonename == "Right Hand")
 	{
-		good2->reload();
 		good2 = good2->clone(mesh + "#");
+		good2->reload();
+		
 		ent = scene.getMgr()->createEntity(mesh + "#");
 	}
 	else*/
@@ -292,8 +294,7 @@ void InteriorCellRender::insertMesh(const std::string &mesh, Ogre::Vector3 vec)
 	assert (insert);
 
 
-  MeshPtr flip = NIFLoader::load(mesh);
-
+  MeshPtr flip = NIFLoader::loadMirror(mesh, vec);
 
   MeshManager *m = MeshManager::getSingletonPtr();
     // Check if the resource already exists

@@ -242,7 +242,8 @@ void NIFLoader::createMaterial(const String &name,
     {
         Pass *pass = material->getTechnique(0)->getPass(0);
         /*TextureUnitState *txt =*/
-        pass->createTextureUnitState(texName);
+        Ogre::TextureUnitState* state = pass->createTextureUnitState(texName);
+	
 
         // As of yet UNTESTED code from Chris:
         /*pass->setTextureFiltering(Ogre::TFO_ANISOTROPIC);
@@ -373,9 +374,11 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 			int index = i * 3;
 			const float *pos = data->vertices.ptr + index;
 		    Ogre::Vector3 original = Ogre::Vector3(*pos  ,*(pos+1), *(pos+2));
+			std::cout << "Original: " << original;
 			//rstd::cout << "vectorfirst" << original << "\n";
 			original = mTransform * original;
 			mBoundingBox.merge(original);
+			std::cout <<" New: " << original << "\n";
 			datamod[index] = original.x;
 			datamod[index+1] = original.y;
 			datamod[index+2] = original.z;
@@ -455,12 +458,31 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     // Texture UV coordinates
     if (data->uvlist.length)
     {
+
+
+
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
                    numVerts, HardwareBuffer::HBU_STATIC);
 
-        vbuf->writeData(0, vbuf->getSizeInBytes(), data->uvlist.ptr, false);
+		if(flip)
+		{
+			std::cout << "FLIPPINGTEXTURE\n";
+		    float *datamod = new float[data->uvlist.length];
+		
+		    for(int i = 0; i < data->uvlist.length; i+=2){
+			    float x = *(data->uvlist.ptr + i);
+			    
+			    float y = *(data->uvlist.ptr + i + 1);
+
+			    datamod[i] =x;
+				datamod[i + 1] =y;
+		    }
+			vbuf->writeData(0, vbuf->getSizeInBytes(), datamod, false);
+		}
+		else
+			vbuf->writeData(0, vbuf->getSizeInBytes(), data->uvlist.ptr, false);
         bind->setBinding(nextBuf++, vbuf);
     }
 
@@ -479,7 +501,6 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
                                             createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
                                                               numFaces,
                                                               HardwareBuffer::HBU_STATIC);
-
 
 		if(flip && mFlipVertexWinding && sub->indexData->indexCount % 3 == 0){
 			sub->indexData->indexBuffer = ibuf;
@@ -874,6 +895,8 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if (!mSkel.isNull())     //if there is a skeleton
         {
             std::string name = node->name.toString();
+			if(flip)
+				std::cout << "Name: " << name;
             //if (isBeast && isChest)
             //  std::cout << "NAME: " << name << "\n";
             // Quick-n-dirty workaround for the fact that several
@@ -947,7 +970,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         Tri Tail
         Tri Chest
         */
-        if((isChest && stack < 10 )  || (isHands && counter < 3) || !(isChest || isHands)){                       //(isBeast && isChest && stack < 10 && counter == skincounter )
+        if((isChest && stack < 10 )  || (isHands && counter < 3 && !secondHand) || !(isChest || isHands)){                       //(isBeast && isChest && stack < 10 && counter == skincounter )
             
             std::string name = node->name.toString();
             //if (isChest)
@@ -977,13 +1000,13 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
             
             
-                counter++;
+                
         }
-		/*
-		else if(isHands && counter > 2 && counter < 6){
+		else if(isHands && counter > 2 && counter < 6 && secondHand){
 			handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
-			counter++;
-		}*/
+			std::cout << "In the wild\n";
+		}
+		counter++;
         /*if(isHands){
             //cout << "Handling Shape, Stack " << stack <<"\n";
             counter++;
@@ -1008,6 +1031,7 @@ void NIFLoader::loadResource(Resource *resource)
 {
 	if(flip)
 	{
+		std::cout << "Flipping";
 		calculateTransform();
 	}
 
@@ -1024,7 +1048,10 @@ void NIFLoader::loadResource(Resource *resource)
     stack = 0;
 	//If we already loaded a hand, and we try to load again, keep the counter the same
 	//The opposite hand will be loaded
-	//if(!isHands)
+	//if(isHands)
+	//	secondHand = true;
+	//else 
+	//	secondHand = false;
 		counter = 0;
     std::string name = resource->getName();
     if(resourceName.compare(name) != 0)
