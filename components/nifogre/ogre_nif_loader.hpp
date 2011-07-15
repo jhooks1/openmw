@@ -111,7 +111,7 @@ class NIFLoader : Ogre::ManualResourceLoader
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
 
     private:
-        NIFLoader() : resourceGroup("General"),  mNormaliseNormals(true),
+        NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
           mUpdateBoundingBox(true),
           mFlipVertexWinding(false), counter(0), secondHand(false)
 		{ skincounter = 0; resourceName = "";}
@@ -188,6 +188,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 		 bool mNormaliseNormals;
         bool mUpdateBoundingBox;
         bool mFlipVertexWinding;
+		std::string triname;
 
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;

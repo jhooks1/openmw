@@ -330,6 +330,7 @@ void NIFLoader::findRealTexture(String &texName)
     texName[len-3] = 'd';
     texName[len-2] = 'd';
     texName[len-1] = 's';
+
 }
 
 //Handle node at top
@@ -365,20 +366,21 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
             numVerts, HardwareBuffer::HBU_STATIC);
 
 	
-
+	
 	if(flip)
 	{
+		std::cout << "TriShape" << triname << "\n";
 		float *datamod = new float[data->vertices.length];
 		for(int i = 0; i < numVerts; i++)
 		{
 			int index = i * 3;
 			const float *pos = data->vertices.ptr + index;
 		    Ogre::Vector3 original = Ogre::Vector3(*pos  ,*(pos+1), *(pos+2));
-			std::cout << "Original: " << original;
+			//std::cout << "Original: " << original;
 			//rstd::cout << "vectorfirst" << original << "\n";
 			original = mTransform * original;
 			mBoundingBox.merge(original);
-			std::cout <<" New: " << original << "\n";
+			//std::cout <<" New: " << original << "\n";
 			datamod[index] = original.x;
 			datamod[index+1] = original.y;
 			datamod[index+2] = original.z;
@@ -468,7 +470,6 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 
 		if(flip)
 		{
-			std::cout << "FLIPPINGTEXTURE\n";
 		    float *datamod = new float[data->uvlist.length];
 		
 		    for(int i = 0; i < data->uvlist.length; i+=2){
@@ -495,6 +496,8 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 	
     if (numFaces)
     {
+		if(sub->indexData != NULL && flip)
+			std::cout << "We have index data\n";
 		sub->indexData->indexCount = numFaces;
         sub->indexData->indexStart = 0;
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
@@ -504,7 +507,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 
 		if(flip && mFlipVertexWinding && sub->indexData->indexCount % 3 == 0){
 			sub->indexData->indexBuffer = ibuf;
-			//std::cout << "triangles" << numFaces << "\n";
+			std::cout << "triangles" << numFaces << "\n";
 			uint16 *datamod = new uint16[numFaces];
 			int index = 0;
 			for (size_t i = 0; i < sub->indexData->indexCount; i+=3)
@@ -517,10 +520,6 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 
 				//std::cout << "i0: " << i0 << "i1: " << i1 << "i2: " << i2 << "\n";
 
-				// flip
-				uint16 tmp = i0;
-				i0 = i2;
-				i2 = tmp;
 
 				datamod[index] = i2;
 				datamod[index+1] = i1;
@@ -677,8 +676,11 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                    problem since all the nif data is stored in a local
                    throwaway buffer.
                  */
-                texName = "textures\\" + tname.toString();
+				
+                    texName = "textures\\" + tname.toString();
+					
                 findRealTexture(texName);
+					
             }
             else warn("Found internal texture, ignoring.");
         }
@@ -973,8 +975,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if((isChest && stack < 10 )  || (isHands && counter < 3 && !secondHand) || !(isChest || isHands)){                       //(isBeast && isChest && stack < 10 && counter == skincounter )
             
             std::string name = node->name.toString();
-            //if (isChest)
-                //std::cout << "NAME: " << name << "\n";
+            triname = name;
 
             if(isChest && isBeast && skincounter == 0 && name.compare("Tri Chest") == 0){
                 //std::cout <<"BEASTCHEST1\n";
@@ -1002,10 +1003,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             
                 
         }
-		else if(isHands && counter > 2 && counter < 6 && secondHand){
-			handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
-			std::cout << "In the wild\n";
-		}
+		
 		counter++;
         /*if(isHands){
             //cout << "Handling Shape, Stack " << stack <<"\n";
