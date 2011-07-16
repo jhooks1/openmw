@@ -972,8 +972,9 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         Tri Tail
         Tri Chest
         */
+		
         if((isChest && stack < 10 )  || (isHands && counter < 3 && !secondHand) || !(isChest || isHands)){                       //(isBeast && isChest && stack < 10 && counter == skincounter )
-            
+
             std::string name = node->name.toString();
             triname = name;
 
@@ -1052,6 +1053,10 @@ void NIFLoader::loadResource(Resource *resource)
 	//	secondHand = false;
 		counter = 0;
     std::string name = resource->getName();
+	if(name.at(name.length() - 1) == '#')
+	{
+		name.erase(name.length() - 1, 1);
+	}
     if(resourceName.compare(name) != 0)
     {
         skincounter = 0;
@@ -1245,7 +1250,7 @@ void NIFLoader::loadResource(Resource *resource)
 	{
 		Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
 		Nif::NiKeyframeDataPtr data = f->data;
-		std::cout <<"Bone" << o->name.toString() << "\n";
+		//std::cout <<"Bone" << o->name.toString() << "\n";
 		data->setBonename(o->name.toString());
 		Nif::NiKeyframeData c;
 		c.clone(data.get());
