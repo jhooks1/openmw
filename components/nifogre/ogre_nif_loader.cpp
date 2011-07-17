@@ -369,7 +369,6 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 	
 	if(flip)
 	{
-		std::cout << "TriShape" << triname << "\n";
 		float *datamod = new float[data->vertices.length];
 		for(int i = 0; i < numVerts; i++)
 		{
@@ -496,8 +495,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 	
     if (numFaces)
     {
-		if(sub->indexData != NULL && flip)
-			std::cout << "We have index data\n";
+		
 		sub->indexData->indexCount = numFaces;
         sub->indexData->indexStart = 0;
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
@@ -507,7 +505,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 
 		if(flip && mFlipVertexWinding && sub->indexData->indexCount % 3 == 0){
 			sub->indexData->indexBuffer = ibuf;
-			std::cout << "triangles" << numFaces << "\n";
+
 			uint16 *datamod = new uint16[numFaces];
 			int index = 0;
 			for (size_t i = 0; i < sub->indexData->indexCount; i+=3)
@@ -897,8 +895,6 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if (!mSkel.isNull())     //if there is a skeleton
         {
             std::string name = node->name.toString();
-			if(flip)
-				std::cout << "Name: " << name;
             //if (isBeast && isChest)
             //  std::cout << "NAME: " << name << "\n";
             // Quick-n-dirty workaround for the fact that several
@@ -1004,6 +1000,10 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             
                 
         }
+		else if(isHands && secondHand && counter > 2)
+        {
+                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+        }
 		
 		counter++;
         /*if(isHands){
@@ -1030,7 +1030,7 @@ void NIFLoader::loadResource(Resource *resource)
 {
 	if(flip)
 	{
-		std::cout << "Flipping";
+		//std::cout << "Flipping";
 		calculateTransform();
 	}
 
@@ -1055,8 +1055,11 @@ void NIFLoader::loadResource(Resource *resource)
     std::string name = resource->getName();
 	if(name.at(name.length() - 1) == '#')
 	{
+		secondHand = true;
 		name.erase(name.length() - 1, 1);
 	}
+	else
+		secondHand = false;
     if(resourceName.compare(name) != 0)
     {
         skincounter = 0;
@@ -1192,7 +1195,6 @@ void NIFLoader::loadResource(Resource *resource)
         //FIXME: "Bip01" isn't every time the root bone
         if (n->name == "Bip01" || n->name == "Root Bone")  //root node, create a skeleton
         {
-			std::cout << "making skeleton\n";
             mSkel = SkeletonManager::getSingleton().create(getSkeletonName(), resourceGroup);
 
             /*if (node->extra->recType == RC_NiTextKeyExtraData )
@@ -1255,7 +1257,7 @@ void NIFLoader::loadResource(Resource *resource)
 		Nif::NiKeyframeData c;
 		c.clone(data.get());
 		allanim.push_back(c);
-		std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
+		//std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
 	}
 	
 	}
@@ -1293,7 +1295,6 @@ void NIFLoader::loadResource(Resource *resource)
 	 
     //transformTool->transform(p, Matrix4::getScale(vector), false);
 		
-	std::cout << "4\n";
 	mesh->_setBounds(mBoundingBox, false);
 	//mesh = ptr.get();
 		//processMeshFile();
@@ -1375,10 +1376,10 @@ MeshPtr NIFLoader::load(const std::string &name,
         // Calculate transform
         Matrix4 transform = Matrix4::IDENTITY;
 
-		std::cout << "Calculating transformation...";
+		//std::cout << "Calculating transformation...";
 
                 transform = Matrix4::getScale(vector) * transform;
-				std::cout << "Apply scaling \n";
+				//std::cout << "Apply scaling \n";
                 
 
 		//ignore, if no mesh given. Without we can't do this op.
@@ -1398,7 +1399,7 @@ MeshPtr NIFLoader::load(const std::string &name,
         }
 
         mTransform = transform;
-		std::cout << "final transform \n";
+		//std::cout << "final transform \n";
         //print("final transform " + StringConverter::toString(mTransform), V_HIGH);
     }
 
