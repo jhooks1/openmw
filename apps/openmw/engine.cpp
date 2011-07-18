@@ -94,7 +94,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 	Ogre::Bone* bone = skel->getBone(data.getBonename());
 		float x;
 		
-		//Ogre::SceneNode* s = ent.getParentSceneNode();
+		
 		//s->showBoundingBox(true);
 
 		std::vector<float> ttime = data.gettTime();
@@ -123,19 +123,37 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 		Ogre::Vector3 v2 = translist1[tindexJ];
 		Ogre::Vector3 t = v1 + (v2 - v1) * x;
 
-		bone->setPosition(t);
-		/*
-		if(data.getBonename() == "Bip01")
-		{
-
-			Ogre::Vector3 t2 =(v2 - v1) * x;
-			s->translate(t2);
-		}*/
 		
 		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
+		if(data.getBonename() == "Bip01")
+		{
+			Ogre::SceneNode* s = ent.getParentSceneNode();
+			Ogre::Radian yaw = s->getOrientation().getYaw();
+			Ogre::Real xp = Ogre::Math::Cos(yaw);
+			Ogre::Real yp = Ogre::Math::Sin(yaw);
+
+		    Ogre::Radian roll = s->getOrientation().getRoll();
+		    Ogre::Real zp = Ogre::Math::Cos(roll);
+		    Ogre::Real yp2 = Ogre::Math::Sin(roll);
+
+		    Ogre::Radian pitch = s->getOrientation().getPitch();
+			Ogre::Real zp2 = Ogre::Math::Cos(pitch);
+			Ogre::Real xp2 = Ogre::Math::Sin(pitch);
+			Ogre::Vector3 t2 =(v2 - v1) * x;
+
+			//s->translate(t2.y * yp, t2.x * xp,0);            //Y is left to right, z is up
+			s->translate(-t2.y * yp2  + t2.y * yp, t2.x * xp + t2.x * xp2, t2.z * zp + -t2.z * zp2);            //-t2.y * yp2  + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
+		}
+		else
+		{
+			bone->setPosition(t);
+			bone->setOrientation(r);
+		}
+		
+		
 		//bone->yaw(Ogre::Degree(10));
 
-		bone->setOrientation(r);
+		
 
 		//std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
 		/*data.setrindexI(rindexi);
