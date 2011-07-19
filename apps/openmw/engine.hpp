@@ -22,6 +22,7 @@
 #include <components/nif/extra.hpp>
 struct aindex{
 	float time;
+	Ogre::Quaternion rotationl;
 	std::vector<int>rindexI;
 	std::vector<int>tindexI;
 };
@@ -114,7 +115,7 @@ namespace OMW
 
             void addResourcesDirectory (const boost::filesystem::path& path);
 
-			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, float &time, int &rindexI, int &tindexI );
+			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, float &time, int &rindexI, int &tindexI, Ogre::Quaternion &rotationl );
 
 			bool timeIndex( float time, std::vector<float> times, int & i, int & j, float & x );
 

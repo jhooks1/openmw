@@ -86,7 +86,7 @@ void OMW::Engine::executeLocalScripts()
     mIgnoreLocalPtr = MWWorld::Ptr();
 }
 
-void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI){
+void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl){
 	//std::cout << "i";
 	Ogre::SkeletonInstance *skel = ent.getSkeleton();
 	if(skel->hasBone(data.getBonename())){
@@ -125,9 +125,13 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
 		
 		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
-		if(data.getBonename() == "Bip01")
+
+		
+		if(data.getBonename() == "Bip01") //&& !ent.getBoundingBox().contains(t))
 		{
+
 			Ogre::SceneNode* s = ent.getParentSceneNode();
+			
 			Ogre::Radian yaw = s->getOrientation().getYaw();
 			Ogre::Real xp = Ogre::Math::Cos(yaw);
 			Ogre::Real yp = Ogre::Math::Sin(yaw);
@@ -141,8 +145,16 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 			Ogre::Real xp2 = Ogre::Math::Sin(pitch);
 			Ogre::Vector3 t2 =(v2 - v1) * x;
 
-			//s->translate(t2.y * yp, t2.x * xp,0);            //Y is left to right, z is up
-			s->translate(-t2.y * yp2  + t2.y * yp, t2.x * xp + t2.x * xp2, t2.z * zp + -t2.z * zp2);            //-t2.y * yp2  + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
+			Ogre::Quaternion amount = r - rotationl;
+
+			rotationl = r;
+
+			//Subtract current rotation from last rotation -- orientation
+
+			//s->translate(t2.y * yp, t2.x * xp,0);            //Y is left to right, z is up and down
+			s->translate(-t2.y * yp2  + t2.y * yp, t2.x * xp + -t2.x * xp2, t2.z * zp + -t2.z * zp2);            //-t2.y * yp2  + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
+			s->setOrientation(s->getOrientation() + amount);
+			//s->rotate(amount, Ogre::Node::TS_WORLD);
 		}
 		else
 		{
@@ -274,6 +286,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		{
 			aindex a;
 			a.time = 0.0;
+			
 			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
 				//a.rindexJ.push_back(0);
@@ -290,7 +303,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			
-			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o]);
+			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o], r.rotationl);
 			
 
 
@@ -306,7 +319,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
 
 	if(npcdata.size() > 0){
-	//For now we only want to render one npc, rendering more slows us down
+	//For now we only want to animate one npc, rendering more slows us down
 	for(int i = 0; i < 1; i++)
 	{
 		
@@ -318,6 +331,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		{
 			aindex a;
 			a.time = 0.0;
+			a.rotationl = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
+			std::cout << "Bip01" << a.rotationl << "\n";
 			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
 				//a.rindexJ.push_back(0);
@@ -342,7 +357,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			
-			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o]);
+			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl);
 			/*
 			if(first)
 			{
