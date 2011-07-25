@@ -92,39 +92,14 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
     }
        parent->scale(axis);
 }
-void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans, Ogre::Vector3 scale){
-	MeshPtr good2;
-	Entity *ent;
+void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+	MeshPtr good2 = NIFLoader::load(mesh);
+		  Entity* ent = scene.getMgr()->createEntity(mesh);;
 	Ogre::MeshManager *m = MeshManager::getSingletonPtr();
-	  
-	if(scale != Ogre::Vector3(1,1,1))
-	{
-		good2 = NIFLoader::loadMirror(mesh, scale);
-		   ent = scene.getMgr()->createEntity(mesh);
-	}
-	/*
-	if(m->getByName("\\tiger.nif").isNull()){
-			std::cout << "SCALE" << scale << "BONE: " << bonename;
-			 good2 = NIFLoader::loadMirror(mesh, Ogre::Vector3(1,-1,1));
-			 MeshPtr scaledMesh = good2->clone("\\tiger.nif");
-			 
-	  }*/
-	else{
-		  good2 = NIFLoader::load(mesh);
-		   ent = scene.getMgr()->createEntity(mesh);
-	}
 	 
 	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
 	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
 				
-
-	//if(base->getSkeleton()->getBone(bonename))
-		//std::cout << "BONEEXISTS";
-	//NIFLoader::combineResources(base, ent, bonename);
-	//std::cout << "DOINGMESH\n";
-		
-	
-	//ent->attachObjectToBone(
 }
 void InteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	base->attachObjectToBone(bonename, part ,quat, trans);
@@ -136,12 +111,13 @@ Ogre::Entity* InteriorCellRender::insertBase(const std::string &mesh, bool attac
 
   NIFLoader::load(mesh);
   Entity *ent = scene.getMgr()->createEntity(mesh);
+  Ogre::AxisAlignedBox box = ent->getBoundingBox();
+  box.setInfinite();
   ent->setDisplaySkeleton(true);
   if(attach)
   {
 		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(1, 0, 0)); //-3.14 / 2
 			npcPart = insert->createChildSceneNode(name, Vector3::ZERO, q);
-
 
       npcPart->attachObject(ent);
   }

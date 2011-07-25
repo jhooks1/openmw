@@ -1028,11 +1028,7 @@ void NIFLoader::setVector(Ogre::Vector3 vec)
 }
 void NIFLoader::loadResource(Resource *resource)
 {
-	if(flip)
-	{
-		//std::cout << "Flipping";
-		calculateTransform();
-	}
+	
 
 	/*if(mTool == NULL)
 	{
@@ -1056,10 +1052,14 @@ void NIFLoader::loadResource(Resource *resource)
 	if(name.at(name.length() - 1) == '#')
 	{
 		secondHand = true;
+		hasSuffix = true;
+		vector = Ogre::Vector3(-1,1,1);
 		name.erase(name.length() - 1, 1);
 	}
-	else
+	else{
 		secondHand = false;
+		hasSuffix = false;
+	}
     if(resourceName.compare(name) != 0)
     {
         skincounter = 0;
@@ -1146,6 +1146,16 @@ void NIFLoader::loadResource(Resource *resource)
     else
         isHands = false;
 
+	if((!isHands && !isChest ) && hasSuffix)
+	{
+		flip = true;
+	}
+
+	if(flip)
+	{
+		//std::cout << "Flipping";
+		calculateTransform();
+	}
 
    
     resourceName = "";
@@ -1229,6 +1239,10 @@ void NIFLoader::loadResource(Resource *resource)
     // set the bounding value.
     if (bounds.isValid())
     {
+		//float widthhalf = (bounds.maxX() - bounds.minX()) / 2;
+		//float heighthalf = (bounds.maxY() - bounds.minY()) / 2;
+		//float depthhalf = (bounds.maxZ() - bounds.minZ()) / 2;
+
         mesh->_setBounds(AxisAlignedBox(bounds.minX(), bounds.minY(), bounds.minZ(),
                                         bounds.maxX(), bounds.maxY(), bounds.maxZ()));
         mesh->_setBoundingSphereRadius(bounds.getRadius());
@@ -1262,52 +1276,15 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	}
 	
-	if(flip)
-	{
-		//meshmagick::MeshMagick mm = meshmagick::MeshMagick::MeshMagick();
-		//meshmagick::TransformTool* transformTool = mm.getTransformTool();
-		//Ogre::MeshPtr p = Ogre::MeshPtr(mesh);
-
-		//transformTool->transform(p, Matrix4::getScale(vector) * Matrix4::IDENTITY, false);
-		/*
-		StatefulMeshSerializer* meshSerializer =
-            new StatefulMeshSerializer();
-		meshSerializer->saveMesh("ogrehead.mesh", mesh, false);
-		MeshPtr ptr = meshSerializer->loadMesh("ogrehead.mesh");
-		mesh = ptr.get();*/
-		/*
-		std::cout << "Calling flip\n";
-	Ogre::MeshPtr p = Ogre::MeshPtr(mesh);
-	meshmagick::MeshMagick mm;
-		meshmagick::TransformTool* transformTool = mm.getTransformTool();
-
-	 
-    transformTool->transform(p, Matrix4::getScale(vector), false);
-	Ogre::String nname = p->getName();
-	mesh = (p->clone(nname)).get();*/
-
-		//meshmagick::MeshMagick mm;
-		//meshmagick::TransformTool* transformTool = mm.getTransformTool();
-
-	  // transformTool = 
-		//mm.getTransformTool();
-	// Ogre::Mesh m = *mesh;
-	 
-    //transformTool->transform(p, Matrix4::getScale(vector), false);
-		
+	if(flip){
 	mesh->_setBounds(mBoundingBox, false);
-	//mesh = ptr.get();
-		//processMeshFile();
-
-		
-		//mesh = ptr.get();
-
 	}
     // set skeleton
   if (!mSkel.isNull())
   {
         mesh->_notifySkeleton(mSkel);
   }
+  flip = false;
   //std::cout << "7\n";
 }
 
@@ -1344,29 +1321,13 @@ MeshPtr NIFLoader::load(const std::string &name,
     {
 		NIFLoader::getSingletonPtr()->setFlip(false);
         resize = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
-        //cout <<"EXISTING" << name << "\n";
-        
-        //if(pieces > 1)
-            //cout << "Creating it\n";
-        
-        
-        //resize->load();
-        //resize->reload();
-        //return 0;
          ResourcePtr ptr = m->getByName(name, group);
          resize = MeshPtr(ptr);
-        
-        //NIFLoader::getSingletonPtr()->
-        /*ResourcePtr ptr = m->getByName(name, group);
-    if (!ptr.isNull()){
-        if(pieces > 1)
-            cout << "It exists\n";
-        resize = MeshPtr(ptr);*/
-        //return resize;
-    }
     return resize;
-}
 
+	}
+
+}
 
 
 

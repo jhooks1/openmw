@@ -86,131 +86,128 @@ void OMW::Engine::executeLocalScripts()
     mIgnoreLocalPtr = MWWorld::Ptr();
 }
 
-void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, bool &first){
+void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
+	//Ogre::AxisAlignedBox box = ent.getBoundingBox();
+	//box.setInfinite();
 	//std::cout << "i";
-	Ogre::SkeletonInstance *skel = ent.getSkeleton();
-	if(skel->hasBone(data.getBonename())){
-		//std::cout << "INHERE\n";
-	Ogre::Bone* bone = skel->getBone(data.getBonename());
-		float x;
+    Ogre::SkeletonInstance *skel = ent.getSkeleton();
+    if(skel->hasBone(data.getBonename())){
+    //std::cout << "INHERE\n";
+    Ogre::Bone* bone = skel->getBone(data.getBonename());
+    float x;
+
+
+    //s->showBoundingBox(true);
+
+    std::vector<float> ttime = data.gettTime();
+    std::vector<float>::iterator ttimeiter = ttime.begin();
+    std::vector<Ogre::Vector3> translist1 = data.getTranslist1();
+    //std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+    std::vector<Ogre::Vector3> translist2 = data.getTranslist2();
+    //std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+    std::vector<Ogre::Vector3> translist3 = data.getTranslist3();
+
+
+
+    std::vector<Ogre::Quaternion> quats = data.getQuat();
+    //std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin() + rpos;
+    std::vector<float> rtime = data.getrTime();
+    //std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
+    int rindexJ = 0;
+    timeIndex(time, rtime, rindexI, rindexJ, x);
+
+
+    int tindexJ = 0;
+
+    Ogre::Vector3 old = bone->getPosition();
+    timeIndex(time, ttime, tindexI, tindexJ, x);
+    Ogre::Vector3 v1 = translist1[tindexI];
+    Ogre::Vector3 v2 = translist1[tindexJ];
+    Ogre::Vector3 t = v1 + (v2 - v1) * x;
+
+
+    Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
+
+    if(data.getBonename() == "Bip01")
+     {
+     Ogre::SceneNode* s = ent.getParentSceneNode();
+     //std::cout << "Bounding " << ent.getBoundingBox() << "\n";
+     if(!ent.getBoundingBox().contains(t))
+    {
+
+
+    Ogre::Radian yaw = s->getOrientation().getYaw();
+    Ogre::Real xp = Ogre::Math::Cos(yaw);
+    Ogre::Real yp = Ogre::Math::Sin(yaw);
+
+    Ogre::Radian roll = s->getOrientation().getRoll();
+    Ogre::Real zp = Ogre::Math::Cos(roll);
+    Ogre::Real yp2 = Ogre::Math::Sin(roll);
+
+    Ogre::Radian pitch = s->getOrientation().getPitch();
+    Ogre::Real zp2 = Ogre::Math::Cos(pitch);
+    Ogre::Real xp2 = Ogre::Math::Sin(pitch);
+    Ogre::Vector3 t2 =(v2 - v1) * x;
+
+
+
+//Subtract current rotation from last rotation -- orientation
+
+//s->translate(t2.y * yp, t2.x * xp,0); //Y is left to right, z is up and down
+    Ogre::Vector3 magnitude = Ogre::Vector3(-t2.y * yp2 + t2.y * yp, -t2.x * xp + t2.x * xp2, t2.z * zp + -t2.z * zp2);
+    s->translate(magnitude); //-t2.y * yp2 + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
+
+    //s->rotate(amount, Ogre::Node::TS_WORLD);
+    }
+    else
+    {
+
+    s->setPosition(absolutePos);
+    //s->setOrientation(absoluteRot); //uncomment
+    bone->setPosition(t);             //uncomment
+    //std::cout << "BoneBefore:" <<bone->getOrientation() << "\n";
+      //bone->setOrientation(absoluteRot);
+    //std::cout << "BoneAfter:" << bone->getOrientation() << "\n--------------------------\n";
+    }
+
+//if(s->getOrientation() != rotationl)
+//{
+   if(!first)
+   {
+     Ogre::Quaternion amount = r - rotationl;
+
+    //s->setOrientation(s->getOrientation() + amount);
+    }
+    else
+        first = false;
+    rotationl = r;
+
+
+   }
+   else
+   {
+	
+	bone->setPosition(t);
+  
+   }
+
+    bone->setOrientation(r);
+
+
+    //bone->yaw(Ogre::Degree(10));
+
+
+
+    skel->getManualBonesDirty();
+    skel->_updateTransforms();
+
+    ent.getAllAnimationStates()->_notifyDirty();
+    ent._updateAnimation();
 		
-		
-		//s->showBoundingBox(true);
-
-		std::vector<float> ttime = data.gettTime();
-		std::vector<float>::iterator ttimeiter = ttime.begin();
-		std::vector<Ogre::Vector3> translist1  = data.getTranslist1();
-		//std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
-		std::vector<Ogre::Vector3> translist2  = data.getTranslist2();
-		//std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
-		std::vector<Ogre::Vector3> translist3  = data.getTranslist3();
-
-		
-
-		std::vector<Ogre::Quaternion> quats = data.getQuat();
-		//std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin() + rpos;
-		std::vector<float> rtime = data.getrTime();
-		//std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
-		int rindexJ = 0;
-		timeIndex(time, rtime, rindexI, rindexJ, x);
-		
-
-		int tindexJ = 0;
-
-		Ogre::Vector3 old = bone->getPosition();
-		timeIndex(time, ttime, tindexI, tindexJ, x);
-		Ogre::Vector3 v1 = translist1[tindexI];
-		Ogre::Vector3 v2 = translist1[tindexJ];
-		Ogre::Vector3 t = v1 + (v2 - v1) * x;
-
-		
-		Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
-
-		if(data.getBonename() == "Bip01")
-		{
-			Ogre::SceneNode* s = ent.getParentSceneNode();
-		if(!ent.getBoundingBox().contains(t))
-		{
-			
-			
-			Ogre::Radian yaw = s->getOrientation().getYaw();
-			Ogre::Real xp = Ogre::Math::Cos(yaw);
-			Ogre::Real yp = Ogre::Math::Sin(yaw);
-
-		    Ogre::Radian roll = s->getOrientation().getRoll();
-		    Ogre::Real zp = Ogre::Math::Cos(roll);
-		    Ogre::Real yp2 = Ogre::Math::Sin(roll);
-
-		    Ogre::Radian pitch = s->getOrientation().getPitch();
-			Ogre::Real zp2 = Ogre::Math::Cos(pitch);
-			Ogre::Real xp2 = Ogre::Math::Sin(pitch);
-			Ogre::Vector3 t2 =(v2 - v1) * x;
-
-			
-
-			//Subtract current rotation from last rotation -- orientation
-
-			//s->translate(t2.y * yp, t2.x * xp,0);            //Y is left to right, z is up and down
-			Ogre::Vector3 magnitude = Ogre::Vector3(-t2.y * yp2  + t2.y * yp, t2.x * xp + -t2.x * xp2, t2.z * zp + -t2.z * zp2);
-			s->translate(magnitude);            //-t2.y * yp2  + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
-			
-			//s->rotate(amount, Ogre::Node::TS_WORLD);
-		}
-		else
-		{
-			
-			s->setPosition(absolutePos);
-			bone->setPosition(t);
-			//bone->setOrientation(r);
-		}
-		
-		//if(s->getOrientation() != rotationl)
-		//{
-		if(!first)
-		{
-			Ogre::Quaternion amount = r - rotationl;
-			
-			s->setOrientation(s->getOrientation() + amount);
-		}
-		else
-			first = false;
-		rotationl = r;
-		//}
-
-
-		}
-		else
-		{
-			bone->setPosition(t);
-			bone->setOrientation(r);
-		}
-		
-		
-		//bone->yaw(Ogre::Degree(10));
-
-		
-
-		//std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
-		/*data.setrindexI(rindexi);
-		data.setrindexJ(rindexj);
-		data.settindexI(tindexi);
-		data.settindexJ(tindexj);*/
-
-		//ent.getAllAnimationStates()->_notifyDirty();
-		skel->getManualBonesDirty();
-				skel->_updateTransforms();
 				
-				ent.getAllAnimationStates()->_notifyDirty();
-				ent._updateAnimation();
+
+	
 	}
-		
-				
-				//Ogre::Vector3 standard = *transiter;
-				//if(data->getTtype() == 2)
-				//	standard = *transiter *  *transiter2  *  *transiter3;
-
-	
-	
 	   
     
 }
@@ -327,7 +324,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			
-			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, first);
+			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
 			
 
 
@@ -357,6 +354,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			a.time = 0.0;
 			a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
 			a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
+			a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
 			a.first = true;
 			std::cout << "Bip01" << a.rotationl << "\n";
 			for(int init = 0; init < allanim.size(); init++){
@@ -383,7 +381,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			
-			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, first);
+			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
 			/*
 			if(first)
 			{

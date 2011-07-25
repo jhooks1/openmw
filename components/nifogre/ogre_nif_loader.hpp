@@ -113,7 +113,7 @@ class NIFLoader : Ogre::ManualResourceLoader
     private:
         NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
           mUpdateBoundingBox(true),
-          mFlipVertexWinding(false), counter(0), secondHand(false)
+          mFlipVertexWinding(false), counter(0), secondHand(false), hasSuffix(false), flip(false)
 		{ skincounter = 0; resourceName = "";}
 
         NIFLoader(NIFLoader& n) {}
@@ -174,6 +174,7 @@ class NIFLoader : Ogre::ManualResourceLoader
         int stack;
 		bool anim;
 		short handle;
+		bool hasSuffix;
 		Ogre::Animation* animcore;
 		Ogre::Animation* animcore2;
 		//static std::vector numTracks;
