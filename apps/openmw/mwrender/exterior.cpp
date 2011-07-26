@@ -310,6 +310,7 @@ Ogre::Entity* ExteriorCellRender::insertBase(const std::string &mesh, bool attac
   {
 		  Ogre::Quaternion q  = Ogre::Quaternion(Ogre::Radian(0), Ogre::Vector3(1, 0, 0)); //-3.14 / 2
 			mNpcPart = mInsert->createChildSceneNode(name, Vector3::ZERO, q);
+			mNpcPart->setInheritOrientation(false);
 
 
       mNpcPart->attachObject(ent);

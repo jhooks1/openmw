@@ -131,6 +131,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
     if(data.getBonename() == "Bip01")
      {
      Ogre::SceneNode* s = ent.getParentSceneNode();
+	 s->showBoundingBox(true);
      //std::cout << "Bounding " << ent.getBoundingBox() << "\n";
      if(!ent.getBoundingBox().contains(t))
     {
@@ -154,8 +155,9 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 //Subtract current rotation from last rotation -- orientation
 
 //s->translate(t2.y * yp, t2.x * xp,0); //Y is left to right, z is up and down
-    Ogre::Vector3 magnitude = Ogre::Vector3(-t2.y * yp2 + t2.y * yp, -t2.x * xp + t2.x * xp2, t2.z * zp + -t2.z * zp2);
-    s->translate(magnitude); //-t2.y * yp2 + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
+    //Ogre::Vector3 magnitude = Ogre::Vector3(-t2.y * yp2 + t2.y * yp, -t2.x * xp + t2.x * xp2, t2.z * zp + -t2.z * zp2);
+	Ogre::Vector3 magnitude = Ogre::Vector3( -t2.y * yp2 + t2.y * yp,-t2.x * xp2 + t2.x * xp, t2.z * zp + -t2.z * zp2);
+    //s->setPosition(s->getPosition() + magnitude); //-t2.y * yp2 + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
 
     //s->rotate(amount, Ogre::Node::TS_WORLD);
     }
@@ -341,7 +343,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 	if(npcdata.size() > 0){
 	//For now we only want to animate one npc, rendering more slows us down
-	for(int i = 0; i < 1; i++)
+	for(int i = 0; i < npcdata.size(); i++)
 	{
 		
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
@@ -380,8 +382,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
-			
-			handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
+			if(i == 0 || i == 1)
+				handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
 			/*
 			if(first)
 			{

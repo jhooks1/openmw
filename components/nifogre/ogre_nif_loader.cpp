@@ -969,27 +969,29 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         Tri Chest
         */
 		
-        if((isChest && stack < 10 )  || (isHands && counter < 3 && !secondHand) || !(isChest || isHands)){                       //(isBeast && isChest && stack < 10 && counter == skincounter )
+        if((isChest)  || (isHands && counter < 3 && !secondHand) || !(isChest || isHands)){                       //(isBeast && isChest && stack < 10 && counter == skincounter )
 
             std::string name = node->name.toString();
             triname = name;
 
-            if(isChest && isBeast && skincounter == 0 && name.compare("Tri Chest") == 0){
+			if(isChest && name.compare("Tri Chest") == 0 && (suffix != '#' && suffix != '?' && suffix != '<') ){
                 //std::cout <<"BEASTCHEST1\n";
                 handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
                 skincounter++;
             }
-            else if(isChest && isBeast && skincounter == 1 && name.compare("Tri Tail") == 0){
-                //std::cout <<"BEASTCHEST2\n";
-                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
-                skincounter++;
-            }
-            else if(isChest && isBeast && skincounter == 2 && name.compare("Tri Left Foot") == 0){
-                //std::cout <<"BEASTCHEST3\n";
-                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
-                skincounter=1000;
-            }
-            else if (!isChest || !isBeast)
+			else if(isChest && name.compare("Tri Left Foot") == 0 && suffix == '#')
+			{
+				handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+			}
+			else if(isChest && name.compare("Tri Right Foot") == 0 && suffix == '?')
+			{
+				handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+			}
+			else if(isChest && name.compare("Tri Tail") == 0 && suffix == '<')
+			{
+				handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+			}
+            else if (!isChest)
             {
                 handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
             }
@@ -1049,16 +1051,23 @@ void NIFLoader::loadResource(Resource *resource)
 	//	secondHand = false;
 		counter = 0;
     std::string name = resource->getName();
-	if(name.at(name.length() - 1) == '#')
+	suffix = name.at(name.length() - 1);
+	if( suffix == '#' || suffix == '?' || suffix == '<')
 	{
 		secondHand = true;
-		hasSuffix = true;
-		vector = Ogre::Vector3(-1,1,1);
 		name.erase(name.length() - 1, 1);
+
+		if(suffix == '#')
+			vector = Ogre::Vector3(-1,1,1);
+		if(suffix == '?')
+			vector = Ogre::Vector3(1,-1,1);
+		if(suffix == '<')
+			vector = Ogre::Vector3(1,1,-1);
+		
 	}
 	else{
 		secondHand = false;
-		hasSuffix = false;
+		suffix = ' ';
 	}
     if(resourceName.compare(name) != 0)
     {
@@ -1066,40 +1075,34 @@ void NIFLoader::loadResource(Resource *resource)
         resourceName = name;
     }
 
-    const std::string test ="meshes\\b\\B_N_Dark Elf_M_Skins.NIF";
-    const std::string test2 ="meshes\\b\\B_N_Dark Elf_M_Skins.nif";
-    const std::string test3 ="meshes\\b\\B_N_Redguard_F_Skins.NIF";
-    const std::string test4 ="meshes\\b\\B_N_Redguard_F_Skins.nif";
-    const std::string test5 ="meshes\\b\\B_N_Dark Elf_F_Skins.nif";
-    const std::string test6 ="meshes\\b\\B_N_Redguard_M_Skins.nif";
-    const std::string test7 ="meshes\\b\\B_N_Wood Elf_F_Skins.nif";
-    const std::string test8 ="meshes\\b\\B_N_Wood Elf_M_Skins.nif";
-    const std::string test9 ="meshes\\b\\B_N_Imperial_F_Skins.nif";
-    const std::string test10 ="meshes\\b\\B_N_Imperial_M_Skins.nif";
-    const std::string test11 ="meshes\\b\\B_N_Khajiit_F_Skins.nif";
-    const std::string test12 ="meshes\\b\\B_N_Khajiit_M_Skins.nif";
-    const std::string test13 ="meshes\\b\\B_N_Argonian_F_Skins.nif";
-    const std::string test14 ="meshes\\b\\B_N_Argonian_M_Skins.nif";
-    const std::string test15 ="meshes\\b\\B_N_Nord_F_Skins.nif";
-    const std::string test16 ="meshes\\b\\B_N_Nord_M_Skins.nif";
-    const std::string test17 ="meshes\\b\\B_N_Imperial_F_Skins.nif";
-    const std::string test18 ="meshes\\b\\B_N_Imperial_M_Skins.nif";
-    const std::string test19 ="meshes\\b\\B_N_Orc_F_Skins.nif";
-    const std::string test20 ="meshes\\b\\B_N_Orc_M_Skins.nif";
-    const std::string test21 ="meshes\\b\\B_N_Breton_F_Skins.nif";
-    const std::string test22 ="meshes\\b\\B_N_Breton_M_Skins.nif";
-    const std::string test23 ="meshes\\b\\B_N_High Elf_F_Skins.nif";
-    const std::string test24 ="meshes\\b\\B_N_High Elf_M_Skins.nif";
-
+    const std::string test ="meshes\\b\\b_n_dark elf_m_skins.nif";
+    const std::string test2 ="meshes\\b\\b_n_redguard_f_skins.nif";
+    const std::string test3 ="meshes\\b\\b_n_dark elf_f_skins.nif";
+    const std::string test4 ="meshes\\b\\b_n_redguard_m_skins.nif";
+    const std::string test5 ="meshes\\b\\b_n_wood elf_f_skins.nif";
+    const std::string test6 ="meshes\\b\\b_n_wood elf_m_skins.nif";
+    const std::string test7 ="meshes\\b\\b_n_imperial_f_skins.nif";
+    const std::string test8 ="meshes\\b\\b_n_imperial_m_skins.nif";
+    const std::string test9 ="meshes\\b\\b_n_khajiit_f_skins.nif";
+    const std::string test10 ="meshes\\b\\b_n_khajiit_m_skins.nif";
+    const std::string test11 ="meshes\\b\\b_n_argonian_f_skins.nif";
+    const std::string test12 ="meshes\\b\\b_n_argonian_m_skins.nif";
+    const std::string test13 ="meshes\\b\\b_n_nord_f_skins.nif";
+    const std::string test14 ="meshes\\b\\b_n_nord_m_skins.nif";
+    const std::string test15 ="meshes\\b\\b_n_orc_f_skins.nif";
+    const std::string test16 ="meshes\\b\\b_n_orc_m_skins.nif";
+    const std::string test17 ="meshes\\b\\b_n_breton_f_skins.nif";
+    const std::string test18 ="meshes\\b\\b_n_breton_m_skins.nif";
+    const std::string test19 ="meshes\\b\\b_n_high elf_f_skins.nif";
+    const std::string test20 ="meshes\\b\\b_n_high elf_m_skins.nif";
+	std::transform(name.begin(), name.end(), name.begin(), std::tolower);
     
     
     if(name.compare(test) == 0 || name.compare(test2) == 0 || name.compare(test3) == 0 || name.compare(test4) == 0 ||
         name.compare(test5) == 0 || name.compare(test6) == 0 || name.compare(test7) == 0 || name.compare(test8) == 0 || name.compare(test9) == 0 ||
         name.compare(test10) == 0 || name.compare(test11) == 0 || name.compare(test12) == 0 || name.compare(test13) == 0 ||
         name.compare(test14) == 0 || name.compare(test15) == 0 || name.compare(test16) == 0 || name.compare(test17) == 0 ||
-        name.compare(test18) == 0 || name.compare(test19) == 0 || name.compare(test20) == 0 || name.compare(test21) == 0 ||
-        name.compare(test22) == 0 || name.compare(test23) == 0 || name.compare(test24) == 0
-        
+        name.compare(test18) == 0 || name.compare(test19) == 0 || name.compare(test20) == 0 
         ){
         //std::cout << "Welcome Chest\n";
         isChest = true;
@@ -1113,26 +1116,26 @@ void NIFLoader::loadResource(Resource *resource)
     }
     else
         isChest = false;
-    const std::string hands ="meshes\\b\\B_N_Dark Elf_M_Hands.1st.NIF";
-    const std::string hands2 ="meshes\\b\\B_N_Dark Elf_F_Hands.1st.NIF";
-    const std::string hands3 ="meshes\\b\\B_N_Redguard_M_Hands.1st.nif";
-    const std::string hands4 ="meshes\\b\\B_N_Redguard_F_Hands.1st.nif";
+    const std::string hands ="meshes\\b\\b_n_dark elf_m_hands.1st.nif";
+    const std::string hands2 ="meshes\\b\\b_n_dark elf_f_hands.1st.nif";
+    const std::string hands3 ="meshes\\b\\b_n_redguard_m_hands.1st.nif";
+    const std::string hands4 ="meshes\\b\\b_n_redguard_f_hands.1st.nif";
     const std::string hands5 ="meshes\\b\\b_n_argonian_m_hands.1st.nif";
     const std::string hands6 ="meshes\\b\\b_n_argonian_f_hands.1st.nif";
-    const std::string hands7 ="meshes\\b\\B_N_Breton_M_Hand.1st.NIF";
-    const std::string hands8 ="meshes\\b\\B_N_Breton_F_Hands.1st.nif";
-    const std::string hands9 ="meshes\\b\\B_N_High Elf_M_Hands.1st.nif";
-    const std::string hands10 ="meshes\\b\\B_N_High Elf_F_Hands.1st.nif";
-    const std::string hands11 ="meshes\\b\\B_N_Nord_M_Hands.1st.nif";
-    const std::string hands12 ="meshes\\b\\B_N_Nord_F_Hands.1st.nif";
+    const std::string hands7 ="meshes\\b\\b_n_breton_m_hand.1st.nif";
+    const std::string hands8 ="meshes\\b\\b_n_breton_f_hands.1st.nif";
+    const std::string hands9 ="meshes\\b\\b_n_high elf_m_hands.1st.nif";
+    const std::string hands10 ="meshes\\b\\b_n_high elf_f_hands.1st.nif";
+    const std::string hands11 ="meshes\\b\\b_n_nord_m_hands.1st.nif";
+    const std::string hands12 ="meshes\\b\\b_n_nord_f_hands.1st.nif";
     const std::string hands13 ="meshes\\b\\b_n_khajiit_m_hands.1st.nif";
     const std::string hands14 ="meshes\\b\\b_n_khajiit_f_hands.1st.nif";
-    const std::string hands15 ="meshes\\b\\B_N_Orc_M_Hands.1st.nif";
-    const std::string hands16 ="meshes\\b\\B_N_Orc_F_Hands.1st.nif";
-    const std::string hands17 ="meshes\\b\\B_N_Wood Elf_M_Hands.1st.nif";
-    const std::string hands18 ="meshes\\b\\B_N_Wood Elf_F_Hands.1st.nif";
-    const std::string hands19 ="meshes\\b\\B_N_Imperial_M_Hands.1st.nif";
-    const std::string hands20 ="meshes\\b\\B_N_Imperial_F_Hands.1st.nif";
+    const std::string hands15 ="meshes\\b\\b_n_orc_m_hands.1st.nif";
+    const std::string hands16 ="meshes\\b\\b_n_orc_f_hands.1st.nif";
+    const std::string hands17 ="meshes\\b\\b_n_wood elf_m_hands.1st.nif";
+    const std::string hands18 ="meshes\\b\\b_n_wood elf_f_hands.1st.nif";
+    const std::string hands19 ="meshes\\b\\b_n_imperial_m_hands.1st.nif";
+    const std::string hands20 ="meshes\\b\\b_n_imperial_f_hands.1st.nif";
     if(name.compare(hands) == 0 || name.compare(hands2) == 0 || name.compare(hands3) == 0 || name.compare(hands4) == 0 ||
         name.compare(hands5) == 0 || name.compare(hands6) == 0 || name.compare(hands7) == 0 || name.compare(hands8) == 0 ||
         name.compare(hands9) == 0 || name.compare(hands10) == 0 || name.compare(hands11) == 0 || name.compare(hands12) == 0 ||
@@ -1146,7 +1149,7 @@ void NIFLoader::loadResource(Resource *resource)
     else
         isHands = false;
 
-	if((!isHands && !isChest ) && hasSuffix)
+	if((!isHands && !isChest ) && (suffix == '#' || suffix == '?' || suffix == '<'))
 	{
 		flip = true;
 	}
@@ -1298,16 +1301,6 @@ MeshPtr NIFLoader::load(const std::string &name,
 	//std::cout << "IN Load" << name << "\n";
     ResourcePtr ptr = m->getByName(name, group);
     MeshPtr resize;
-    
-    const std::string beast1 ="meshes\\b\\B_N_Khajiit_F_Skins.nif";
-    const std::string beast2 ="meshes\\b\\B_N_Khajiit_M_Skins.nif";
-    const std::string beast3 ="meshes\\b\\B_N_Argonian_F_Skins.nif";
-    const std::string beast4 ="meshes\\b\\B_N_Argonian_M_Skins.nif";
-
-    const std::string beasttail1 ="tail\\b\\B_N_Khajiit_F_Skins.nif";
-    const std::string beasttail2 ="tail\\b\\B_N_Khajiit_M_Skins.nif";
-    const std::string beasttail3 ="tail\\b\\B_N_Argonian_F_Skins.nif";
-    const std::string beasttail4 ="tail\\b\\B_N_Argonian_M_Skins.nif";
 
     if (!ptr.isNull()){ 
         

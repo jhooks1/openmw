@@ -50,10 +50,12 @@ namespace MWClass
 		std::string hairID = ref->base->hair;
         std::string headID = ref->base->head;
 		std::string npcName = ref->base->name;
+		
 		//std::cout << "NPC: " << npcName << "\n";
 
         //get the part of the bodypart id which describes the race and the gender
         std::string bodyRaceID = headID.substr(0, headID.find_last_of("head_") - 4);
+		std::cout << "Race " << bodyRaceID << "\n";
         std::string headModel = "meshes\\" +
             environment.mWorld->getStore().bodyParts.find(headID)->model;
 
@@ -61,7 +63,12 @@ namespace MWClass
             environment.mWorld->getStore().bodyParts.find(hairID)->model;
 
         MWRender::Rendering rendering (cellRender, ref->ref);
-		ref->model = cellRender.insertAndDeliverMesh("meshes\\base_anim.nif");
+		if(bodyRaceID == "b_n_khajiit_m_" || bodyRaceID == "b_n_khajiit_f_" || bodyRaceID == "b_n_argonian_m_" || bodyRaceID == "b_n_argonian_f_")
+			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_animkna.nif");
+		else
+			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_anim.nif");
+		ref->model->getParentSceneNode()->showBoundingBox(true);
+	
         ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
 
         const ESM::BodyPart *bodyPart =
@@ -123,13 +130,14 @@ namespace MWClass
 		//cellRender.insertMesh("meshes\\b\\B_N_Breton_F_Foot.nif", Ogre::Vector3(-1,1,1));        //1, -1, 1
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
         if (groin){
-			addresses2[numbers] = npcName + "groin";
-			addresses[numbers++] = npcName + "groin";
 			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, e, blank);
 
 		}
 		if (tail) {
-			
+			Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
+			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
+			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
+			cellRender.insertMesh("meshes\\" + tail->model + "<", "Bip01 Tail", ref->model, p2, tailpos);
 		}
 		
 		q = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
@@ -163,9 +171,11 @@ namespace MWClass
 			}
 		}
 		if(feet){
-			
-			cellRender.insertMesh("meshes\\" + feet->model + "#", "Left Foot", ref->model, e, blank);
-			cellRender.insertMesh("meshes\\" + feet->model, "Right Foot", ref->model, e, blank);
+			Ogre::Vector3 pos = Ogre::Vector3(-6,5,0);  //y is up
+			Ogre::Vector3 pos2 = Ogre::Vector3(6,5,0);
+
+			cellRender.insertMesh("meshes\\" + feet->model + "#", "Left Foot", ref->model, p, pos);
+			cellRender.insertMesh("meshes\\" + feet->model + '?', "Right Foot", ref->model, p, pos2);
 			//cellRender.scaleMesh(Ogre::Vector3(1, -1, 1), addresses, numbers);
 		}
 		
