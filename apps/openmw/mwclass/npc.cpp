@@ -279,7 +279,7 @@ namespace MWClass
 		
 		while(ilistiter != ilist.end())
 		{
-			std::cout << "Item:" <<ilistiter->item.toString();
+			//std::cout << "Item:" <<ilistiter->item.toString();
 			const ESM::Clothing *clothes = environment.mWorld->getStore().clothes.search(ilistiter->item.toString());
 			ilistiter++;
 			
@@ -314,6 +314,16 @@ namespace MWClass
 			    }
 			    else
 				    continue;
+
+				
+				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>> clothingparts = clothes->parts.parts;
+				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>>::iterator clothingpartsiter = clothingparts.begin();
+				
+				while(clothingpartsiter != clothingparts.end())
+				{
+					std::cout << "Part: " << clothingpartsiter->male << "\n";
+					clothingpartsiter++;
+				}
 			    //Insert the clothes on top of body parts
 			}
 	
