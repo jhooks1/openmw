@@ -128,15 +128,14 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
     Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
 
-    if(data.getBonename() == "Bip01")
-     {
-     Ogre::SceneNode* s = ent.getParentSceneNode();
-	 s->showBoundingBox(true);
+    //if(data.getBonename() == "Bip01")
+    // {
+     //Ogre::SceneNode* s = ent.getParentSceneNode();
      //std::cout << "Bounding " << ent.getBoundingBox() << "\n";
-     if(!ent.getBoundingBox().contains(t))
-    {
+    // if(!ent.getBoundingBox().contains(t))
+   //{
 
-
+		/*
     Ogre::Radian yaw = s->getOrientation().getYaw();
     Ogre::Real xp = Ogre::Math::Cos(yaw);
     Ogre::Real yp = Ogre::Math::Sin(yaw);
@@ -156,24 +155,26 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
 //s->translate(t2.y * yp, t2.x * xp,0); //Y is left to right, z is up and down
     //Ogre::Vector3 magnitude = Ogre::Vector3(-t2.y * yp2 + t2.y * yp, -t2.x * xp + t2.x * xp2, t2.z * zp + -t2.z * zp2);
-	Ogre::Vector3 magnitude = Ogre::Vector3( -t2.y * yp2 + t2.y * yp,-t2.x * xp2 + t2.x * xp, t2.z * zp + -t2.z * zp2);
+	Ogre::Vector3 magnitude = Ogre::Vector3( -t2.y * yp2 + t2.y * yp,-t2.x * xp2 + t2.x * xp, t2.z * zp + -t2.z * zp2);*/
     //s->setPosition(s->getPosition() + magnitude); //-t2.y * yp2 + t2.y * yp, t2.x * xp2 + t2.x * xp, 0
 
     //s->rotate(amount, Ogre::Node::TS_WORLD);
-    }
-    else
-    {
+    ///}
+    //else
+    //{
 
-    s->setPosition(absolutePos);
+   // s->setPosition(absolutePos);
     //s->setOrientation(absoluteRot); //uncomment
-    bone->setPosition(t);             //uncomment
+	if(bone->getName() != "Bip01")
+		bone->setPosition(t);             //uncomment
     //std::cout << "BoneBefore:" <<bone->getOrientation() << "\n";
       //bone->setOrientation(absoluteRot);
     //std::cout << "BoneAfter:" << bone->getOrientation() << "\n--------------------------\n";
-    }
+ 
 
 //if(s->getOrientation() != rotationl)
 //{
+	 /*
    if(!first)
    {
      Ogre::Quaternion amount = r - rotationl;
@@ -187,11 +188,11 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
    }
    else
-   {
+   {*/
 	
-	bone->setPosition(t);
+	//one->setPosition(t);
   
-   }
+   //}
 
     bone->setOrientation(r);
 
@@ -206,10 +207,10 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
     ent.getAllAnimationStates()->_notifyDirty();
     ent._updateAnimation();
 		
-				
+				}
 
 	
-	}
+
 	   
     
 }
@@ -294,6 +295,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
 	
+
 	if(creatureData.size() > 0){
 	for(int i = 0; i < 1; i++)
 	{
@@ -371,8 +373,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		aindex& r = npca[i];
 
 		int to = r.time + evt.timeSinceLastFrame;
-		if( to > ((int) r.time))
-			std::cout << "TimePosition: " << r.time << "\n";
+		//if( to > ((int) r.time))
+		//	std::cout << "TimePosition: " << r.time << "\n";
 
 		r.time += evt.timeSinceLastFrame;
 		//std::cout << "s\n";
@@ -382,7 +384,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
-			if(i == 0 || i == 1)
+			if(i == 0)
 				handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
 			/*
 			if(first)
@@ -397,6 +399,31 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			}*/
 
 			o++;
+		}
+		if(i == 0){
+		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
+			mAnimationState->setLoop(true);
+
+
+
+			mAnimationState->setEnabled(true);  
+			
+			/*
+			Ogre::AnimationState *mAnimationState2 = npcmodel->getAnimationState("WholeThing2");
+			mAnimationState2->setLoop(false);
+
+			mAnimationState2->setEnabled(true);  
+			int bones = npcmodel->getSkeleton()->getNumBones();
+			mAnimationState2->createBlendMask(bones,1);
+			 mAnimationState->createBlendMask(bones,1);
+			 for(int j = 0; j < bones; j++)
+			 {
+				mAnimationState->setBlendMaskEntry(bones,1);
+				mAnimationState2->setBlendMaskEntry(bones,1);
+			 }
+			 mAnimationState2->addTime(evt.timeSinceLastFrame);*/
+			 mAnimationState->addTime(evt.timeSinceLastFrame);
+
 		}
 
 		

@@ -1274,6 +1274,94 @@ void NIFLoader::loadResource(Resource *resource)
 		Nif::NiKeyframeData c;
 		c.clone(data.get());
 		allanim.push_back(c);
+		if(o->name.toString() == "Bip01"){
+			
+			std::cout <<"Creating WholeThing\n";
+			animcore = mSkel->createAnimation("WholeThing", f->timeStop);
+			animcore2 = mSkel->createAnimation("WholeThing2", f->timeStop);
+
+			Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+			std::cout << "The target rec: " << node->name.toString() << "\n";
+			Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle, mSkel->getBone(node->name.toString()));
+			Ogre::NodeAnimationTrack* mTrack2 = animcore2->createNodeTrack(handle++, mSkel->getBone(node->name.toString()));
+
+			std::vector<Ogre::Quaternion> quats = data->getQuat();
+			std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
+			std::vector<float> rtime = data->getrTime();
+			std::vector<float>::iterator rtimeiter = rtime.begin();
+
+			std::vector<float> ttime = data->gettTime();
+			std::vector<float>::iterator ttimeiter = ttime.begin();
+			std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
+			std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+			std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
+			std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+			std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
+			std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+
+
+			float tleft = 0;
+			float rleft = 0.0;
+			float ttotal = 0.0;
+			float rtotal = 0;
+			Ogre::TransformKeyFrame* mKey;
+			Ogre::TransformKeyFrame* mKey2;
+			float tused = 0.0;
+			float rused = 0.0;
+			Ogre::Quaternion lastquat;
+			Ogre::Vector3 lasttrans;
+			bool rend = false;
+			bool tend = false;
+			for (int j = 0 ; j < ttime.size(); j++)
+			{
+			if(data->getTtype() >= 1 && data->getTtype() <= 5)
+			{
+			Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
+			Ogre::Vector3 standard = *transiter;
+			if(data->getTtype() == 2)
+			standard = *transiter * *transiter2 * *transiter3;
+			if(j < (ttime.size() - 1))
+				mKey->setTranslate(standard);
+			transiter++;
+			transiter2++;
+			transiter3++;
+			ttimeiter++;
+			}
+			}
+			float initx = quatIter->x;
+			for (int j = 0 ; j < rtime.size(); j++)
+			{
+			if(data->getRtype() >= 1 && data->getRtype() <= 5)
+			{
+			Ogre::TransformKeyFrame* mKey2 = mTrack2->createNodeKeyFrame(*rtimeiter);
+			Ogre::Quaternion standard = *quatIter;
+			if(j < rtime.size() - 1)
+			{
+				Ogre::Radian angle;
+				Ogre::Vector3 axis;
+				standard.ToAngleAxis(angle, axis);
+				//axis.z = axis.y;
+			//Ogre::Quaternion r = Ogre::Quaternion::Slerp(1.0, standard, *(quatIter+1), true);
+			    Ogre::Quaternion mod = Ogre::Quaternion(angle, axis);    //y,x,z
+				                                                                //z, y, x
+				                                                                //x, z, y
+				                                                                  //y,y,z
+				                                                                 //x,y,y sorta works  y at the end is right
+				                                                                 //z,x,y 
+				                                                                 //-x,z,y
+				                                                                 //-x,-z,y
+				        
+				mKey2->setRotation(standard);
+			}	
+			quatIter++;
+			rtimeiter++;
+			}
+			}
+
+
+
+		}
+
 		//std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
 	}
 	

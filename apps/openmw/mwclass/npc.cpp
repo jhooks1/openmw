@@ -51,22 +51,33 @@ namespace MWClass
         std::string headID = ref->base->head;
 		std::string npcName = ref->base->name;
 		
+		
+		
 		//std::cout << "NPC: " << npcName << "\n";
 
         //get the part of the bodypart id which describes the race and the gender
         std::string bodyRaceID = headID.substr(0, headID.find_last_of("head_") - 4);
-		std::cout << "Race " << bodyRaceID << "\n";
+		
         std::string headModel = "meshes\\" +
             environment.mWorld->getStore().bodyParts.find(headID)->model;
 
 		std::string hairModel = "meshes\\" +
             environment.mWorld->getStore().bodyParts.find(hairID)->model;
 
+
+
         MWRender::Rendering rendering (cellRender, ref->ref);
+
+		
+		std::cout << "Race " << bodyRaceID << "\n";
+		std::cout << "Name:" << ref->base->name << "\n";
+		
+
 		if(bodyRaceID == "b_n_khajiit_m_" || bodyRaceID == "b_n_khajiit_f_" || bodyRaceID == "b_n_argonian_m_" || bodyRaceID == "b_n_argonian_f_")
 			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_animkna.nif");
 		else
 			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_anim.nif");
+
 		ref->model->getParentSceneNode()->showBoundingBox(true);
 	
         ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
@@ -81,12 +92,7 @@ namespace MWClass
 		Ogre::Vector3 axis = Ogre::Vector3( 0, 0, 1);
 		Ogre::Radian angle = Ogre::Radian(0);
 		
-		std::string addresses[6] = {"", "", "", "","", ""};
-		std::string addresses2[6] = {"", "", "", "", "", ""};
-		std::string upperleft[5] = {"", "", "", "", ""};
-		std::string upperright[5] = {"", "", "", "", ""};
-		std::string neckandup[5] = {"", "", "","",""};
-		std::string empty[6] = {"", "", "", "","", ""};
+		
 		int numbers = 0;
 		int uppernumbers = 0;
 		int neckNumbers = 0;
@@ -119,6 +125,8 @@ namespace MWClass
 		const ESM::BodyPart *hands = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hands.1st");
 
 
+
+
 		//std::cout << "RACE" << bodyRaceID << "\n";
 
 		Ogre::Vector3 pos2 = Ogre::Vector3(90, 5, 4);     //5
@@ -138,6 +146,14 @@ namespace MWClass
 			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
 			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
 			cellRender.insertMesh("meshes\\" + tail->model + "<", "Bip01 Tail", ref->model, p2, tailpos);
+		}
+		else
+		{
+			
+			Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
+			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
+			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
+			//cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, p2, tailpos);
 		}
 		
 		q = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
@@ -197,13 +213,7 @@ namespace MWClass
 			
 				cellRender.insertMesh("meshes\\" + wrist->model, "Right Wrist", ref->model, e, blank);
 				cellRender.insertMesh("meshes\\" + wrist->model + "#", "Left Wrist", ref->model, e, blank);
-			if(upperleft[uppernumbers - 1].compare(npcName + "upper arm") == 0)
-			{
-				
-				//cellRender.insertMesh("meshes\\b\\B_N_Argonian_M_Forearm.nif", Ogre::Vector3(-12.5, 0, 0), Ogre::Vector3(0, 0, 0), Ogre::Radian(3.14), npcName + "forearm", upperleft, uppernumbers);
-				//cellRender.insertMesh("meshes\\b\\B_N_Argonian_M_Forearm.nif", Ogre::Vector3(-12.5, 0, 0), Ogre::Vector3(0, 0, 0), Ogre::Radian(3.14), npcName + "forearm2", upperright, uppernumbers);
-
-			}
+			
 
 		}
 		
@@ -250,6 +260,69 @@ namespace MWClass
 		{
 			cellRender.insertMesh("meshes\\" + neck->model, "Neck", ref->model, e, blank);
 		}
+
+
+		std::vector<ESM::ContItem, std::allocator<ESM::ContItem>> ilist = ref->base->inventory.list;
+		std::vector<ESM::ContItem, std::allocator<ESM::ContItem>>::iterator ilistiter = ilist.begin();
+
+		bool blglove = false;
+		bool brglove = false;
+		bool bpants = false;
+		bool brobe = false;
+		bool bshirt = false;
+		bool bshoes = false;
+		bool bskirt = false;
+	
+		//Belts, Rings, and Amulets exist as meshes that you can drop in the world,
+		//but they don't actually wrap around the npc.  They do not need to be rendered.
+
+		
+		while(ilistiter != ilist.end())
+		{
+			std::cout << "Item:" <<ilistiter->item.toString();
+			const ESM::Clothing *clothes = environment.mWorld->getStore().clothes.search(ilistiter->item.toString());
+			ilistiter++;
+			
+			if(clothes){
+			    if(!blglove && clothes->data.type == ESM::Clothing::LGlove)
+			    {
+				    blglove = true;
+			    }
+			    else if(!brglove && clothes->data.type == ESM::Clothing::RGlove)
+			    {
+				    brglove = true;
+			    }
+			    else if(!bpants && clothes->data.type == ESM::Clothing::Pants)
+			    {
+				    bpants = true;
+			    }
+			    else if(!brobe && clothes->data.type == ESM::Clothing::Robe)
+			    {
+				    brobe = true;
+			    }
+			    else if(!bshirt && clothes->data.type == ESM::Clothing::Shirt)
+			    {
+				    bshirt = true;
+			    }
+			    else if(!bshoes && clothes->data.type == ESM::Clothing::Shoes)
+			    {
+				    bshoes = true;
+			    }
+			    else if(!bskirt && clothes->data.type == ESM::Clothing::Skirt)
+			    {
+				    bskirt = true;
+			    }
+			    else
+				    continue;
+			    //Insert the clothes on top of body parts
+			}
+	
+
+			
+			
+		}
+
+
 		
 		ref->mData.setHandle (rendering.end (ref->mData.isEnabled()));
 		
