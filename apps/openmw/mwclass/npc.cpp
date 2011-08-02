@@ -78,7 +78,7 @@ namespace MWClass
 		else
 			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_anim.nif");
 
-		ref->model->getParentSceneNode()->showBoundingBox(true);
+		//ref->model->getParentSceneNode()->showBoundingBox(true);
 	
         ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
 
@@ -322,6 +322,94 @@ namespace MWClass
 				while(clothingpartsiter != clothingparts.end())
 				{
 					std::cout << "Part: " << clothingpartsiter->male << "\n";
+					char marker = clothingpartsiter->part;
+					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (clothingpartsiter->male);
+					
+					
+					if(part)
+					{
+						std::string bonename = "";
+						switch (marker)
+						{
+
+							
+							
+							//Cuirass represents chest, we should change this, it is confusing
+							case ESM::PRT_Cuirass:
+								bonename = "Chest";
+								break;
+							case ESM::PRT_Groin:
+								bonename = "Groin";
+								break;
+							case ESM::PRT_Head :
+								bonename = "Head";
+								break;
+							case ESM::PRT_LAnkle:
+								bonename = "Left Ankle";
+								break;
+							case ESM::PRT_LFoot :
+								bonename = "Left Foot";
+								break;
+							case ESM::PRT_LForearm :
+								bonename = "Left Forearm";
+								break;
+							case ESM::PRT_LHand :
+								bonename = "Left Hand";
+								break;
+							case ESM::PRT_LKnee :
+								bonename = "Left Knee";
+								break;
+							case ESM::PRT_LLeg :
+								bonename = "Left Upper Leg";
+								break;
+							case ESM::PRT_LPauldron :
+								bonename = "Left Clavicle";
+								break;
+							case ESM::PRT_LUpperarm :
+								bonename = "Left Upper Arm";
+								break;
+							case ESM::PRT_LWrist :
+								bonename = "Left Wrist";
+								break;
+							case ESM::PRT_Neck:
+								bonename = "Neck";
+								break;
+							case ESM::PRT_RAnkle:
+								bonename = "Right Ankle";
+								break;
+							case ESM::PRT_RFoot:
+								bonename = "Right Foot";
+								break;
+							case ESM::PRT_RForearm:
+								bonename = "Right Forearm";
+								break;
+							case ESM::PRT_RHand:
+								bonename = "Right Hand";
+								break;
+							case ESM::PRT_RKnee:
+								bonename = "Right Knee";
+								break;
+							case ESM::PRT_RLeg:
+								bonename = "Right Upper Leg";
+								break;
+							case ESM::PRT_RPauldron:
+								bonename = "Right Clavicle";
+								break;
+							case ESM::PRT_RWrist:
+								bonename = "Right Wrist";
+								break;
+							case ESM::PRT_Shield:
+								bonename = "Shield";
+								break;
+							case ESM::PRT_Skirt:
+								bonename = "Groin";
+								break;
+							case ESM::PRT_Tail:
+								bonename = "Tail";
+								break;
+						}
+							
+					}
 					clothingpartsiter++;
 				}
 			    //Insert the clothes on top of body parts
