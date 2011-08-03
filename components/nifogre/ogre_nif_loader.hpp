@@ -114,7 +114,7 @@ class NIFLoader : Ogre::ManualResourceLoader
         NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
           mUpdateBoundingBox(true),
           mFlipVertexWinding(false), counter(0), secondHand(false),suffix(' '), flip(false)
-		{ skincounter = 0; resourceName = "";}
+		{ resourceName = "";}
 
         NIFLoader(NIFLoader& n) {}
 
@@ -164,11 +164,6 @@ class NIFLoader : Ogre::ManualResourceLoader
 //		TransformTool* mTool;
         std::string resourceName;
         std::string resourceGroup;
-        int skincounter;
-        bool isChest;
-        bool isBeast;
-        bool isHands;
-        bool isFeet;
         int counter;
         int numbers;
         int stack;

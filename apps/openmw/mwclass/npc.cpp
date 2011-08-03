@@ -54,6 +54,14 @@ namespace MWClass
 		//  ? Tri Right Hand
 		//  | Normal
 
+		//Mirroring Parts on second to last character
+		//suffix == '*'
+		//	vector = Ogre::Vector3(-1,1,1);
+		//  suffix == '?'
+		//	vector = Ogre::Vector3(1,-1,1);
+		//  suffix == '<'
+		//	vector = Ogre::Vector3(1,1,-1);
+
 
 
 
@@ -114,7 +122,7 @@ namespace MWClass
 			
 			Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
 
-				cellRender.insertMesh("meshes\\" + bodyPart->model, "Chest", ref->model, q, chestPos);
+				cellRender.insertMesh("meshes\\" + bodyPart->model + "|\"", "Chest", ref->model, q, chestPos);
 		}
 		   //std::cout << "GETTING NPC PART";
 		//Orgre::SceneNode test = cellRender.getNpcPart();
@@ -131,8 +139,8 @@ namespace MWClass
 		const ESM::BodyPart *tail = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "tail");
 		const ESM::BodyPart *wrist = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "wrist");
 		const ESM::BodyPart *forearm = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "forearm");
-		const ESM::BodyPart *hand = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hand.1st");
-		const ESM::BodyPart *hands = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hands.1st");
+		const ESM::BodyPart *hand = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hand");
+		const ESM::BodyPart *hands = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hands");
 
 
 
@@ -155,7 +163,7 @@ namespace MWClass
 			Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
 			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
 			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
-			cellRender.insertMesh("meshes\\" + tail->model + "<<", "Bip01 Tail", ref->model, p2, tailpos);
+			cellRender.insertMesh("meshes\\" + tail->model + "|*", "Bip01 Tail", ref->model, p2, tailpos);
 		}
 		else
 		{
@@ -170,19 +178,19 @@ namespace MWClass
 		p = Ogre::Quaternion(Ogre::Radian(3.14 ), Ogre::Vector3(0, 0, 1));
 
 		if(upperleg){
-			cellRender.insertMesh("meshes\\" + upperleg->model + "**", "Left Upper Leg", ref->model, e, blank);
+			cellRender.insertMesh("meshes\\" + upperleg->model + "*|", "Left Upper Leg", ref->model, e, blank);
 			cellRender.insertMesh("meshes\\" + upperleg->model, "Right Upper Leg", ref->model, e, blank);
 			
 		}
 		if(knee)
 		{
-			cellRender.insertMesh("meshes\\" + knee->model + "**", "Left Knee", ref->model, e, blank);  //e
+			cellRender.insertMesh("meshes\\" + knee->model + "*|", "Left Knee", ref->model, e, blank);  //e
 			cellRender.insertMesh("meshes\\" + knee->model, "Right Knee", ref->model, e,blank);   //e
 			
 		}
 		if(ankle){
 			
-			cellRender.insertMesh("meshes\\" + ankle->model + "**", "Left Ankle", ref->model, e, blank); //Ogre::Quaternion(Ogre::Radian(3.14 / 4), Ogre::Vector3(1, 0, 0)),blank); //1,0,0, blank);
+			cellRender.insertMesh("meshes\\" + ankle->model + "*|", "Left Ankle", ref->model, e, blank); //Ogre::Quaternion(Ogre::Radian(3.14 / 4), Ogre::Vector3(1, 0, 0)),blank); //1,0,0, blank);
 			cellRender.insertMesh("meshes\\" + ankle->model, "Right Ankle", ref->model, e,blank);
 		}
 		if(foot){
@@ -193,28 +201,28 @@ namespace MWClass
 			else
 			{
 				cellRender.insertMesh("meshes\\" + foot->model, "Right Foot", ref->model, e, blank);
-				cellRender.insertMesh("meshes\\" + foot->model + "**", "Left Foot", ref->model, e, blank);
+				cellRender.insertMesh("meshes\\" + foot->model + "*|", "Left Foot", ref->model, e, blank);
 			}
 		}
 		if(feet){
 			Ogre::Vector3 pos = Ogre::Vector3(-6,5,0);  //y is up
 			Ogre::Vector3 pos2 = Ogre::Vector3(6,5,0);
 
-			cellRender.insertMesh("meshes\\" + feet->model + "**", "Left Foot", ref->model, p, pos);
-			cellRender.insertMesh("meshes\\" + feet->model + "??", "Right Foot", ref->model, p, pos2);
+			cellRender.insertMesh("meshes\\" + feet->model + "|:", "Left Foot", ref->model, p, pos);
+			cellRender.insertMesh("meshes\\" + feet->model + "|<", "Right Foot", ref->model, p, pos2);
 			//cellRender.scaleMesh(Ogre::Vector3(1, -1, 1), addresses, numbers);
 		}
 		
 		 
 		if (arm){
 			cellRender.insertMesh("meshes\\" + arm->model, "Right Upper Arm", ref->model, e, blank);
-			cellRender.insertMesh("meshes\\" + arm->model + "**", "Left Upper Arm", ref->model, e, blank);
+			cellRender.insertMesh("meshes\\" + arm->model + "*|", "Left Upper Arm", ref->model, e, blank);
 		}
 
 		if (forearm)
 		{
 				cellRender.insertMesh("meshes\\" + forearm->model, "Right Forearm", ref->model, e, blank);
-				cellRender.insertMesh("meshes\\" + forearm->model + "**", "Left Forearm", ref->model, e, blank);
+				cellRender.insertMesh("meshes\\" + forearm->model + "*|", "Left Forearm", ref->model, e, blank);
 		}
 
 		if (wrist)
@@ -222,7 +230,7 @@ namespace MWClass
 
 			
 				cellRender.insertMesh("meshes\\" + wrist->model, "Right Wrist", ref->model, e, blank);
-				cellRender.insertMesh("meshes\\" + wrist->model + "**", "Left Wrist", ref->model, e, blank);
+				cellRender.insertMesh("meshes\\" + wrist->model + "*|", "Left Wrist", ref->model, e, blank);
 			
 
 		}
@@ -239,26 +247,18 @@ namespace MWClass
 		if(hand)
 		{
 			std::string pass;
-			if(hand->model.compare("b\\B_N_Dark Elf_F_Hands.1st.NIF")==0 && bodyRaceID.compare("b_n_dark elf_m_") == 0)
-				pass = "b\\B_N_Dark Elf_M_Hands.1st.NIF";	
-			else
 				pass = hand->model;
 
-			cellRender.insertMesh("meshes\\" + pass, "Left Hand", ref->model, handRot, handPos);
-			cellRender.insertMesh("meshes\\" + pass + "**", "Right Hand", ref->model, handRot, handPos2);
+			cellRender.insertMesh("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
+			cellRender.insertMesh("meshes\\" + pass + "|?", "Right Hand", ref->model, handRot, handPos2);
 		}
 		if(hands)
 		{
 			std::string pass;
-			if(hands->model.compare("b\\B_N_Redguard_F_Hands.1st.nif")==0 && bodyRaceID.compare("b_n_redguard_m_") == 0)
-				pass = "b\\B_N_Redguard_M_Hands.1st.nif";
-			else if(hands->model.compare("b\\B_N_Imperial_M_Hands.1st.nif") == 0 && bodyRaceID.compare("b_n_nord_m_") == 0)
-				pass = "b\\B_N_Nord_M_Hands.1st.nif";
-			else
 				pass =hands->model;	
 			
-			cellRender.insertMesh("meshes\\" + pass, "Left Hand", ref->model, handRot, handPos);
-			cellRender.insertMesh("meshes\\" + pass + "**", "Right Hand", ref->model, handRot, handPos2);
+			cellRender.insertMesh("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
+			cellRender.insertMesh("meshes\\" + pass + "|?", "Right Hand", ref->model, handRot, handPos2);
 		}
 
 
