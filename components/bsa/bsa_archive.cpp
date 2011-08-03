@@ -56,9 +56,9 @@ public:
     // should not have been declared const in the first place.
     BSAFile *narc = (BSAFile*)&arc;
 	String passed = filename;
-	if(filename.at(filename.length() - 1) == '#' || filename.at(filename.length() - 1) == '?' ||  filename.at(filename.length() - 1) == '<')
+	if(filename.at(filename.length() - 1) == '*' || filename.at(filename.length() - 1) == '?' ||  filename.at(filename.length() - 1) == '<')
 	{
-	   passed = filename.substr(0, filename.length() - 1);
+	   passed = filename.substr(0, filename.length() - 2);
 	}
     // Open the file
     StreamPtr strm = narc->getFile(passed.c_str());
@@ -70,9 +70,9 @@ public:
   // Check if the file exists.
   bool exists(const String& filename) { 
 	  String passed = filename;
-	if(filename.at(filename.length() - 1) == '#' || filename.at(filename.length() - 1) == '?' ||  filename.at(filename.length() - 1) == '<')
+	if(filename.at(filename.length() - 1) == '*' || filename.at(filename.length() - 1) == '?' ||  filename.at(filename.length() - 1) == '<')
 	{
-	   passed = filename.substr(0, filename.length() - 1);
+	   passed = filename.substr(0, filename.length() - 2);
 	}
 	  return arc.exists(passed.c_str()); 
   

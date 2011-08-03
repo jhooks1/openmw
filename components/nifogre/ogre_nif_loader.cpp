@@ -974,12 +974,12 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             std::string name = node->name.toString();
             triname = name;
 
-			if(isChest && name.compare("Tri Chest") == 0 && (suffix != '#' && suffix != '?' && suffix != '<') ){
+			if(isChest && name.compare("Tri Chest") == 0 && (suffix != '*' && suffix != '?' && suffix != '<') ){
                 //std::cout <<"BEASTCHEST1\n";
                 handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
                 skincounter++;
             }
-			else if(isChest && name.compare("Tri Left Foot") == 0 && suffix == '#')
+			else if(isChest && name.compare("Tri Left Foot") == 0 && suffix == '*')
 			{
 				handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
 			}
@@ -1052,12 +1052,12 @@ void NIFLoader::loadResource(Resource *resource)
 		counter = 0;
     std::string name = resource->getName();
 	suffix = name.at(name.length() - 1);
-	if( suffix == '#' || suffix == '?' || suffix == '<')
+	if( suffix == '*' || suffix == '?' || suffix == '<')
 	{
 		secondHand = true;
-		name.erase(name.length() - 1, 1);
+		name.erase(name.length() - 2, 2);
 
-		if(suffix == '#')
+		if(suffix == '*')
 			vector = Ogre::Vector3(-1,1,1);
 		if(suffix == '?')
 			vector = Ogre::Vector3(1,-1,1);
@@ -1149,7 +1149,7 @@ void NIFLoader::loadResource(Resource *resource)
     else
         isHands = false;
 
-	if((!isHands && !isChest ) && (suffix == '#' || suffix == '?' || suffix == '<'))
+	if((!isHands && !isChest ) && (suffix == '*' || suffix == '?' || suffix == '<'))
 	{
 		flip = true;
 	}
