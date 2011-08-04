@@ -854,7 +854,6 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 void NIFLoader::handleNode(Nif::Node *node, int flags,
                            const Transformation *trafo, BoundsFinder &bounds, Bone *parentBone)
 {
-    stack++;
     //if( MWClass::isChest)
     //  cout << "u:" << node << "\n";
     // Accumulate the flags from all the child nodes. This works for all
@@ -956,20 +955,9 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
     }
     else if (node->recType == RC_NiTriShape)
     {
-    // For shapes
-        /*For Beast Skins, Shape Bone Names
-        Tri Left Foot
-        Tri Right Foot
-        Tri Tail
-        Tri Chest
-        */
-		
 
             std::string name = node->name.toString();
-			
-
-
-
+		
 			if (triname == "")
             {
                 handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
@@ -980,13 +968,8 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 				if(triname == name.substr(0, triname.length()))
 					handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
 			}
-            
-
-            
         
     }
-
-    stack--;
 }
 std::vector<Nif::NiKeyframeData> NIFLoader::getAllanim(){
 		return allanim;

@@ -331,10 +331,10 @@ namespace MWClass
 				
 				while(clothingpartsiter != clothingparts.end())
 				{
-					std::cout << "Part: " << clothingpartsiter->male << "\n";
+					//std::cout << "Part: " << clothingpartsiter->male << "\n";
 					char marker = clothingpartsiter->part;
 					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (clothingpartsiter->male);
-					
+					std::string end = "";
 					
 					if(part)
 					{
@@ -346,7 +346,8 @@ namespace MWClass
 							
 							//Cuirass represents chest, we should change this, it is confusing
 							case ESM::PRT_Cuirass:
-								bonename = "Chest";
+								//bonename = "Chest";               //Chest piece causes errors right now
+								end = "|\"";
 								break;
 							case ESM::PRT_Groin:
 								bonename = "Groin";
@@ -355,30 +356,39 @@ namespace MWClass
 								bonename = "Head";
 								break;
 							case ESM::PRT_LAnkle:
+								end = "*|";
 								bonename = "Left Ankle";
 								break;
 							case ESM::PRT_LFoot :
+								end = "*|";
 								bonename = "Left Foot";
 								break;
 							case ESM::PRT_LForearm :
+								end = "*|";
 								bonename = "Left Forearm";
 								break;
 							case ESM::PRT_LHand :
+								end = "|>";
 								bonename = "Left Hand";
 								break;
 							case ESM::PRT_LKnee :
+								end = "*|";
 								bonename = "Left Knee";
 								break;
 							case ESM::PRT_LLeg :
+								end = "*|";
 								bonename = "Left Upper Leg";
 								break;
 							case ESM::PRT_LPauldron :
+								end = "*|";
 								bonename = "Left Clavicle";
 								break;
 							case ESM::PRT_LUpperarm :
+								end = "*|";
 								bonename = "Left Upper Arm";
 								break;
 							case ESM::PRT_LWrist :
+								end = "*|";
 								bonename = "Left Wrist";
 								break;
 							case ESM::PRT_Neck:
@@ -395,6 +405,7 @@ namespace MWClass
 								break;
 							case ESM::PRT_RHand:
 								bonename = "Right Hand";
+								end = "|?";
 								break;
 							case ESM::PRT_RKnee:
 								bonename = "Right Knee";
@@ -404,6 +415,9 @@ namespace MWClass
 								break;
 							case ESM::PRT_RPauldron:
 								bonename = "Right Clavicle";
+								break;
+							case ESM::PRT_RUpperarm:
+								bonename = "Right Upper Arm";
 								break;
 							case ESM::PRT_RWrist:
 								bonename = "Right Wrist";
@@ -416,13 +430,21 @@ namespace MWClass
 								break;
 							case ESM::PRT_Tail:
 								bonename = "Tail";
+								end = "|*";
 								break;
+						}
+
+						if(bonename != "")
+						{
+							 //Insert the clothes on top of body parts
+							std::cout << "BOne" << bonename << "model" << part->model << "\n";
+							cellRender.insertMesh("meshes\\" + part->model + end, bonename, ref->model, e, blank);
 						}
 							
 					}
 					clothingpartsiter++;
 				}
-			    //Insert the clothes on top of body parts
+			   
 			}
 	
 

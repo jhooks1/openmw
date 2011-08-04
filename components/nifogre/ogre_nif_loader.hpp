@@ -113,7 +113,7 @@ class NIFLoader : Ogre::ManualResourceLoader
     private:
         NIFLoader() : resourceGroup("General"),  mNormaliseNormals(false),
           mUpdateBoundingBox(true),
-          mFlipVertexWinding(false), counter(0), secondHand(false),suffix(' '), flip(false)
+          mFlipVertexWinding(false),suffix(' '), flip(false)
 		{ resourceName = "";}
 
         NIFLoader(NIFLoader& n) {}
@@ -161,18 +161,14 @@ class NIFLoader : Ogre::ManualResourceLoader
         Mangle::VFS::OgreVFS *vfs;
 
 
-//		TransformTool* mTool;
         std::string resourceName;
         std::string resourceGroup;
-        int counter;
-        int numbers;
-        int stack;
-		bool anim;
+      
 		short handle;
 		char suffix;
 		Ogre::Animation* animcore;
 		Ogre::Animation* animcore2;
-		//static std::vector numTracks;
+		
 		int test;
 		std::vector<Nif::NiKeyframeData> allanim;
 		bool flip;
@@ -180,7 +176,6 @@ class NIFLoader : Ogre::ManualResourceLoader
 
 		  Ogre::Matrix4 mTransform;
         Ogre::AxisAlignedBox mBoundingBox;
-		bool secondHand;
 		 bool mNormaliseNormals;
         bool mUpdateBoundingBox;
         bool mFlipVertexWinding;
