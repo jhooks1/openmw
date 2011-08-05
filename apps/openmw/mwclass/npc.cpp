@@ -124,24 +124,264 @@ namespace MWClass
 
 				cellRender.insertMesh("meshes\\" + bodyPart->model + "|\"", "Chest", ref->model, q, chestPos);
 		}
-		   //std::cout << "GETTING NPC PART";
-		//Orgre::SceneNode test = cellRender.getNpcPart();
+		
 
 		const ESM::BodyPart *upperleg = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "upper leg");
 		const ESM::BodyPart *groin = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "groin");
-		const ESM::BodyPart *arm = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "upper arm");
+		const ESM::BodyPart *arml = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "upper arm");  //We need two
 		const ESM::BodyPart *neck = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "neck");
-		const ESM::BodyPart *head = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "head");
 		const ESM::BodyPart *knee = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "knee");
 		const ESM::BodyPart *ankle = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "ankle");
 		const ESM::BodyPart *foot = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "foot");
 		const ESM::BodyPart *feet = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "feet");
 		const ESM::BodyPart *tail = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "tail");
-		const ESM::BodyPart *wrist = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "wrist");
-		const ESM::BodyPart *forearm = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "forearm");
-		const ESM::BodyPart *hand = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hand");
-		const ESM::BodyPart *hands = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hands");
+		const ESM::BodyPart *wristl = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "wrist");  //We need two
+		const ESM::BodyPart *forearml = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "forearm");  //We need two
+		const ESM::BodyPart *handl = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hand");   //We need two
+		const ESM::BodyPart *hair = environment.mWorld->getStore().bodyParts.search(hairID);
+		const ESM::BodyPart *head = environment.mWorld->getStore().bodyParts.search(headID);
+		if(!handl)
+			handl = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hands");
+		const ESM::BodyPart* claviclel;
+		const ESM::BodyPart* clavicler;
+		const ESM::BodyPart* handr = handl;
+		const ESM::BodyPart* forearmr = forearml;
+		const ESM::BodyPart* wristr = wristl;
+		const ESM::BodyPart* armr = arml;
 
+		int pchest = 1;
+		int pupperleg = 1;
+		int pgroin = 1;
+		int parml = 1;
+		int pknee = 1;
+		int pankle = 1;
+		int pfoot = 1;
+		int pwristl = 1;
+		int pforearml = 1;
+		int phandl = 1;
+		int pclaviclel = 1;
+		int pclavicler = 1;
+		int phandr = 1;
+		int pforearmr = 1;
+		int pwristr = 1;
+		int parmr = 1;
+		int phead = 1;
+		int phair = 1;
+		int pneck = 1;
+		int ptail = 1; 
+
+		std::vector<ESM::ContItem, std::allocator<ESM::ContItem>> ilist = ref->base->inventory.list;
+		std::vector<ESM::ContItem, std::allocator<ESM::ContItem>>::iterator ilistiter = ilist.begin();
+
+		bool blglove = false;
+		bool brglove = false;
+		bool bpants = false;
+		bool brobe = false;
+		bool bshirt = false;
+		bool bshoes = false;
+		bool bskirt = false;
+	
+		//Belts, Rings, and Amulets exist as meshes that you can drop in the world,
+		//but they don't actually wrap around the npc.  They do not need to be rendered.
+
+		//Priorities
+		//Robe 5
+		//Skirt 4
+		//Armor 3
+		//Shoes/Pants/Shirts/Gloves 2
+		//Skin 1
+
+		int priority = 1;
+		while(ilistiter != ilist.end())
+		{
+			//std::cout << "Item:" <<ilistiter->item.toString();
+			const ESM::Clothing *clothes = environment.mWorld->getStore().clothes.search(ilistiter->item.toString());
+			ilistiter++;
+			
+			if(clothes){
+			    if(!blglove && clothes->data.type == ESM::Clothing::LGlove)
+			    {
+				    blglove = true;
+					priority = 2;
+			    }
+			    else if(!brglove && clothes->data.type == ESM::Clothing::RGlove)
+			    {
+				    brglove = true;
+					priority = 2;
+			    }
+			    else if(!bpants && clothes->data.type == ESM::Clothing::Pants)
+			    {
+				    bpants = true;
+					priority = 2;
+			    }
+			    else if(!brobe && clothes->data.type == ESM::Clothing::Robe)
+			    {
+				    brobe = true;
+					priority = 5;
+			    }
+			    else if(!bshirt && clothes->data.type == ESM::Clothing::Shirt)
+			    {
+				    bshirt = true;
+					priority = 2;
+			    }
+			    else if(!bshoes && clothes->data.type == ESM::Clothing::Shoes)
+			    {
+				    bshoes = true;
+					priority = 2;
+			    }
+			    else if(!bskirt && clothes->data.type == ESM::Clothing::Skirt)
+			    {
+				    bskirt = true;
+					priority = 4;
+			    }
+			    else
+				    continue;
+
+				
+				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>> clothingparts = clothes->parts.parts;
+				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>>::iterator clothingpartsiter = clothingparts.begin();
+				
+				while(clothingpartsiter != clothingparts.end())
+				{
+					//std::cout << "Part: " << clothingpartsiter->male << "\n";
+					char marker = clothingpartsiter->part;
+					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (clothingpartsiter->male);
+					
+					if(part)
+					{
+						//Cuirass represents chest, we should change this, it is confusing
+						if(marker == ESM::PRT_Cuirass && priority > pchest)
+						{
+							pchest = priority;
+						}
+						else if(marker == ESM::PRT_Groin && priority > pgroin)
+						{
+							groin = part;
+							pgroin = priority;
+						}
+						else if(marker == ESM::PRT_Head && priority > phead)
+						{
+							head = part;
+							phead = priority;
+						}
+						else if(marker == ESM::PRT_LAnkle && priority > pankle)
+						{
+							ankle = part;
+							pankle = priority;
+						}
+						else if(marker == ESM::PRT_LFoot && priority > pfoot)
+						{
+							foot = part;
+							pfoot = priority;
+						}
+			
+						else if(marker == ESM::PRT_LForearm && priority > pforearml)
+						{
+							forearml = part;
+							pforearml = priority;
+						}
+						else if(marker == ESM::PRT_LHand && priority > phandl)
+						{
+							handl = part;
+							phandl = priority;
+						}
+						else if(marker == ESM::PRT_LKnee && priority > pknee)
+						{
+							knee = part;
+							pknee = priority;
+						}
+						else if(marker == ESM::PRT_LLeg && priority > pupperleg)
+						{
+							upperleg = part;
+							pupperleg = priority;
+						}
+						else if(marker == ESM::PRT_LPauldron && priority > pclaviclel)
+						{
+							claviclel = part;
+							pclaviclel = priority;
+						}
+						else if(marker == ESM::PRT_LUpperarm && priority > parml)
+						{
+							arml = part;
+							parml = priority;
+						}
+						else if(marker == ESM::PRT_Neck && priority > pneck)
+						{
+							neck = part;
+							pneck = priority;
+						}
+						else if(marker == ESM::PRT_RAnkle && priority > pankle)
+						{
+							ankle = part;
+							pankle = priority;
+						}
+						else if(marker == ESM::PRT_RFoot && priority > pfoot)
+						{
+							foot = part;
+							pfoot = priority;
+						}
+						else if(marker == ESM::PRT_RForearm && priority > pankle)
+						{
+							forearmr = part;
+							pforearmr = priority;
+						}
+						else if(marker == ESM::PRT_RHand && priority > phandr)
+						{
+							handr = part;
+							phandr = priority;
+						}
+						else if(marker == ESM::PRT_RKnee && priority > pknee)
+						{
+							knee = part;
+							pknee = priority;
+						}
+						else if(marker == ESM::PRT_RLeg && priority > pupperleg)
+						{
+							upperleg = part;
+							pupperleg = priority;
+						}
+						else if(marker == ESM::PRT_RPauldron && priority > pclavicler)
+						{
+							clavicler= part;
+							pclavicler = priority;
+						}
+						else if(marker == ESM::PRT_RUpperarm && priority > parmr)
+						{
+							armr = part;
+							parmr = priority;
+						}
+						else if(marker == ESM::PRT_RWrist && priority > pwristr)
+						{
+							wristr = part;
+							pwristr = priority;
+						}
+						else if(marker == ESM::PRT_Shield)
+						{
+							;
+						}
+						else if(marker == ESM::PRT_Skirt && priority > pgroin)
+						{
+							groin = part;
+							pgroin = priority;
+						}
+						else if(marker == ESM::PRT_Tail && priority > ptail)
+						{
+							tail = part;
+							ptail = priority;
+						}
+						
+						
+						
+
+						
+
+							
+					}
+					clothingpartsiter++;
+				}
+			   
+			}
+		}
 
 
 
@@ -214,26 +454,27 @@ namespace MWClass
 		}
 		
 		 
-		if (arm){
-			cellRender.insertMesh("meshes\\" + arm->model, "Right Upper Arm", ref->model, e, blank);
-			cellRender.insertMesh("meshes\\" + arm->model + "*|", "Left Upper Arm", ref->model, e, blank);
+		if (armr){
+			cellRender.insertMesh("meshes\\" + armr->model, "Right Upper Arm", ref->model, e, blank);
+		}
+		if(arml){
+			cellRender.insertMesh("meshes\\" + arml->model + "*|", "Left Upper Arm", ref->model, e, blank);
 		}
 
-		if (forearm)
+		if (forearmr)
 		{
-				cellRender.insertMesh("meshes\\" + forearm->model, "Right Forearm", ref->model, e, blank);
-				cellRender.insertMesh("meshes\\" + forearm->model + "*|", "Left Forearm", ref->model, e, blank);
+				cellRender.insertMesh("meshes\\" + forearmr->model, "Right Forearm", ref->model, e, blank);
 		}
+		if(forearml)
+			cellRender.insertMesh("meshes\\" + forearml->model + "*|", "Left Forearm", ref->model, e, blank);
 
-		if (wrist)
+		if (wristr)
 		{
-
-			
-				cellRender.insertMesh("meshes\\" + wrist->model, "Right Wrist", ref->model, e, blank);
-				cellRender.insertMesh("meshes\\" + wrist->model + "*|", "Left Wrist", ref->model, e, blank);
-			
-
+			cellRender.insertMesh("meshes\\" + wristr->model, "Right Wrist", ref->model, e, blank);
 		}
+
+		if(wristl)
+				cellRender.insertMesh("meshes\\" + wristl->model + "*|", "Left Wrist", ref->model, e, blank);
 		
 
 		//                                        y was 50
@@ -244,213 +485,34 @@ namespace MWClass
 		Ogre::Quaternion handRot = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 1, 0)); //1,0,0         //0,1,0
 		handRot = handRot * Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0)) *  Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0));
 		Ogre::Quaternion handRot2 = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1,0,0));
-		if(hand)
+		if(handl)
 		{
 			std::string pass;
-				pass = hand->model;
+				pass = handl->model;
 
 			cellRender.insertMesh("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
-			cellRender.insertMesh("meshes\\" + pass + "|?", "Right Hand", ref->model, handRot, handPos2);
 		}
-		if(hands)
-		{
-			std::string pass;
-				pass =hands->model;	
-			
-			cellRender.insertMesh("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
-			cellRender.insertMesh("meshes\\" + pass + "|?", "Right Hand", ref->model, handRot, handPos2);
-		}
+		if(handr)
+			cellRender.insertMesh("meshes\\" + handr->model + "|?", "Right Hand", ref->model, handRot, handPos2);
 
 
-
-			cellRender.insertMesh(headModel, "Head", ref->model, e, blank);
-			cellRender.insertMesh(hairModel, "Head", ref->model, e, blank);
 	
 		if(neck)
 		{
 			cellRender.insertMesh("meshes\\" + neck->model, "Neck", ref->model, e, blank);
 		}
+		if(head)
+			cellRender.insertMesh("meshes\\" + head->model, "Head", ref->model, e, blank);
+		if(hair)
+			cellRender.insertMesh("meshes\\" + hair->model, "Head", ref->model, e, blank);
 
-
-		std::vector<ESM::ContItem, std::allocator<ESM::ContItem>> ilist = ref->base->inventory.list;
-		std::vector<ESM::ContItem, std::allocator<ESM::ContItem>>::iterator ilistiter = ilist.begin();
-
-		bool blglove = false;
-		bool brglove = false;
-		bool bpants = false;
-		bool brobe = false;
-		bool bshirt = false;
-		bool bshoes = false;
-		bool bskirt = false;
-	
-		//Belts, Rings, and Amulets exist as meshes that you can drop in the world,
-		//but they don't actually wrap around the npc.  They do not need to be rendered.
 
 		
-		while(ilistiter != ilist.end())
-		{
-			//std::cout << "Item:" <<ilistiter->item.toString();
-			const ESM::Clothing *clothes = environment.mWorld->getStore().clothes.search(ilistiter->item.toString());
-			ilistiter++;
-			
-			if(clothes){
-			    if(!blglove && clothes->data.type == ESM::Clothing::LGlove)
-			    {
-				    blglove = true;
-			    }
-			    else if(!brglove && clothes->data.type == ESM::Clothing::RGlove)
-			    {
-				    brglove = true;
-			    }
-			    else if(!bpants && clothes->data.type == ESM::Clothing::Pants)
-			    {
-				    bpants = true;
-			    }
-			    else if(!brobe && clothes->data.type == ESM::Clothing::Robe)
-			    {
-				    brobe = true;
-			    }
-			    else if(!bshirt && clothes->data.type == ESM::Clothing::Shirt)
-			    {
-				    bshirt = true;
-			    }
-			    else if(!bshoes && clothes->data.type == ESM::Clothing::Shoes)
-			    {
-				    bshoes = true;
-			    }
-			    else if(!bskirt && clothes->data.type == ESM::Clothing::Skirt)
-			    {
-				    bskirt = true;
-			    }
-			    else
-				    continue;
-
-				
-				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>> clothingparts = clothes->parts.parts;
-				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>>::iterator clothingpartsiter = clothingparts.begin();
-				
-				while(clothingpartsiter != clothingparts.end())
-				{
-					//std::cout << "Part: " << clothingpartsiter->male << "\n";
-					char marker = clothingpartsiter->part;
-					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (clothingpartsiter->male);
-					std::string end = "";
-					
-					if(part)
-					{
-						std::string bonename = "";
-						switch (marker)
-						{
-
-							
-							
-							//Cuirass represents chest, we should change this, it is confusing
-							case ESM::PRT_Cuirass:
-								//bonename = "Chest";               //Chest piece causes errors right now
-								end = "|\"";
-								break;
-							case ESM::PRT_Groin:
-								bonename = "Groin";
-								break;
-							case ESM::PRT_Head :
-								bonename = "Head";
-								break;
-							case ESM::PRT_LAnkle:
-								end = "*|";
-								bonename = "Left Ankle";
-								break;
-							case ESM::PRT_LFoot :
-								end = "*|";
-								bonename = "Left Foot";
-								break;
-							case ESM::PRT_LForearm :
-								end = "*|";
-								bonename = "Left Forearm";
-								break;
-							case ESM::PRT_LHand :
-								end = "|>";
-								bonename = "Left Hand";
-								break;
-							case ESM::PRT_LKnee :
-								end = "*|";
-								bonename = "Left Knee";
-								break;
-							case ESM::PRT_LLeg :
-								end = "*|";
-								bonename = "Left Upper Leg";
-								break;
-							case ESM::PRT_LPauldron :
-								end = "*|";
-								bonename = "Left Clavicle";
-								break;
-							case ESM::PRT_LUpperarm :
-								end = "*|";
-								bonename = "Left Upper Arm";
-								break;
-							case ESM::PRT_LWrist :
-								end = "*|";
-								bonename = "Left Wrist";
-								break;
-							case ESM::PRT_Neck:
-								bonename = "Neck";
-								break;
-							case ESM::PRT_RAnkle:
-								bonename = "Right Ankle";
-								break;
-							case ESM::PRT_RFoot:
-								bonename = "Right Foot";
-								break;
-							case ESM::PRT_RForearm:
-								bonename = "Right Forearm";
-								break;
-							case ESM::PRT_RHand:
-								bonename = "Right Hand";
-								end = "|?";
-								break;
-							case ESM::PRT_RKnee:
-								bonename = "Right Knee";
-								break;
-							case ESM::PRT_RLeg:
-								bonename = "Right Upper Leg";
-								break;
-							case ESM::PRT_RPauldron:
-								bonename = "Right Clavicle";
-								break;
-							case ESM::PRT_RUpperarm:
-								bonename = "Right Upper Arm";
-								break;
-							case ESM::PRT_RWrist:
-								bonename = "Right Wrist";
-								break;
-							case ESM::PRT_Shield:
-								bonename = "Shield";
-								break;
-							case ESM::PRT_Skirt:
-								bonename = "Groin";
-								break;
-							case ESM::PRT_Tail:
-								bonename = "Tail";
-								end = "|*";
-								break;
-						}
-
-						if(bonename != "")
-						{
-							 //Insert the clothes on top of body parts
-							std::cout << "BOne" << bonename << "model" << part->model << "\n";
-							cellRender.insertMesh("meshes\\" + part->model + end, bonename, ref->model, e, blank);
-						}
-							
-					}
-					clothingpartsiter++;
-				}
-			   
-			}
 	
 
 			
 			
-		}
+
 
 
 		
