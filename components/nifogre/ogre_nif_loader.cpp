@@ -43,6 +43,7 @@
 
 // float infinity
 #include <limits>
+#include <float.h>
 
 
 typedef unsigned char ubyte;
@@ -1078,7 +1079,7 @@ void NIFLoader::loadResource(Resource *resource)
         warn("Found no records in NIF.");
         return;
     }
-
+	
 	for(int i = 0; i < nif.numRecords(); i++)
 
 	{
@@ -1112,9 +1113,12 @@ void NIFLoader::loadResource(Resource *resource)
         return;
     }
 
+	
 
     // Handle the node
     handleNode(node, 0, NULL, bounds, 0);
+
+	
 
 
 	handle = 0;
@@ -1132,6 +1136,8 @@ void NIFLoader::loadResource(Resource *resource)
     }
 
 	int acounter = 1;
+
+	
 	for(int i = 0; i < nif.numRecords(); i++)
 	{
 		
@@ -1144,11 +1150,16 @@ void NIFLoader::loadResource(Resource *resource)
 
 	Nif::Node *n = dynamic_cast<Nif::Node*>(nif.getRecord(i));
 	
+	
 
 	if(f != NULL)
 	{
+		
 		Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
 		Nif::NiKeyframeDataPtr data = f->data;
+		
+		if (f->timeStart == FLT_MAX)
+			continue;
 		//std::cout <<"Bone" << o->name.toString() << "\n";
 		data->setBonename(o->name.toString());
 		Nif::NiKeyframeData c;
@@ -1247,9 +1258,11 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	}
 	
+	
 	if(flip){
 	mesh->_setBounds(mBoundingBox, false);
 	}
+	
     // set skeleton
   if (!mSkel.isNull())
   {

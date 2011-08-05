@@ -118,13 +118,7 @@ namespace MWClass
 		Ogre::Quaternion q = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0,0,1)); //1,0,0
 		Ogre::Quaternion e = Ogre::Quaternion::IDENTITY;
 		Ogre::Vector3 blank = Ogre::Vector3(0,0,0);
-        if (bodyPart){
-			
-			Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
-
-				cellRender.insertMesh("meshes\\" + bodyPart->model + "|\"", "Chest", ref->model, q, chestPos);
-		}
-		
+        
 
 		const ESM::BodyPart *upperleg = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "upper leg");
 		const ESM::BodyPart *groin = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "groin");
@@ -243,7 +237,7 @@ namespace MWClass
 				
 				while(clothingpartsiter != clothingparts.end())
 				{
-					//std::cout << "Part: " << clothingpartsiter->male << "\n";
+					std::cout << "Part: " << clothingpartsiter->male << "\n";
 					char marker = clothingpartsiter->part;
 					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (clothingpartsiter->male);
 					
@@ -252,6 +246,7 @@ namespace MWClass
 						//Cuirass represents chest, we should change this, it is confusing
 						if(marker == ESM::PRT_Cuirass && priority > pchest)
 						{
+							bodyPart = part;
 							pchest = priority;
 						}
 						else if(marker == ESM::PRT_Groin && priority > pgroin)
@@ -279,6 +274,11 @@ namespace MWClass
 						{
 							forearml = part;
 							pforearml = priority;
+						}
+						else if(marker == ESM::PRT_LWrist && priority > pwristl)
+						{
+							wristl = part;
+							pwristl = priority;
 						}
 						else if(marker == ESM::PRT_LHand && priority > phandl)
 						{
@@ -395,6 +395,13 @@ namespace MWClass
 
 		//cellRender.insertMesh("meshes\\b\\B_N_Breton_F_Foot.nif", Ogre::Vector3(-1,1,1));        //1, -1, 1
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
+		if (bodyPart){
+			
+			Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
+
+				cellRender.insertMesh("meshes\\" + bodyPart->model + "|\"", "Chest", ref->model, q, chestPos);
+		}
+		
         if (groin){
 			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, e, blank);
 
