@@ -75,6 +75,10 @@ namespace MWClass
 
         //get the part of the bodypart id which describes the race and the gender
         std::string bodyRaceID = headID.substr(0, headID.find_last_of("head_") - 4);
+		char secondtolast = bodyRaceID.at(bodyRaceID.length() - 2);
+		bool female = tolower(secondtolast) == 'f';
+		bool beast = bodyRaceID == "b_n_khajiit_m_" || bodyRaceID == "b_n_khajiit_f_" || bodyRaceID == "b_n_argonian_m_" || bodyRaceID == "b_n_argonian_f_";
+
 		
         std::string headModel = "meshes\\" +
             environment.mWorld->getStore().bodyParts.find(headID)->model;
@@ -89,9 +93,11 @@ namespace MWClass
 		
 		std::cout << "Race " << bodyRaceID << "\n";
 		std::cout << "Name:" << ref->base->name << "\n";
+		if(female)
+			std::cout << "Is female\n";
 		
 
-		if(bodyRaceID == "b_n_khajiit_m_" || bodyRaceID == "b_n_khajiit_f_" || bodyRaceID == "b_n_argonian_m_" || bodyRaceID == "b_n_argonian_f_")
+		if(beast)
 			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_animkna.nif");
 		else
 			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_anim.nif");
@@ -136,8 +142,8 @@ namespace MWClass
 		const ESM::BodyPart *head = environment.mWorld->getStore().bodyParts.search(headID);
 		if(!handl)
 			handl = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "hands");
-		const ESM::BodyPart* claviclel;
-		const ESM::BodyPart* clavicler;
+		const ESM::BodyPart* claviclel = environment.mWorld->getStore().bodyParts.search (bodyRaceID + "clavicle");
+		const ESM::BodyPart* clavicler = claviclel;
 		const ESM::BodyPart* handr = handl;
 		const ESM::BodyPart* forearmr = forearml;
 		const ESM::BodyPart* wristr = wristl;
@@ -190,7 +196,10 @@ namespace MWClass
 		{
 			//std::cout << "Item:" <<ilistiter->item.toString();
 			const ESM::Clothing *clothes = environment.mWorld->getStore().clothes.search(ilistiter->item.toString());
+			const ESM::Armor *armor =  environment.mWorld->getStore().armors.search(ilistiter->item.toString());
 			ilistiter++;
+			std::vector<ESM::PartReference,std::allocator<ESM::PartReference>> apparelparts;
+				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>>::iterator appareliter;
 			
 			if(clothes){
 			    if(!blglove && clothes->data.type == ESM::Clothing::LGlove)
@@ -220,6 +229,8 @@ namespace MWClass
 			    }
 			    else if(!bshoes && clothes->data.type == ESM::Clothing::Shoes)
 			    {
+					if(beast)
+						continue;
 				    bshoes = true;
 					priority = 2;
 			    }
@@ -230,16 +241,29 @@ namespace MWClass
 			    }
 			    else
 				    continue;
-
+				apparelparts = clothes->parts.parts;
+				appareliter = apparelparts.begin();
+			}
+			else if(armor)
+			{
+				priority = 3;
+				if(armor->data.type == ESM::Armor::Boots && beast)
+					continue;
+				apparelparts = armor->parts.parts;
+				appareliter = apparelparts.begin();
+			}
+			else 
+				continue;
 				
-				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>> clothingparts = clothes->parts.parts;
-				std::vector<ESM::PartReference,std::allocator<ESM::PartReference>>::iterator clothingpartsiter = clothingparts.begin();
 				
-				while(clothingpartsiter != clothingparts.end())
+				while(appareliter != apparelparts.end())
 				{
-					std::cout << "Part: " << clothingpartsiter->male << "\n";
-					char marker = clothingpartsiter->part;
-					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (clothingpartsiter->male);
+					std::cout << "Part: " << appareliter->male << "\n";
+					std::cout << "PartF:" << appareliter->female <<"\n";
+					char marker = appareliter->part;
+					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (appareliter->male);
+					if(female && environment.mWorld->getStore().bodyParts.search (appareliter->female))
+						part = environment.mWorld->getStore().bodyParts.search (appareliter->female);
 					
 					if(part)
 					{
@@ -258,6 +282,12 @@ namespace MWClass
 						{
 							head = part;
 							phead = priority;
+							hair = 0;
+						}
+						else if(marker == ESM::PRT_Hair && priority > phair)
+						{
+							hair = part;
+							phair = priority;
 						}
 						else if(marker == ESM::PRT_LAnkle && priority > pankle)
 						{
@@ -377,10 +407,9 @@ namespace MWClass
 
 							
 					}
-					clothingpartsiter++;
+					appareliter++;
 				}
 			   
-			}
 		}
 
 
@@ -502,7 +531,11 @@ namespace MWClass
 		if(handr)
 			cellRender.insertMesh("meshes\\" + handr->model + "|?", "Right Hand", ref->model, handRot, handPos2);
 
-
+		if(claviclel)
+			cellRender.insertMesh("meshes\\" + claviclel->model + "*|", "Left Clavicle", ref->model, e, blank);
+		if(clavicler)
+			cellRender.insertMesh("meshes\\" + clavicler->model , "Right Clavicle", ref->model, e, blank);
+	
 	
 		if(neck)
 		{
