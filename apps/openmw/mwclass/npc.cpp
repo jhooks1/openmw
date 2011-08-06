@@ -256,7 +256,7 @@ namespace MWClass
 				continue;
 				
 				
-				while(appareliter != apparelparts.end())
+				while(apparelparts.size() > 0 && appareliter != apparelparts.end())
 				{
 					std::cout << "Part: " << appareliter->male << "\n";
 					std::cout << "PartF:" << appareliter->female <<"\n";
@@ -265,8 +265,7 @@ namespace MWClass
 					if(female && environment.mWorld->getStore().bodyParts.search (appareliter->female))
 						part = environment.mWorld->getStore().bodyParts.search (appareliter->female);
 					
-					if(part)
-					{
+					
 						//Cuirass represents chest, we should change this, it is confusing
 						if(marker == ESM::PRT_Cuirass && priority > pchest)
 						{
@@ -350,7 +349,7 @@ namespace MWClass
 							foot = part;
 							pfoot = priority;
 						}
-						else if(marker == ESM::PRT_RForearm && priority > pankle)
+						else if(marker == ESM::PRT_RForearm && priority > pforearmr)
 						{
 							forearmr = part;
 							pforearmr = priority;
@@ -406,7 +405,7 @@ namespace MWClass
 						
 
 							
-					}
+				
 					appareliter++;
 				}
 			   
