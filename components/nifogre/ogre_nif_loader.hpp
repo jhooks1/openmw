@@ -106,6 +106,8 @@ class NIFLoader : Ogre::ManualResourceLoader
 		void setFlip(bool fl);
 		void setVector(Ogre::Vector3 vec);
 		std::vector<Nif::NiKeyframeData> getAllanim();
+		std::vector<Nif::NiKeyframeData> getAnim(std::string);
+		std::vector<Nif::NiTriShapeCopy> getShapes();
         
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
@@ -168,9 +170,12 @@ class NIFLoader : Ogre::ManualResourceLoader
 		char suffix;
 		Ogre::Animation* animcore;
 		Ogre::Animation* animcore2;
+		int assignmentn;
 		
 		int test;
 		std::vector<Nif::NiKeyframeData> allanim;
+		std::map<std::string,std::vector<Nif::NiKeyframeData>> allanimmap;
+		std::vector<Nif::NiTriShapeCopy> shapes;
 		bool flip;
 		Ogre::Vector3 vector; 
 

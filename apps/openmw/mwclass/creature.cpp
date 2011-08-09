@@ -36,13 +36,26 @@ namespace MWClass
         {
             MWRender::Rendering rendering (cellRender, ref->ref);
            ref->model = cellRender.insertAndDeliverMesh("meshes\\" + model);
+		   //cellRender.insertMesh("meshes\\b\\B_N_Redguard_F_Upper Arm.nif", "Bip01 Head", ref->model);
 		   
 		   int v = NIFLoader::getSingleton().numTracks.size();
             cellRender.insertActorPhysics();
+			
             ref->mData.setHandle (rendering.end (ref->mData.isEnabled()));
+			ref->smodel = "meshes\\" + model;
         }
-		ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
-	
+		//ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
+		//ref->shapes = NIFLoader::getSingletonPtr()->getShapes();
+		//std::cout << "Size" << ref->shapes.size() << "\n";
+		//std::vector<Nif::NiTriShapeCopy>::iterator shapesiter = ref->shapes.begin() ;
+		
+		/*while(shapesiter != ref->shapes.end()){
+			std::cout << "Loop\n";
+			SString name = shapesiter->name;
+			//std::cout << "Name" << name<< "\n";
+			//std::cout << "Fu" <<  shapesiter->name.toString() << "\n";
+			shapesiter++;
+		}*/
 	
 	
 	}

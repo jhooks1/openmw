@@ -96,15 +96,18 @@ namespace MWClass
 		if(female)
 			std::cout << "Is female\n";
 		
-
+		std::string smodel = "meshes\\base_anim.nif";
 		if(beast)
-			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_animkna.nif");
-		else
-			ref->model = cellRender.insertAndDeliverMesh("meshes\\base_anim.nif");
+			smodel = "meshes\\base_animkna.nif"; 
+		
+	
+			
+			ref->smodel = smodel;
+			ref->model = cellRender.insertAndDeliverMesh(smodel);
 
 		//ref->model->getParentSceneNode()->showBoundingBox(true);
 	
-        ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
+        //ref->allanim = NIFLoader::getSingletonPtr()->getAllanim();
 
         const ESM::BodyPart *bodyPart =
             environment.mWorld->getStore().bodyParts.search (bodyRaceID + "chest");
@@ -258,8 +261,8 @@ namespace MWClass
 				
 				while(apparelparts.size() > 0 && appareliter != apparelparts.end())
 				{
-					std::cout << "Part: " << appareliter->male << "\n";
-					std::cout << "PartF:" << appareliter->female <<"\n";
+					//std::cout << "Part: " << appareliter->male << "\n";
+					//std::cout << "PartF:" << appareliter->female <<"\n";
 					char marker = appareliter->part;
 					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (appareliter->male);
 					if(female && environment.mWorld->getStore().bodyParts.search (appareliter->female))

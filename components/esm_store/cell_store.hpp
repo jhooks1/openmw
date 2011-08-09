@@ -33,13 +33,9 @@ namespace ESMS
   {
     // The object that this instance is based on.
     const X* base;
-	std::vector<Nif::NiKeyframeData> allanim;
-	float time;
-	std::vector<int> rindexI;
-	std::vector<int> rindexJ;
-	std::vector<int> tindexI;
-	std::vector<int> tindexJ;
-
+	
+	//std::vector<Nif::NiTriShapeCopy> shapes;
+    std::string smodel;
 	
 
 	Ogre::Entity *model;

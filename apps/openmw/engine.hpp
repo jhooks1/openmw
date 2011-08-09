@@ -70,7 +70,8 @@ namespace OMW
 
     class Engine : private Ogre::FrameListener
     {
-
+			std::string prev;
+			std::vector<Nif::NiKeyframeData> allanim;
             //int nFiles;
             boost::filesystem::path mDataDir;
             boost::filesystem::path mResDir;

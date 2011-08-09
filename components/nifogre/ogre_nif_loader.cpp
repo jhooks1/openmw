@@ -344,6 +344,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     NiTriShapeData *data = shape->data.getPtr();
 
     SubMesh *sub = mesh->createSubMesh(shape->name.toString());
+	//std::cout << "name" << shape->name.toString() << "\n";
 
     int nextBuf = 0;
 
@@ -743,6 +744,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
     //use niskindata for the position of vertices.
     if (!shape->skin.empty())
     {
+		shapes.push_back(shape->clone());
         // vector that stores if the position if a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
 
@@ -780,6 +782,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation);
 
 
+
             for (unsigned int i=0; i<it->weights.length; i++)
             {
                 unsigned int verIndex = (it->weights.ptr + i)->vertex;
@@ -811,6 +814,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 vba.boneIndex = bonePtr->getHandle();
                 vba.vertexIndex = verIndex;
                 vba.weight = (it->weights.ptr + i)->weight;
+	
 
                 vertexBoneAssignments.push_back(vba);
             }
@@ -976,6 +980,19 @@ std::vector<Nif::NiKeyframeData> NIFLoader::getAllanim(){
 		return allanim;
 }
 
+std::vector<Nif::NiKeyframeData> NIFLoader::getAnim(std::string lowername){
+		std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
+		std::vector<Nif::NiKeyframeData> anim;
+		std::map<std::string,std::vector<Nif::NiKeyframeData>>::iterator iter = allanimmap.find(lowername);
+		if(iter != allanimmap.end())
+			anim = iter->second;
+		return anim;
+			
+}
+std::vector<Nif::NiTriShapeCopy> NIFLoader::getShapes(){
+		return shapes;
+}
+
 void NIFLoader::setFlip(bool fl){
 	flip = fl;
 }
@@ -985,7 +1002,11 @@ void NIFLoader::setVector(Ogre::Vector3 vec)
 }
 void NIFLoader::loadResource(Resource *resource)
 {
+	assignmentn = 0;
     std::string name = resource->getName();
+	std::string lowername = name;
+	std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
+	//std::cout << "Name" << name << "\n";
 	suffix = name.at(name.length() - 2);
 	if( suffix == '*' || suffix == '?' || suffix == '<')
 	{
@@ -1137,6 +1158,9 @@ void NIFLoader::loadResource(Resource *resource)
 
 	int acounter = 1;
 
+	allanim.clear();
+	shapes.clear();
+	bool hasAnim = false;
 	
 	for(int i = 0; i < nif.numRecords(); i++)
 	{
@@ -1154,7 +1178,7 @@ void NIFLoader::loadResource(Resource *resource)
 
 	if(f != NULL)
 	{
-		
+		hasAnim = true;
 		Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
 		Nif::NiKeyframeDataPtr data = f->data;
 		
@@ -1165,8 +1189,8 @@ void NIFLoader::loadResource(Resource *resource)
 		Nif::NiKeyframeData c;
 		c.clone(data.get());
 		allanim.push_back(c);
+		
 		if(o->name.toString() == "Bip01"){
-			
 			std::cout <<"Creating WholeThing\n";
 			animcore = mSkel->createAnimation("WholeThing", f->timeStop);
 			animcore2 = mSkel->createAnimation("WholeThing2", f->timeStop);
@@ -1257,8 +1281,10 @@ void NIFLoader::loadResource(Resource *resource)
 	}
 	
 	}
-	
-	
+	if(hasAnim){
+		std::cout << "Lower" << lowername << "\n";
+		allanimmap[lowername] = allanim;
+	}
 	if(flip){
 	mesh->_setBounds(mBoundingBox, false);
 	}

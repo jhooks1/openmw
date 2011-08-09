@@ -165,7 +165,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
    // s->setPosition(absolutePos);
     //s->setOrientation(absoluteRot); //uncomment
-	if(bone->getName() != "Bip01")
+	//if(bone->getName() != "Bip01")
 		bone->setPosition(t);             //uncomment
     //std::cout << "BoneBefore:" <<bone->getOrientation() << "\n";
       //bone->setOrientation(absoluteRot);
@@ -203,9 +203,15 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
     skel->getManualBonesDirty();
     skel->_updateTransforms();
+	skel->_notifyManualBonesDirty();
+	
+	
 
     ent.getAllAnimationStates()->_notifyDirty();
     ent._updateAnimation();
+	ent._notifyMoved();
+
+
 		
 				}
 
@@ -297,20 +303,27 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	
 
 	if(creatureData.size() > 0){
-	for(int i = 0; i < 1; i++)
+	for(int i = 0; i < creatureData.size(); i++)
 	{
 		//std::cout << "Creature encounter\n";
 		//std::cout << "Testing" << i < "\n";
 		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
 		Ogre::Entity* creaturemodel = item.model;
-		std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
+		std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
+		prev = item.smodel;
 		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
+//		std::vector<Nif::NiTriShapeCopy> shapes = (item.shapes);
+	//	std::vector<Nif::NiTriShapeCopy>::iterator shapesiter = shapes.begin() ;
 		
 		if(creaturea.size() == i)
 		{
+			//std::cout << "Shapes" << shapesiter->name.toString() << "\n";
 			aindex a;
 			a.time = 0.0;
 			a.first = true;
+			//a.absoluterot = creaturemodel->getParentSceneNode()->getOrientation();
+			//a.absolutepos = creaturemodel->getParentSceneNode()->getPosition();
+			//a.initialrot = creaturemodel->getSkeleton()->getBone("Bip01")->getOrientation();
 			
 			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
@@ -319,15 +332,16 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 				//a.tindexJ.push_back(0);
 			}
 			creaturea.push_back(a);
+			
 		}
 
 		aindex& r = creaturea[i];
-
+		r.time += evt.timeSinceLastFrame;
 	
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
-			
+			//std::cout << "Bone" << allanimiter->getBonename() << "Rindex" << r.rindexI[o] << "\n";
 			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
 			
 
@@ -343,23 +357,35 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
 
-	if(npcdata.size() > 0){
-	//For now we only want to animate one npc, rendering more slows us down
+	
+	
+		
 	for(int i = 0; i < npcdata.size(); i++)
 	{
-		
+	
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
-		std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
-		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
+	
+		if(prev != item.smodel)
+		{
+			prev = item.smodel;
+			//std::cout << "New:" << prev << "\n";
+			allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
+			//std::cout << "Size" << allanim.size()<< "\n";
+			if(allanim.size() == 0){
+				break;
+			}
+
+		}
+
 		if(npca.size() == i)
 		{
 			aindex a;
 			a.time = 0.0;
-			a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
-			a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
-			a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
-			a.first = true;
+			//a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
+			//a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
+			//a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
+			//a.first = true;
 			std::cout << "Bip01" << a.rotationl << "\n";
 			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
@@ -369,6 +395,10 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			}
 			npca.push_back(a);
 		}
+		//std::cout << "Filename" << item.smodel << "\n";
+		//std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
+		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
+		
 
 		aindex& r = npca[i];
 
@@ -384,7 +414,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
-			if(i == 0)
+			//if(i == 0)
 				handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
 			/*
 			if(first)
@@ -400,7 +430,6 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 			o++;
 		}
-		if(i == 0){
 		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
 			mAnimationState->setLoop(true);
 
@@ -424,13 +453,12 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			 mAnimationState2->addTime(evt.timeSinceLastFrame);*/
 			 mAnimationState->addTime(evt.timeSinceLastFrame);
 
-		}
+
 
 		
 
 	
 		npcdataiter++;
-	}
 	}
 
 	
