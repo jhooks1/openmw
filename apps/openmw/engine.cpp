@@ -86,6 +86,8 @@ void OMW::Engine::executeLocalScripts()
     mIgnoreLocalPtr = MWWorld::Ptr();
 }
 
+
+
 void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
 	//Ogre::AxisAlignedBox box = ent.getBoundingBox();
 	//box.setInfinite();
@@ -310,8 +312,10 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
 		Ogre::Entity* creaturemodel = item.model;
 		std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
+		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.smodel);
 		prev = item.smodel;
 		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
+		std::vector<Nif::NiTriShapeCopy>::iterator allshapesiter;
 //		std::vector<Nif::NiTriShapeCopy> shapes = (item.shapes);
 	//	std::vector<Nif::NiTriShapeCopy>::iterator shapesiter = shapes.begin() ;
 		
@@ -348,6 +352,12 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 			o++;
 		}
+		allshapesiter = allshapes.begin();
+
+
+		//std::cout << "All shapes" << allshapesiter->sname << "\n";
+		//std::cout << "Vertx:" << *ptr << "\n";
+
 		
 
 	

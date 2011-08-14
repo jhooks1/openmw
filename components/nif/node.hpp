@@ -115,18 +115,13 @@ struct NiNode : Node
   }
 };
 
-struct NiTriShapeCopy : Node
+struct NiTriShapeCopy
 {
-  /* Possible flags:
-     0x40 - mesh has no vertex normals ?
-
-     Only flags included in 0x47 (ie. 0x01, 0x02, 0x04 and 0x40) have
-     been observed so far.
-   */
-
-  NiTriShapeData data;
-  NiSkinInstance skin;
-
+ std::string sname;
+ std::vector<Ogre::Quaternion> skinrotations;
+ std::vector<Ogre::Vector3> skintranslations;
+ std::vector<Ogre::Vector3> vertices;
+ std::vector<Ogre::Vector3> normals;
 };
 
 
@@ -150,11 +145,7 @@ struct NiTriShape : Node
   }
   NiTriShapeCopy clone(){
 	  NiTriShapeCopy copy;
-	  copy.data = data.get();
-	  copy.skin = skin.get();	
-	  copy.flags = flags;
-	  copy.name = name;
-	  copy.trafo = trafo;
+      copy.sname = name.toString();
   return copy;
   }
 };

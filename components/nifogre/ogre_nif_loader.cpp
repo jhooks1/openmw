@@ -738,12 +738,20 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
     float *ptr = (float*)data->vertices.ptr;
     float *optr = ptr;
-
+	 
+	std::cout << "name" << shape->name.toString() << "/" << *ptr << "\n";
     std::list<VertexBoneAssignment> vertexBoneAssignments;
 
     //use niskindata for the position of vertices.
     if (!shape->skin.empty())
     {
+		//Bone assignments are stored in submeshes, so we don't need to copy them
+		//std::string triname
+		//std::vector<Quaternion> rotations
+		//std::vector<Vector3>    translations
+		//std::vector<Vector3>    vertices
+		//std::vector<Vector3>    normals
+
 		shapes.push_back(shape->clone());
         // vector that stores if the position if a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
@@ -989,8 +997,13 @@ std::vector<Nif::NiKeyframeData> NIFLoader::getAnim(std::string lowername){
 		return anim;
 			
 }
-std::vector<Nif::NiTriShapeCopy> NIFLoader::getShapes(){
-		return shapes;
+std::vector<Nif::NiTriShapeCopy> NIFLoader::getShapes(std::string lowername){
+		std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
+		std::vector<Nif::NiTriShapeCopy> s;
+		std::map<std::string,std::vector<Nif::NiTriShapeCopy>>::iterator iter = allshapesmap.find(lowername);
+		if(iter != allshapesmap.end())
+			s = iter->second;
+		return s;
 }
 
 void NIFLoader::setFlip(bool fl){
@@ -1002,6 +1015,8 @@ void NIFLoader::setVector(Ogre::Vector3 vec)
 }
 void NIFLoader::loadResource(Resource *resource)
 {
+	allanim.clear();
+	shapes.clear();
 	assignmentn = 0;
     std::string name = resource->getName();
 	std::string lowername = name;
@@ -1158,8 +1173,7 @@ void NIFLoader::loadResource(Resource *resource)
 
 	int acounter = 1;
 
-	allanim.clear();
-	shapes.clear();
+	
 	bool hasAnim = false;
 	
 	for(int i = 0; i < nif.numRecords(); i++)
@@ -1284,6 +1298,7 @@ void NIFLoader::loadResource(Resource *resource)
 	if(hasAnim){
 		std::cout << "Lower" << lowername << "\n";
 		allanimmap[lowername] = allanim;
+		allshapesmap[lowername] = shapes;
 	}
 	if(flip){
 	mesh->_setBounds(mBoundingBox, false);
