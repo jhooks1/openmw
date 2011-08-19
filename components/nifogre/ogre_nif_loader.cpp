@@ -340,12 +340,16 @@ void NIFLoader::findRealTexture(String &texName)
 // mesh.
 void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std::list<VertexBoneAssignment> &vertexBoneAssignments)
 {
+	//if(mSkel.isNull() || (mSkel->getNumBones() < 57 || mSkel->getNumBones() > 59)){
     //  cout << "s:" << shape << "\n";
+	//if(mSkel.isNull() || (mSkel->getNumBones() < 57 && mSkel->getNumBones() > 59) ){
+	
     NiTriShapeData *data = shape->data.getPtr();
-
-    SubMesh *sub = mesh->createSubMesh(shape->name.toString());
+	std::string subname = shape->name.toString();
+	
+    SubMesh *sub = mesh->createSubMesh(subname);
 	//std::cout << "name" << shape->name.toString() << "\n";
-
+	
     int nextBuf = 0;
 
     // This function is just one long stream of Ogre-barf, but it works
@@ -357,6 +361,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     sub->vertexData->vertexCount = numVerts;
     sub->useSharedVertices = false;
     
+	
 	//Positions
 	//Vertex declarations contain vertex elements
     VertexDeclaration *decl = sub->vertexData->vertexDeclaration;
@@ -543,12 +548,14 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     if (!material.empty()) sub->setMaterialName(material);
 
     //add vertex bone assignments
+	
 
     for (std::list<VertexBoneAssignment>::iterator it = vertexBoneAssignments.begin();
         it != vertexBoneAssignments.end(); it++)
     {
             sub->addBoneAssignment(*it);
     }
+
 	//mesh->_notifySkeleton(mSkel);
 }
 
@@ -638,6 +645,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
         // Scan the property list for material information
         PropertyList &list = shape->props;
+
         int n = list.length();
         for (int i=0; i<n; i++)
         {
@@ -739,12 +747,13 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
     float *ptr = (float*)data->vertices.ptr;
     float *optr = ptr;
 	 
-	std::cout << "name" << shape->name.toString() << "/" << *ptr << "\n";
+	//std::cout << "name" << shape->name.toString() << "/" << *ptr << "\n";
     std::list<VertexBoneAssignment> vertexBoneAssignments;
 
     //use niskindata for the position of vertices.
     if (!shape->skin.empty())
     {
+		//std::cout << "Skin is not empty\n";
 		//Bone assignments are stored in submeshes, so we don't need to copy them
 		//std::string triname
 		//std::vector<Quaternion> rotations
@@ -852,7 +861,15 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 ptr += 3;
             }
         }
+		if(!mSkel.isNull() ){
+		 VertexBoneAssignment vba;
+                vba.boneIndex = mSkel->getNumBones() - 1;
+                vba.vertexIndex = 0;
+                vba.weight = 0;
+				 vertexBoneAssignments.push_back(vba);
+		}
     }
+	
 
     if (!hidden)
     {
@@ -913,6 +930,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             // bones may have the same name.
             if(!mSkel->hasBone(name))
             {
+				//std::cout << "Creating a" << name << "\n";
                 bone = mSkel->createBone(name);
 
                 if (parentBone)
@@ -957,18 +975,19 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         for (int i = 0; i<n; i++)
         {
 			
-            
+                //bone 57
             if (list.has(i))
                 handleNode(&list[i], flags, node->trafo, bounds, bone);
-
+		}
 			    //repeat later
-        }
+        
 
 
     }
-    else if (node->recType == RC_NiTriShape)
+    else if (node->recType == RC_NiTriShape)   //57,58,59
     {
 
+		
             std::string name = node->name.toString();
 		
 			if (triname == "")
@@ -1202,6 +1221,7 @@ void NIFLoader::loadResource(Resource *resource)
 		data->setBonename(o->name.toString());
 		Nif::NiKeyframeData c;
 		c.clone(data.get());
+		c.setStartTime(f->timeStart);
 		allanim.push_back(c);
 		
 		if(o->name.toString() == "Bip01"){
@@ -1296,7 +1316,7 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	}
 	if(hasAnim){
-		std::cout << "Lower" << lowername << "\n";
+		//std::cout << "Lower" << lowername << "\n";
 		allanimmap[lowername] = allanim;
 		allshapesmap[lowername] = shapes;
 	}
@@ -1307,7 +1327,8 @@ void NIFLoader::loadResource(Resource *resource)
     // set skeleton
   if (!mSkel.isNull())
   {
-        mesh->_notifySkeleton(mSkel);
+	  //std::cout << "Mskel" << mSkel->getNumBones();
+       mesh->_notifySkeleton(mSkel);
   }
   flip = false;
   //std::cout << "7\n";

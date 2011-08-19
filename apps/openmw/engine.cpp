@@ -92,14 +92,21 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 	//Ogre::AxisAlignedBox box = ent.getBoundingBox();
 	//box.setInfinite();
 	//std::cout << "i";
+	
+	if(time < data.getStartTime())
+	{
+		return;
+	}
     Ogre::SkeletonInstance *skel = ent.getSkeleton();
     if(skel->hasBone(data.getBonename())){
     //std::cout << "INHERE\n";
     Ogre::Bone* bone = skel->getBone(data.getBonename());
+	
     float x;
 
 
     //s->showBoundingBox(true);
+	std::vector<Ogre::Quaternion> quats = data.getQuat();
 
     std::vector<float> ttime = data.gettTime();
     std::vector<float>::iterator ttimeiter = ttime.begin();
@@ -111,25 +118,30 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 
 
 
-    std::vector<Ogre::Quaternion> quats = data.getQuat();
+    
     //std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin() + rpos;
     std::vector<float> rtime = data.getrTime();
     //std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
     int rindexJ = 0;
+	
     timeIndex(time, rtime, rindexI, rindexJ, x);
-
+	
+	
 
     int tindexJ = 0;
 
     Ogre::Vector3 old = bone->getPosition();
     timeIndex(time, ttime, tindexI, tindexJ, x);
+	
+	if(translist1.size() > 0){
     Ogre::Vector3 v1 = translist1[tindexI];
     Ogre::Vector3 v2 = translist1[tindexJ];
     Ogre::Vector3 t = v1 + (v2 - v1) * x;
-
-
+	bone->setPosition(t); 
+	}
+	
     Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
-
+	
     //if(data.getBonename() == "Bip01")
     // {
      //Ogre::SceneNode* s = ent.getParentSceneNode();
@@ -168,7 +180,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
    // s->setPosition(absolutePos);
     //s->setOrientation(absoluteRot); //uncomment
 	//if(bone->getName() != "Bip01")
-		bone->setPosition(t);             //uncomment
+		            //uncomment
     //std::cout << "BoneBefore:" <<bone->getOrientation() << "\n";
       //bone->setOrientation(absoluteRot);
     //std::cout << "BoneAfter:" << bone->getOrientation() << "\n--------------------------\n";
@@ -303,8 +315,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
 	
-
-	if(creatureData.size() > 0){
+	
+	//if(creatureData.size() > 0){
 	for(int i = 0; i < creatureData.size(); i++)
 	{
 		//std::cout << "Creature encounter\n";
@@ -363,10 +375,9 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	
 		creaturedataiter++;
 	}
-	}
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
-
+	
 	
 	
 		
