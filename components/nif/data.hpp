@@ -367,7 +367,12 @@ public:
     Vector trans;    // Translation
     float scale;     // Probably scale (always 1)
   };
-
+  struct BoneTrafoCopy
+  {
+	  Ogre::Quaternion rotation;
+	  Ogre::Vector3 trans;
+	  float scale;
+  };
   struct VertWeight
   {
     short vertex;
@@ -384,7 +389,7 @@ public:
 
   struct BoneInfoCopy
   {
-	   BoneTrafo trafo;
+	   BoneTrafoCopy trafo;
 	   Vector4 unknown;
        std::vector<VertWeight> weights;
   };

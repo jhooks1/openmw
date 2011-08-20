@@ -348,7 +348,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 	std::string subname = shape->name.toString();
 	
     SubMesh *sub = mesh->createSubMesh(subname);
-	std::cout << "name" << shape->name.toString() << "\n";
+	
 	
     int nextBuf = 0;
 
@@ -612,6 +612,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
     bool collide   = (flags & 0x02) != 0; // Use mesh for collision
     bool bbcollide = (flags & 0x04) != 0; // Use bounding box for collision
 
+	//std::cout << "NiTriShape" << shape->name.toString() << "\n";
     // Bounding box collision isn't implemented, always use mesh for now.
     if (bbcollide)
     {
@@ -756,10 +757,9 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		//std::cout << "Skin is not empty\n";
 		//Bone assignments are stored in submeshes, so we don't need to copy them
 		//std::string triname
-		//std::vector<Quaternion> rotations
-		//std::vector<Vector3>    translations
-		//std::vector<Vector3>    vertices
-		//std::vector<Vector3>    normals
+		//std::vector<Ogre::Vector3> vertices;
+        //std::vector<Ogre::Vector3> normals;
+        //std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfo;
 		Nif::NiTriShapeCopy copy = shape->clone();
 		
         // vector that stores if the position if a vertex is absolute
@@ -799,7 +799,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation);
 
 			Nif::NiSkinData::BoneInfoCopy boneinfo;
-			boneinfo.trafo = *(it->trafo);
+			boneinfo.trafo.rotation = convertRotation(it->trafo->rotation);
+			boneinfo.trafo.trans = convertVector3(it->trafo->trans);
 
             for (unsigned int i=0; i<it->weights.length; i++)
             {

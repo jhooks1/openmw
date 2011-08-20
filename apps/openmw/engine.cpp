@@ -334,6 +334,29 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		if(creaturea.size() == i)
 		{
 			//std::cout << "Shapes" << shapesiter->name.toString() << "\n";
+			if(i == 0)
+			{
+				/*
+				Nif::NiTriShapeCopy copy = allshapes[0];
+				std::cout << "Name" << copy.sname << "\n";
+				
+				for(int i = 0 ; i < copy.vertices.size() ; i++){
+				std::cout << "Vertex " << copy.vertices[i] << "\n";
+				std::cout << "Normal " << copy.normals[i] << "\n";
+				}
+				std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
+				for (int i = 0; i < boneinfovector.size(); i++)
+				{
+					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
+				
+					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
+					std::vector<Nif::NiSkinData::VertWeight> weights = boneinfo.weights;
+					for (int j = 0; j < weights.size(); j++){
+						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
+					}
+				}*/
+			}
+
 			aindex a;
 			a.time = 0.0;
 			a.first = true;

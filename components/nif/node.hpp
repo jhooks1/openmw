@@ -151,9 +151,12 @@ struct NiTriShape : Node
 	  for(int i = 0; i < numVerts; i++)
 	  {
 		   float *current = (float*) (ptr + i * 3);
-           float *currentNormals = (float*) (ptrNormals + i * 3);
 		   copy.vertices.push_back(Ogre::Vector3(*current, *(current + 1), *(current + 2)));
-		   copy.normals.push_back(Ogre::Vector3(*currentNormals, *(currentNormals + 1), *(currentNormals + 2))); 	 		 
+		    
+		   if(ptrNormals){
+			float *currentNormals = (float*) (ptrNormals + i * 3);
+		   copy.normals.push_back(Ogre::Vector3(*currentNormals, *(currentNormals + 1), *(currentNormals + 2))); 
+	 		  }
       }
 	  
 
