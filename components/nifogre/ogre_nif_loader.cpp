@@ -348,7 +348,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 	std::string subname = shape->name.toString();
 	
     SubMesh *sub = mesh->createSubMesh(subname);
-	//std::cout << "name" << shape->name.toString() << "\n";
+	std::cout << "name" << shape->name.toString() << "\n";
 	
     int nextBuf = 0;
 
@@ -370,7 +370,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     HardwareVertexBufferSharedPtr vbuf =
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
-            numVerts, HardwareBuffer::HBU_STATIC);
+            numVerts, HardwareBuffer::HBU_DYNAMIC);
 
 	
 	
@@ -409,7 +409,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT3, VES_NORMAL);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT3),
-                   numVerts, HardwareBuffer::HBU_STATIC);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
 		
 		if(flip)
 		{
@@ -458,7 +458,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_STATIC);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
         vbuf->writeData(0, vbuf->getSizeInBytes(), &colorsRGB.front(), false);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -472,7 +472,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_STATIC);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
 
 		if(flip)
 		{
@@ -508,7 +508,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
                                             createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
                                                               numFaces,
-                                                              HardwareBuffer::HBU_STATIC);
+                                                              HardwareBuffer::HBU_DYNAMIC);
 
 		if(flip && mFlipVertexWinding && sub->indexData->indexCount % 3 == 0){
 			sub->indexData->indexBuffer = ibuf;
@@ -760,8 +760,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		//std::vector<Vector3>    translations
 		//std::vector<Vector3>    vertices
 		//std::vector<Vector3>    normals
-
-		shapes.push_back(shape->clone());
+		Nif::NiTriShapeCopy copy = shape->clone();
+		
         // vector that stores if the position if a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
 
@@ -798,12 +798,14 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
             vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation);
 
-
+			Nif::NiSkinData::BoneInfoCopy boneinfo;
+			boneinfo.trafo = *(it->trafo);
 
             for (unsigned int i=0; i<it->weights.length; i++)
             {
+				
                 unsigned int verIndex = (it->weights.ptr + i)->vertex;
-
+				boneinfo.weights.push_back(*(it->weights.ptr + i));
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
                 if (vertexPosAbsolut[verIndex] == false)
                 {
@@ -835,9 +837,11 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
                 vertexBoneAssignments.push_back(vba);
             }
+			copy.boneinfo.push_back(boneinfo);
 
             boneIndex++;
         }
+		shapes.push_back(copy);
     }
     else
     {

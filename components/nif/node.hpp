@@ -118,10 +118,9 @@ struct NiNode : Node
 struct NiTriShapeCopy
 {
  std::string sname;
- std::vector<Ogre::Quaternion> skinrotations;
- std::vector<Ogre::Vector3> skintranslations;
  std::vector<Ogre::Vector3> vertices;
  std::vector<Ogre::Vector3> normals;
+ std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfo;
 };
 
 
@@ -146,6 +145,18 @@ struct NiTriShape : Node
   NiTriShapeCopy clone(){
 	  NiTriShapeCopy copy;
       copy.sname = name.toString();
+	  float *ptr = (float*)data->vertices.ptr;
+	  float *ptrNormals = (float*)data->normals.ptr;
+	  int numVerts = data->vertices.length / 3;
+	  for(int i = 0; i < numVerts; i++)
+	  {
+		   float *current = (float*) (ptr + i * 3);
+           float *currentNormals = (float*) (ptrNormals + i * 3);
+		   copy.vertices.push_back(Ogre::Vector3(*current, *(current + 1), *(current + 2)));
+		   copy.normals.push_back(Ogre::Vector3(*currentNormals, *(currentNormals + 1), *(currentNormals + 2))); 	 		 
+      }
+	  
+
   return copy;
   }
 };

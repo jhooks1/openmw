@@ -365,8 +365,18 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			o++;
 		}
 		allshapesiter = allshapes.begin();
+		/*
+		Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(0)->vertexData->vertexBufferBinding->getBuffer(0);
+		Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+		//std::cout << "Size" << vbuf->getSizeInBytes() << "\n";
+		//float *datamod = new float[vbuf->getSizeInBytes() / 3];
+		for (int i = 0; i < vbuf->getSizeInBytes() / 3; i++)
+		{
+			pReal[i] = 0;
+		}
+		vbuf->unlock();*/
 
-
+		
 		//std::cout << "All shapes" << allshapesiter->sname << "\n";
 		//std::cout << "Vertx:" << *ptr << "\n";
 

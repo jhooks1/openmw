@@ -382,6 +382,13 @@ public:
     SliceArray<VertWeight> weights;
   };
 
+  struct BoneInfoCopy
+  {
+	   BoneTrafo trafo;
+	   Vector4 unknown;
+       std::vector<VertWeight> weights;
+  };
+
   const BoneTrafo *trafo;
   std::vector<BoneInfo> bones;
 
