@@ -801,6 +801,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 			Nif::NiSkinData::BoneInfoCopy boneinfo;
 			boneinfo.trafo.rotation = convertRotation(it->trafo->rotation);
 			boneinfo.trafo.trans = convertVector3(it->trafo->trans);
+			boneinfo.bonename = shape->skin->bones[boneIndex].name.toString();
 
             for (unsigned int i=0; i<it->weights.length; i++)
             {
@@ -842,7 +843,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
             boneIndex++;
         }
-		shapes.push_back(copy);
+		if(!hidden)
+		     shapes.push_back(copy);
     }
     else
     {

@@ -328,8 +328,6 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		prev = item.smodel;
 		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
 		std::vector<Nif::NiTriShapeCopy>::iterator allshapesiter;
-//		std::vector<Nif::NiTriShapeCopy> shapes = (item.shapes);
-	//	std::vector<Nif::NiTriShapeCopy>::iterator shapesiter = shapes.begin() ;
 		
 		if(creaturea.size() == i)
 		{
@@ -387,21 +385,46 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 			o++;
 		}
-		allshapesiter = allshapes.begin();
-		/*
-		Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(0)->vertexData->vertexBufferBinding->getBuffer(0);
-		Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-		//std::cout << "Size" << vbuf->getSizeInBytes() << "\n";
-		//float *datamod = new float[vbuf->getSizeInBytes() / 3];
-		for (int i = 0; i < vbuf->getSizeInBytes() / 3; i++)
+
+		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{
-			pReal[i] = 0;
-		}
-		vbuf->unlock();*/
+			Nif::NiTriShapeCopy copy = *allshapesiter;
+			std::map<int, Ogre::Vector3> vertices;
+			std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
+			
+
+			
+				for (int i = 0; i < boneinfovector.size(); i++)
+				{
+					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
+					Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(boneinfo.bonename);
+					Ogre::Vector3 vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfo.trafo.trans;
+					Ogre::Quaternion vecRot = bonePtr->_getDerivedOrientation() * boneinfo.trafo.rotation;
+					//std::cout << "Bone" << bonePtr->getName() << "\n";
+					
+				
+					/*
+					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
+					std::vector<Nif::NiSkinData::VertWeight> weights = boneinfo.weights;
+					for (int j = 0; j < weights.size(); j++){
+						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
+					}*/
+				}
+
+		    Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+		    Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+		//std::cout << "Sub: " << copy.sname << " Size: " << vbuf->getSizeInBytes() << "\n";
+		//float *datamod = new float[vbuf->getSizeInBytes() / 3];
+		//for (int i = 0; i < vbuf->getSizeInBytes() / 3; i++)
+		//{
+		//	pReal[i] = 0;
+		//}
+		vbuf->unlock();
 
 		
 		//std::cout << "All shapes" << allshapesiter->sname << "\n";
 		//std::cout << "Vertx:" << *ptr << "\n";
+		}
 
 		
 

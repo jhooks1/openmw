@@ -389,6 +389,7 @@ public:
 
   struct BoneInfoCopy
   {
+	   std::string bonename;
 	   BoneTrafoCopy trafo;
 	   Vector4 unknown;
        std::vector<VertWeight> weights;
