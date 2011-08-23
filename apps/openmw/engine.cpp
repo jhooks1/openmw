@@ -314,7 +314,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List creatureData = (current->creatures).list;
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
-	
+	first2 = true;
 	
 	//if(creatureData.size() > 0){
 	for(int i = 0; i < creatureData.size(); i++)
@@ -385,13 +385,14 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 			o++;
 		}
-
+		
 		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{
 			Nif::NiTriShapeCopy copy = *allshapesiter;
-			std::map<int, Ogre::Vector3> vertices;
+			std::map<unsigned int, Ogre::Vector3> vertices;
+			std::map<unsigned int, Ogre::Vector3> normals;
 			std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
-			
+			//std::cout << "Name " << copy.sname << "\n";
 
 			
 				for (int i = 0; i < boneinfovector.size(); i++)
@@ -401,7 +402,29 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 					Ogre::Vector3 vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfo.trafo.trans;
 					Ogre::Quaternion vecRot = bonePtr->_getDerivedOrientation() * boneinfo.trafo.rotation;
 					//std::cout << "Bone" << bonePtr->getName() << "\n";
-					
+					 for (unsigned int i=0; i < boneinfo.weights.size(); i++)
+					 {
+						  unsigned int verIndex = boneinfo.weights[i].vertex;
+						  if(vertices.find(verIndex) == vertices.end())
+						  {
+							  Ogre::Vector3 absVertPos = vecPos + vecRot * copy.vertices[verIndex];
+							  vertices[verIndex] = absVertPos;
+
+								//std::cout << "Vertex" << vertices[verIndex] << "\n";
+						  }
+						  else 
+						  {
+							  //std::cout << "Vertex" << verIndex << "Weight: " << boneinfo.weights[i].weight << "was seen twice\n";
+
+						  }
+
+						  if(normals.find(verIndex) == normals.end() &&  verIndex < copy.normals.size() )
+						  {
+							  Ogre::Vector3 absNormalsPos = vecRot * copy.normals[verIndex];
+							  normals[verIndex] = absNormalsPos;
+						  }
+
+					 }
 				
 					/*
 					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
@@ -410,16 +433,40 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
 					}*/
 				}
-
-		    Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+				//if(first2){
+				//std::cout << "Shape" << copy.sname << "\n";
+				Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
 		    Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+			Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
+		    Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+			for( std::map<unsigned int, Ogre::Vector3>::iterator vertiter = vertices.begin(); vertiter != vertices.end(); vertiter++)
+			{
+				Ogre::Real* addr = (pReal + 3 * vertiter->first);
+				*addr = vertiter->second.x;
+				*(addr+1) = vertiter->second.y;
+				*(addr+2) = vertiter->second.z;
+				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
+			}
+			for( std::map<unsigned int, Ogre::Vector3>::iterator normiter = normals.begin(); normiter != normals.end(); normiter++)
+			{
+				Ogre::Real* addr = (pRealNormal + 3 * normiter->first);
+				*addr = normiter->second.x;
+				*(addr+1) = normiter->second.y;
+				*(addr+2) = normiter->second.z;
+				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
+			}
+				vbuf->unlock();
+				vbufNormal->unlock();
+				//first2 = false;
+
+		    
 		//std::cout << "Sub: " << copy.sname << " Size: " << vbuf->getSizeInBytes() << "\n";
 		//float *datamod = new float[vbuf->getSizeInBytes() / 3];
 		//for (int i = 0; i < vbuf->getSizeInBytes() / 3; i++)
 		//{
 		//	pReal[i] = 0;
 		//}
-		vbuf->unlock();
+		
 
 		
 		//std::cout << "All shapes" << allshapesiter->sname << "\n";

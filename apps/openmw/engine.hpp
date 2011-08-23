@@ -87,6 +87,7 @@ namespace OMW
             bool mCompileAll;
             int total;
 			bool first;
+			bool first2;
 			std::vector<aindex> creaturea;
 			std::vector<aindex> npca;
 			std::vector<std::vector<float>::iterator> example;
