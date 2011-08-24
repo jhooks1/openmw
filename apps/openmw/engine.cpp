@@ -385,6 +385,13 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 			o++;
 		}
+		//Ogre::AnimationState *mAnimationState = creaturemodel->getAnimationState("WholeThing");
+			//mAnimationState->setLoop(false);
+
+
+
+			//mAnimationState->setEnabled(true);
+			//mAnimationState->addTime(evt.timeSinceLastFrame);
 		
 		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{

@@ -370,7 +370,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     HardwareVertexBufferSharedPtr vbuf =
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
-            numVerts, HardwareBuffer::HBU_DYNAMIC);
+            numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
 
 	
 	
@@ -409,7 +409,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT3, VES_NORMAL);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT3),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
 		
 		if(flip)
 		{
@@ -458,7 +458,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
         vbuf->writeData(0, vbuf->getSizeInBytes(), &colorsRGB.front(), false);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -472,7 +472,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
 		if(flip)
 		{
@@ -871,7 +871,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		 VertexBoneAssignment vba;
                 vba.boneIndex = mSkel->getNumBones() - 1;
                 vba.vertexIndex = 0;
-                vba.weight = 0;
+                vba.weight = 1;
 				 vertexBoneAssignments.push_back(vba);
 		}
     }

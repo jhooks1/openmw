@@ -117,6 +117,7 @@ namespace MWClass
 		//bodyPart->model->
 		Ogre::Vector3 pos = Ogre::Vector3( 20, 20, 20);
 		Ogre::Vector3 axis = Ogre::Vector3( 0, 0, 1);
+		Ogre::Vector3 skirtpos = Ogre::Vector3(0, 0, 0);
 		Ogre::Radian angle = Ogre::Radian(0);
 		
 		
@@ -395,6 +396,7 @@ namespace MWClass
 						{
 							groin = part;
 							pgroin = priority;
+							skirtpos = Ogre::Vector3(0, -5, -80);
 						}
 						else if(marker == ESM::PRT_Tail && priority > ptail)
 						{
@@ -434,7 +436,7 @@ namespace MWClass
 		}
 		
         if (groin){
-			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, e, blank);
+			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, e, skirtpos);
 
 		}
 		if (tail) {
