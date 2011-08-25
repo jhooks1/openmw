@@ -118,6 +118,10 @@ struct NiNode : Node
 struct NiTriShapeCopy
 {
  std::string sname;
+ std::string bonename;
+ Nif::NiSkinData::BoneTrafoCopy trafo;
+ Ogre::Quaternion initialBoneRotation;
+ Ogre::Vector3 initialBoneTranslation;
  std::vector<Ogre::Vector3> vertices;
  std::vector<Ogre::Vector3> normals;
  std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfo;

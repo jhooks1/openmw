@@ -603,7 +603,7 @@ static void vectorMul(const Matrix &A, float *C)
 }
 
 
-void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds)
+void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Ogre::Bone* parentBone)
 {
     assert(shape != NULL);
 
@@ -751,16 +751,19 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 	//std::cout << "name" << shape->name.toString() << "/" << *ptr << "\n";
     std::list<VertexBoneAssignment> vertexBoneAssignments;
 
+	
+	Nif::NiTriShapeCopy copy = shape->clone();
     //use niskindata for the position of vertices.
     if (!shape->skin.empty())
     {
+		
 		//std::cout << "Skin is not empty\n";
 		//Bone assignments are stored in submeshes, so we don't need to copy them
 		//std::string triname
 		//std::vector<Ogre::Vector3> vertices;
         //std::vector<Ogre::Vector3> normals;
         //std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfo;
-		Nif::NiTriShapeCopy copy = shape->clone();
+		
 		
         // vector that stores if the position if a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
@@ -842,15 +845,25 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
             boneIndex++;
         }
-		if(!hidden)
-		     shapes.push_back(copy);
+		
     }
     else
     {
+		if(parentBone != 0)
+		{
+			copy.initialBoneRotation = parentBone->getOrientation();
+			copy.initialBoneTranslation = parentBone->getPosition();
+			copy.bonename = parentBone->getName();
+		}
         // Rotate, scale and translate all the vertices,
         const Matrix &rot = shape->trafo->rotation;
         const Vector &pos = shape->trafo->pos;
         float scale = shape->trafo->scale;
+
+		copy.trafo.trans = convertVector3(pos);
+		copy.trafo.rotation = convertRotation(rot);
+	
+		// Computes C = B + AxC*scale
         for (int i=0; i<numVerts; i++)
         {
             vectorMulAdd(rot, pos, ptr, scale);
@@ -868,17 +881,26 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             }
         }
 		if(!mSkel.isNull() ){
+			int boneIndex;
+			if(parentBone)
+				boneIndex = parentBone->getHandle();
+			else
+				boneIndex = mSkel->getNumBones() - 1;
+			for(int i = 0; i < numVerts; i++){
 		 VertexBoneAssignment vba;
-                vba.boneIndex = mSkel->getNumBones() - 1;
-                vba.vertexIndex = 0;
+                vba.boneIndex = boneIndex;
+                vba.vertexIndex = i;
                 vba.weight = 1;
 				 vertexBoneAssignments.push_back(vba);
+			}
 		}
     }
+
 	
 
     if (!hidden)
     {
+		shapes.push_back(copy);
         // Add this vertex set to the bounding box
         bounds.add(optr, numVerts);
 
@@ -998,13 +1020,13 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 		
 			if (triname == "")
             {
-                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds, bone);
             }
 			else if(name.length() >= triname.length())
 			{
 				std::transform(name.begin(), name.end(), name.begin(), std::tolower);
 				if(triname == name.substr(0, triname.length()))
-					handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds);
+					handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds, bone);
 			}
         
     }

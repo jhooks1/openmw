@@ -399,6 +399,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			std::map<unsigned int, Ogre::Vector3> vertices;
 			std::map<unsigned int, Ogre::Vector3> normals;
 			std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
+	
 			//std::cout << "Name " << copy.sname << "\n";
 
 			

@@ -132,7 +132,7 @@ class NIFLoader : Ogre::ManualResourceLoader
         void handleNode( Nif::Node *node, int flags,
                         const Nif::Transformation *trafo, BoundsFinder &bounds, Ogre::Bone *parentBone);
 
-        void handleNiTriShape(Nif::NiTriShape *shape, int flags, BoundsFinder &bounds);
+        void handleNiTriShape(Nif::NiTriShape *shape, int flags, BoundsFinder &bounds, Ogre::Bone *parentBone);
 
         void createOgreSubMesh(Nif::NiTriShape *shape, const Ogre::String &material, std::list<Ogre::VertexBoneAssignment> &vertexBoneAssignments);
 
