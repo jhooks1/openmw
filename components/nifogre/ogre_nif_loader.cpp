@@ -603,7 +603,7 @@ static void vectorMul(const Matrix &A, float *C)
 }
 
 
-void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Ogre::Bone* parentBone)
+void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Transformation original, std::vector<std::string> boneSequence)
 {
     assert(shape != NULL);
 
@@ -849,19 +849,17 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
     }
     else
     {
-		if(parentBone != 0)
-		{
-			copy.initialBoneRotation = parentBone->getOrientation();
-			copy.initialBoneTranslation = parentBone->getPosition();
-			copy.bonename = parentBone->getName();
-		}
+		
+			copy.boneSequence = boneSequence;
         // Rotate, scale and translate all the vertices,
         const Matrix &rot = shape->trafo->rotation;
         const Vector &pos = shape->trafo->pos;
         float scale = shape->trafo->scale;
 
-		copy.trafo.trans = convertVector3(pos);
-		copy.trafo.rotation = convertRotation(rot);
+		copy.trafo.trans = convertVector3(original.pos);
+		copy.trafo.rotation = convertRotation(original.rotation);
+		copy.trafo.scale = original.scale;
+		//We don't use velocity for anything yet, so it does not need to be saved
 	
 		// Computes C = B + AxC*scale
         for (int i=0; i<numVerts; i++)
@@ -882,6 +880,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         }
 		if(!mSkel.isNull() ){
 			int boneIndex;
+			Ogre::Bone *parentBone = mSkel->getBone(boneSequence[boneSequence.size() - 1]);
 			if(parentBone)
 				boneIndex = parentBone->getHandle();
 			else
@@ -910,7 +909,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 }
 
 void NIFLoader::handleNode(Nif::Node *node, int flags,
-                           const Transformation *trafo, BoundsFinder &bounds, Bone *parentBone)
+                           const Transformation *trafo, BoundsFinder &bounds, Ogre::Bone *parentBone, std::vector<std::string> boneSequence)
 {
     //if( MWClass::isChest)
     //  cout << "u:" << node << "\n";
@@ -952,8 +951,8 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if (!mSkel.isNull())     //if there is a skeleton
         {
             std::string name = node->name.toString();
-            //if (isBeast && isChest)
-            //  std::cout << "NAME: " << name << "\n";
+            boneSequence.push_back(name);
+
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
             if(!mSkel->hasBone(name))
@@ -970,9 +969,11 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             }
         }
     }
+	Transformation original = *(node->trafo);
 
     // Apply the parent transformation to this node. We overwrite the
     // existing data with the final transformation.
+	
     if (trafo)
     {
         // Get a non-const reference to the node's data, since we're
@@ -998,14 +999,11 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
     {
         NodeList &list = ((NiNode*)node)->children;
         int n = list.length();
-		std::vector<int> nums;
 
         for (int i = 0; i<n; i++)
         {
-			
-                //bone 57
             if (list.has(i))
-                handleNode(&list[i], flags, node->trafo, bounds, bone);
+                handleNode(&list[i], flags, node->trafo, bounds, bone, boneSequence);
 		}
 			    //repeat later
         
@@ -1020,13 +1018,13 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 		
 			if (triname == "")
             {
-                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds, bone);
+                handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds, original, boneSequence);
             }
 			else if(name.length() >= triname.length())
 			{
 				std::transform(name.begin(), name.end(), name.begin(), std::tolower);
 				if(triname == name.substr(0, triname.length()))
-					handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds, bone);
+					handleNiTriShape(dynamic_cast<NiTriShape*>(node), flags, bounds, original, boneSequence);
 			}
         
     }
@@ -1199,7 +1197,8 @@ void NIFLoader::loadResource(Resource *resource)
 	
 
     // Handle the node
-    handleNode(node, 0, NULL, bounds, 0);
+	std::vector<std::string> boneSequence;
+    handleNode(node, 0, NULL, bounds, 0, boneSequence);
 
 	
 

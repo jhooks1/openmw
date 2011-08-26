@@ -402,7 +402,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	
 			//std::cout << "Name " << copy.sname << "\n";
 
-			
+			    if(boneinfovector.size() > 0){
 				for (int i = 0; i < boneinfovector.size(); i++)
 				{
 					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
@@ -441,30 +441,120 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
 					}*/
 				}
+				    Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+			        Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
+		            Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+			        for( std::map<unsigned int, Ogre::Vector3>::iterator vertiter = vertices.begin(); vertiter != vertices.end(); vertiter++)
+			        {
+				        Ogre::Real* addr = (pReal + 3 * vertiter->first);
+				        *addr = vertiter->second.x;
+				        *(addr+1) = vertiter->second.y;
+				        *(addr+2) = vertiter->second.z;
+				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
+			        }
+			       for( std::map<unsigned int, Ogre::Vector3>::iterator normiter = normals.begin(); normiter != normals.end(); normiter++)
+			       {
+			           Ogre::Real* addr = (pRealNormal + 3 * normiter->first);
+				       *addr = normiter->second.x;
+				       *(addr+1) = normiter->second.y;
+				       *(addr+2) = normiter->second.z;
+				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
+			       }
+				    vbuf->unlock();
+				    vbufNormal->unlock();
+				}
+				else
+				{
+					//Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(copy.bonename);
+					Ogre::Quaternion shaperot = copy.trafo.rotation;
+					Ogre::Vector3 shapetrans = copy.trafo.trans;
+					float shapescale = copy.trafo.scale;
+					std::vector<std::string> boneSequence = copy.boneSequence;
+					std::vector<std::string>::iterator boneSequenceIter = boneSequence.begin();
+					Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(*boneSequenceIter);
+					Ogre::Vector3 transmult;
+						Ogre::Quaternion rotmult;
+						float scale;
+					if(bonePtr)
+					{
+
+						transmult = bonePtr->getPosition();
+						rotmult = bonePtr->getOrientation();
+						scale = bonePtr->getScale().x;
+						boneSequenceIter++;
+					    for(; boneSequenceIter != boneSequence.end(); boneSequenceIter++)
+					    {
+							Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(*boneSequenceIter);
+							if(bonePtr)
+							{
+								// Computes C = B + AxC*scale
+								transmult = transmult + rotmult * bonePtr->getPosition();
+								rotmult = rotmult * bonePtr->getOrientation();
+								scale = scale * bonePtr->getScale().x;
+							}
+						    //std::cout << "Bone:" << *boneSequenceIter << "   ";
+					    }
+						transmult = transmult + rotmult * shapetrans;
+						rotmult = rotmult * shaperot;
+						scale = shapescale * scale;
+
+						//std::cout << "Position: " << transmult << "Rotation: " << rotmult << "\n";
+					}
+					else
+					{
+						transmult = shapetrans;
+						rotmult = shaperot;
+						scale = shapescale;
+					}
+		
+					Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
+			        Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
+		            Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_DISCARD));
+					std::vector<Ogre::Vector3> allvertices = copy.vertices;
+					std::vector<Ogre::Vector3> allnormals = copy.normals;
+
+					// Computes C = B + AxC*scale
+					 // final_vector = old_vector + old_rotation*new_vector*old_scale/
+					
+					for(int i = 0; i < allvertices.size(); i++){
+						Ogre::Vector3 current = transmult + rotmult * allvertices[i];
+						Ogre::Real* addr = pReal + i * 3;
+					    *addr = current.x;
+						*(addr+1) = current.y;
+						*(addr + 2) = current.z;
+
+					}
+					for(int i = 0; i < allnormals.size(); i++){
+						Ogre::Vector3 current =rotmult * allnormals[i];
+						Ogre::Real* addr = pRealNormal + i * 3;
+					    *addr = current.x;
+						*(addr+1) = current.y;
+						*(addr + 2) = current.z;
+
+					}
+
+					vbuf->unlock();
+				    vbufNormal->unlock();
+					
+					
+					// final_vector = old_vector + old_rotation*new_vector*old_scale
+					//Ogre::Vector3 transmult = bonePtr->getPosition() + bonePtr->getOrientation() * shapetrans;
+					//Ogre::Quaternion rotmult = bonePtr->getOrientation() * shaperot;
+					//float scale = bonePtr->getScale().x * shapescale;
+					
+					
+				
+					//std::cout << "Scale" << scale << "\n";
+					//std::cout << "No weights:" << copy.bonename << "\n";
+					//std::cout << "Rot: " << copy.initialBoneRotation << "Trans: " << copy.initialBoneTranslation << "\n";
+					//std::cout << "ShapeRot: " << copy.trafo.rotation << "ShapeTrans: " << copy.trafo.trans << "\n";
+
+				}
 				//if(first2){
 				//std::cout << "Shape" << copy.sname << "\n";
-				Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
-		    Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-			Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
-		    Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-			for( std::map<unsigned int, Ogre::Vector3>::iterator vertiter = vertices.begin(); vertiter != vertices.end(); vertiter++)
-			{
-				Ogre::Real* addr = (pReal + 3 * vertiter->first);
-				*addr = vertiter->second.x;
-				*(addr+1) = vertiter->second.y;
-				*(addr+2) = vertiter->second.z;
-				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
-			}
-			for( std::map<unsigned int, Ogre::Vector3>::iterator normiter = normals.begin(); normiter != normals.end(); normiter++)
-			{
-				Ogre::Real* addr = (pRealNormal + 3 * normiter->first);
-				*addr = normiter->second.x;
-				*(addr+1) = normiter->second.y;
-				*(addr+2) = normiter->second.z;
-				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
-			}
-				vbuf->unlock();
-				vbufNormal->unlock();
+				
 				//first2 = false;
 
 		    
