@@ -796,10 +796,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             bonePtr = mSkel->getBone(shape->skin->bones[boneIndex].name.toString());
 
             // final_vector = old_vector + old_rotation*new_vector*old_scale
-            vecPos = bonePtr->_getDerivedPosition() +
-                bonePtr->_getDerivedOrientation() * convertVector3(it->trafo->trans);
-
-            vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation);
+           
 
 			Nif::NiSkinData::BoneInfoCopy boneinfo;
 			boneinfo.trafo.rotation = convertRotation(it->trafo->rotation);
@@ -807,7 +804,10 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 			boneinfo.bonename = shape->skin->bones[boneIndex].name.toString();
             for (unsigned int i=0; i<it->weights.length; i++)
             {
-				
+				 vecPos = bonePtr->_getDerivedPosition() +
+                bonePtr->_getDerivedOrientation() * convertVector3(it->trafo->trans) * (it->weights.ptr + i)->weight;
+
+            vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation) * (it->weights.ptr + i)->weight;
                 unsigned int verIndex = (it->weights.ptr + i)->vertex;
 				boneinfo.weights.push_back(*(it->weights.ptr + i));
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
@@ -832,6 +832,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
                     vertexPosAbsolut[verIndex] = true;
                 }
+
 
                 VertexBoneAssignment vba;
                 vba.boneIndex = bonePtr->getHandle();

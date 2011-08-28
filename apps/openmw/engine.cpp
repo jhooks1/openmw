@@ -140,6 +140,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
 	bone->setPosition(t); 
 	}
 	
+	if(quats.size() > 0){
     Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
 	
     //if(data.getBonename() == "Bip01")
@@ -209,7 +210,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
    //}
 
     bone->setOrientation(r);
-
+	}
 
     //bone->yaw(Ogre::Degree(10));
 
@@ -396,13 +397,17 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{
 			Nif::NiTriShapeCopy copy = *allshapesiter;
-			std::map<unsigned int, Ogre::Vector3> vertices;
-			std::map<unsigned int, Ogre::Vector3> normals;
+			std::map<unsigned int, bool> vertices;
+			std::map<unsigned int, bool> normals;
 			std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
 	
 			//std::cout << "Name " << copy.sname << "\n";
 
 			    if(boneinfovector.size() > 0){
+				Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+			       Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
+		            Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_NORMAL));
 				for (int i = 0; i < boneinfovector.size(); i++)
 				{
 					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
@@ -416,7 +421,11 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 						  if(vertices.find(verIndex) == vertices.end())
 						  {
 							  Ogre::Vector3 absVertPos = vecPos + vecRot * copy.vertices[verIndex];
-							  vertices[verIndex] = absVertPos;
+							  vertices[verIndex] = true;
+							   Ogre::Real* addr = (pReal + 3 * verIndex);
+							  *addr = absVertPos.x;
+							  *(addr+1) = absVertPos.y;
+				              *(addr+2) = absVertPos.z;
 
 								//std::cout << "Vertex" << vertices[verIndex] << "\n";
 						  }
@@ -425,11 +434,15 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 							  //std::cout << "Vertex" << verIndex << "Weight: " << boneinfo.weights[i].weight << "was seen twice\n";
 
 						  }
-
+						  
 						  if(normals.find(verIndex) == normals.end() &&  verIndex < copy.normals.size() )
 						  {
 							  Ogre::Vector3 absNormalsPos = vecRot * copy.normals[verIndex];
-							  normals[verIndex] = absNormalsPos;
+							  normals[verIndex] = true;
+							  Ogre::Real* addr = (pRealNormal + 3 * verIndex);
+							  *addr = absNormalsPos.x;
+				              *(addr+1) = absNormalsPos.y;
+				              *(addr+2) = absNormalsPos.z;
 						  }
 
 					 }
@@ -441,10 +454,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
 					}*/
 				}
-				    Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
-		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-			        Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
-		            Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+				    /*
 			        for( std::map<unsigned int, Ogre::Vector3>::iterator vertiter = vertices.begin(); vertiter != vertices.end(); vertiter++)
 			        {
 				        Ogre::Real* addr = (pReal + 3 * vertiter->first);
@@ -460,9 +470,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 				       *(addr+1) = normiter->second.y;
 				       *(addr+2) = normiter->second.z;
 				//std::cout << "Index: " << vertiter->first << " Vertex: " << vertiter->second << "\n";
-			       }
-				    vbuf->unlock();
-				    vbufNormal->unlock();
+			       }*/
+				   
 				}
 				else
 				{
@@ -535,8 +544,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 					}
 
-					vbuf->unlock();
-				    vbufNormal->unlock();
+					
 					
 					
 					// final_vector = old_vector + old_rotation*new_vector*old_scale
@@ -569,6 +577,16 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		
 		//std::cout << "All shapes" << allshapesiter->sname << "\n";
 		//std::cout << "Vertx:" << *ptr << "\n";
+		}
+
+		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
+		{
+			Nif::NiTriShapeCopy copy = *allshapesiter;
+			Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+
+			        Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
+					vbuf->unlock();
+					vbufNormal->unlock();
 		}
 
 		
