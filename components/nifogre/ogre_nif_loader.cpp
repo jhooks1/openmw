@@ -373,10 +373,11 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
             numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
 
 	
-	
 	if(flip)
 	{
 		float *datamod = new float[data->vertices.length];
+		//std::cout << "Shape" << shape->name.toString() << "\n";
+		//std::cout << "MTransform" << mTransform << "\n";
 		for(int i = 0; i < numVerts; i++)
 		{
 			int index = i * 3;
@@ -607,6 +608,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 {
     assert(shape != NULL);
 
+
     // Interpret flags
     bool hidden    = (flags & 0x01) != 0; // Not displayed
     bool collide   = (flags & 0x02) != 0; // Use mesh for collision
@@ -635,7 +637,6 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
     // Material name for this submesh, if any
     String material;
-
     // Skip the entire material phase for hidden nodes
     if (!hidden)
     {
@@ -742,8 +743,10 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
        nested levels of sub-meshes with transformations applied to each
        level.
     */
-    NiTriShapeData *data = shape->data.getPtr();
+	
+	  NiTriShapeData *data = shape->data.getPtr();
     int numVerts = data->vertices.length / 3;
+
 
     float *ptr = (float*)data->vertices.ptr;
     float *optr = ptr;
@@ -793,6 +796,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 break;
             }
             //get the bone from bones array of skindata
+			if(!mSkel->hasBone(shape->skin->bones[boneIndex].name.toString()))
+				std::cout << "We don't have this bone";
             bonePtr = mSkel->getBone(shape->skin->bones[boneIndex].name.toString());
 
             // final_vector = old_vector + old_rotation*new_vector*old_scale
@@ -805,9 +810,9 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             for (unsigned int i=0; i<it->weights.length; i++)
             {
 				 vecPos = bonePtr->_getDerivedPosition() +
-                bonePtr->_getDerivedOrientation() * convertVector3(it->trafo->trans) * (it->weights.ptr + i)->weight;
+                bonePtr->_getDerivedOrientation() * convertVector3(it->trafo->trans);
 
-            vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation) * (it->weights.ptr + i)->weight;
+            vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation);
                 unsigned int verIndex = (it->weights.ptr + i)->vertex;
 				boneinfo.weights.push_back(*(it->weights.ptr + i));
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
@@ -816,6 +821,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     //apply transformation to the vertices
                     Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
 
+					mBoundingBox.merge(absVertPos);
                     //convert it back to float *
                     for (int j=0; j<3; j++)
                         (ptr + verIndex*3)[j] = absVertPos[j];
@@ -866,9 +872,11 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         for (int i=0; i<numVerts; i++)
         {
             vectorMulAdd(rot, pos, ptr, scale);
+			Ogre::Vector3 absVertPos = Ogre::Vector3(*(ptr + 3 * i), *(ptr + 3 * i + 1), *(ptr + 3 * i + 2));
+			mBoundingBox.merge(absVertPos);
             ptr += 3;
         }
-
+		
         // Remember to rotate all the vertex normals as well
         if (data->normals.length)
         {
@@ -895,11 +903,28 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 			}
 		}
     }
+	/*
+	if(center){
+		for(int i = 0; i < numVerts; i++)
+		{
+			int index = i * 3;
+			const float *pos = data->vertices.ptr + index;
+		    Ogre::Vector3 original = Ogre::Vector3(*pos  ,*(pos+1), *(pos+2));
+			const float *posNormal = data->normals.ptr + index;
+			Ogre::Vector3 originalN = Ogre::Vector3(*posNormal  ,*(posNormal+1), *(posNormal+2));
+			mBoundingBox.merge(original);
+			//std::cout << "Adding Point " << original << "\n";
+		}
+		return;
 
-	
+	}*/
 
     if (!hidden)
     {
+		
+		
+	
+
 		shapes.push_back(copy);
         // Add this vertex set to the bounding box
         bounds.add(optr, numVerts);
@@ -1061,6 +1086,8 @@ void NIFLoader::setVector(Ogre::Vector3 vec)
 }
 void NIFLoader::loadResource(Resource *resource)
 {
+	center = false;
+	mBoundingBox.setNull();
 	allanim.clear();
 	shapes.clear();
 	assignmentn = 0;
@@ -1085,7 +1112,7 @@ void NIFLoader::loadResource(Resource *resource)
 	if(flip)
 	{
 		//std::cout << "Flipping";
-		calculateTransform();
+		calculateTransform(0);
 	}
 
 	suffix = name.at(name.length() - 1);
@@ -1114,9 +1141,11 @@ void NIFLoader::loadResource(Resource *resource)
 			break;
 		case '>':
 			triname = "tri left hand";
+			center = true;
 			break;
 		case '?':
 			triname = "tri right hand";
+			center = true;
 			break;
 		default:
 			triname = "";
@@ -1199,6 +1228,19 @@ void NIFLoader::loadResource(Resource *resource)
 
     // Handle the node
 	std::vector<std::string> boneSequence;
+	
+	/*
+	if(center) 
+	{
+		handleNode(node, 0, NULL, bounds, 0, boneSequence);
+		calculateTransform(1);
+		center = false;
+
+		processSkeleton(mSkel.get());
+		mBoundingBox.setNull();
+		flip = true;
+	}*/
+
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
 
 	
@@ -1348,6 +1390,43 @@ void NIFLoader::loadResource(Resource *resource)
 		allanimmap[lowername] = allanim;
 		allshapesmap[lowername] = shapes;
 	}
+	if(center)
+	{
+		calculateTransform(1);
+
+		  mBoundingBox.setNull();
+
+        if (mesh->sharedVertexData != NULL)
+        {
+            processVertexData(mesh->sharedVertexData);
+        }
+
+        for(int i = 0;i < mesh->getNumSubMeshes();i++)
+        {
+            SubMesh* submesh = mesh->getSubMesh(i);
+            if (submesh->vertexData != NULL)
+            {
+                processVertexData(submesh->vertexData);
+            }
+            if (submesh->indexData != NULL)
+            {
+            	processIndexData(submesh->indexData);
+            }
+        }
+
+		processSkeleton(mSkel.get());
+		/*
+		for(int i = 0; i < mesh->getNumSubMeshes(); i++){
+		Ogre::HardwareVertexBufferSharedPtr vbuf = mesh->getSubMesh(i)->vertexData->vertexBufferBinding->getBuffer(0);
+		Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
+			
+		for (int i = 0; i < vbuf->getSizeInBytes() / 3 / sizeof(float); i++)
+		{
+			pReal[i] = 0;
+		}
+		vbuf->unlock();
+		}*/
+	}
 	if(flip){
 	mesh->_setBounds(mBoundingBox, false);
 	}
@@ -1362,6 +1441,186 @@ void NIFLoader::loadResource(Resource *resource)
   //std::cout << "7\n";
 }
 
+void NIFLoader::processIndexData(IndexData* indexData)
+	{
+		if (!mFlipVertexWinding)
+		{
+			std::cout << "Nothing to do";
+			// Nothing to do.
+			return;
+		}
+
+		if (indexData->indexCount % 3 != 0)
+		{
+            printf("Index number is not a multiple of 3, no vertex winding flipping possible. Skipped.");
+            return;
+		}
+		std::cout << "Something to do";
+
+		//print("Flipping index order for vertex winding flipping.", V_HIGH);
+		Ogre::HardwareIndexBufferSharedPtr buffer = indexData->indexBuffer;
+		unsigned char* data =
+               static_cast<unsigned char*>(buffer->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+
+		if(buffer->getType() == Ogre::HardwareIndexBuffer::IT_16BIT)
+		{
+			// 16 bit
+			//print("using 16bit indices", V_HIGH);
+
+			for (size_t i = 0; i < indexData->indexCount; i+=3)
+			{
+				uint16* i0 = (uint16*)(data+0 * buffer->getIndexSize());
+				uint16* i2 = (uint16*)(data+2 * buffer->getIndexSize());
+
+				// flip
+				uint16 tmp = *i0;
+				*i0 = *i2;
+				*i2 = tmp;
+
+				data += 3 * buffer->getIndexSize();
+			}
+		}
+		else
+		{
+			// 32 bit
+			//print("using 32bit indices", V_HIGH);
+
+			for (size_t i = 0; i < indexData->indexCount; i+=3)
+			{
+				uint32* i0 = (uint32*)(data+0 * buffer->getIndexSize());
+				uint32* i2 = (uint32*)(data+2 * buffer->getIndexSize());
+
+				// flip
+				uint32 tmp = *i0;
+				*i0 = *i2;
+				*i2 = tmp;
+
+				data += 3 * buffer->getIndexSize();
+			}
+		}
+
+		buffer->unlock();
+	}
+	void NIFLoader::processDirectionElement(VertexData* vertexData,
+        const VertexElement* vertexElem)
+    {
+        // We only want to apply rotation to normal, binormal and tangent, so extract it.
+        Quaternion rotation = mTransform.extractQuaternion();
+        rotation.normalise();
+
+        Ogre::HardwareVertexBufferSharedPtr buffer =
+            vertexData->vertexBufferBinding->getBuffer(vertexElem->getSource());
+
+        unsigned char* data =
+            static_cast<unsigned char*>(buffer->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+        for (size_t i = 0; i < vertexData->vertexCount; ++i)
+        {
+            Real* ptr;
+            vertexElem->baseVertexPointerToElement(data, &ptr);
+
+            Vector3 vertex(ptr);
+            vertex = rotation * vertex;
+            if (mNormaliseNormals)
+            {
+                vertex.normalise();
+            }
+            ptr[0] = vertex.x;
+            ptr[1] = vertex.y;
+            ptr[2] = vertex.z;
+
+            data += buffer->getVertexSize();
+        }
+        buffer->unlock();
+    }
+
+    void NIFLoader::processPositionElement(VertexData* vertexData,
+        const VertexElement* vertexElem)
+    {
+        Ogre::HardwareVertexBufferSharedPtr buffer =
+            vertexData->vertexBufferBinding->getBuffer(vertexElem->getSource());
+
+        unsigned char* data =
+            static_cast<unsigned char*>(buffer->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+        for (size_t i = 0; i < vertexData->vertexCount; ++i)
+        {
+            Real* ptr;
+            vertexElem->baseVertexPointerToElement(data, &ptr);
+
+            Vector3 vertex(ptr);
+            vertex = mTransform * vertex;
+            ptr[0] = vertex.x;
+            ptr[1] = vertex.y;
+            ptr[2] = vertex.z;
+            mBoundingBox.merge(vertex);
+
+            data += buffer->getVertexSize();
+        }
+        buffer->unlock();
+    }
+
+
+void NIFLoader::processVertexData(VertexData* vertexData)
+    {
+        const VertexElement* position =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
+        if (position != NULL)
+        {
+            processPositionElement(vertexData, position);
+        }
+
+        const VertexElement* normal =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_NORMAL);
+        if (normal != NULL)
+        {
+            processDirectionElement(vertexData, normal);
+        }
+
+        const VertexElement* binormal =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_BINORMAL);
+        if (binormal != NULL)
+        {
+            processDirectionElement(vertexData, binormal);
+        }
+
+        const VertexElement* tangent =
+            vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_TANGENT);
+        if (tangent != NULL)
+        {
+            processDirectionElement(vertexData, tangent);
+        }
+    }
+
+void NIFLoader::processSkeleton(Ogre::Skeleton* skeleton)
+    {
+        Skeleton::BoneIterator it = skeleton->getBoneIterator();
+        while (it.hasMoreElements())
+        {
+            processBone(it.peekNext());
+            it.moveNext();
+        }
+}
+void NIFLoader::processBone(Ogre::Bone* bone)
+    {
+        if (bone->getParent() == NULL)
+        {
+            // Is root bone, we need to apply full transform
+            bone->setPosition(mTransform * bone->getPosition());
+            Quaternion rot = mTransform.extractQuaternion();
+            rot.normalise();
+            bone->setOrientation(rot * bone->getOrientation());
+        }
+        else
+        {
+            // Non-root-bone, we apply only scale
+            Matrix3 m3x3;
+            mTransform.extract3x3Matrix(m3x3);
+            Vector3 scale(
+                m3x3.GetColumn(0).length(),
+                m3x3.GetColumn(1).length(),
+                m3x3.GetColumn(2).length());
+            bone->setPosition(scale * bone->getPosition());
+        }
+    }
 
 
 MeshPtr NIFLoader::load(const std::string &name, 
@@ -1396,16 +1655,26 @@ MeshPtr NIFLoader::load(const std::string &name,
 
 
 
-  void NIFLoader::calculateTransform()
+  void NIFLoader::calculateTransform(int mode)
     {
         // Calculate transform
         Matrix4 transform = Matrix4::IDENTITY;
 
 		//std::cout << "Calculating transformation...";
 
+		if(mode == 0)
                 transform = Matrix4::getScale(vector) * transform;
 				//std::cout << "Apply scaling \n";
-                
+        if(mode == 1)
+		{
+			Vector3 translate = Vector3::ZERO;
+			if(suffix == '>')                     //left hand
+				translate = Vector3(-mBoundingBox.getMinimum().x, -mBoundingBox.getCenter().y, -mBoundingBox.getCenter().z);
+			else
+				translate = Vector3(-mBoundingBox.getMaximum().x, -mBoundingBox.getCenter().y, -mBoundingBox.getCenter().z);
+			 
+			 transform = Matrix4::getTrans(translate) * transform;
+		}
 
 		//ignore, if no mesh given. Without we can't do this op.
             
@@ -1418,10 +1687,13 @@ MeshPtr NIFLoader::load(const std::string &name,
         // but the test is cheap either way.
         Matrix3 m3;
         transform.extract3x3Matrix(m3);
+		
         if (m3.GetColumn(0).crossProduct(m3.GetColumn(1)).dotProduct(m3.GetColumn(2)) < 0)
         {
         	mFlipVertexWinding = true;
         }
+		if(mode == 1)
+			mFlipVertexWinding = false;
 
         mTransform = transform;
 		//std::cout << "final transform \n";

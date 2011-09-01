@@ -43,6 +43,7 @@ namespace MWClass
         assert (ref->base != NULL);
 		
 		
+		const float PI = 3.14159265;
 		//mTool->
 		
 		//Part selection on last character of the file string
@@ -195,6 +196,14 @@ namespace MWClass
 		//Shoes/Pants/Shirts/Gloves 2
 		//Skin 1
 
+			//                                        y was 50
+		//not x                y moves parallel to ground
+		//                                        -150
+		Ogre::Vector3 handPos2 = Ogre::Vector3(-8, 0, 0);
+		Ogre::Vector3 handPos = Ogre::Vector3(8, 0, 0);        //40,20, -100   //20
+		Ogre::Quaternion handRot = Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(0, 1, 0)) * Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(1, 0, 0));//Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 1, 0)); //1,0,0         //0,1,0
+		//handRot * Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0)) *  Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0));
+		Ogre::Quaternion handRot2 = e; //Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1,0,0));
 		int priority = 1;
 		while(ilistiter != ilist.end())
 		{
@@ -268,7 +277,7 @@ namespace MWClass
 					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (appareliter->male);
 					if(female && environment.mWorld->getStore().bodyParts.search (appareliter->female))
 						part = environment.mWorld->getStore().bodyParts.search (appareliter->female);
-					
+					if(part){
 					
 						//Cuirass represents chest, we should change this, it is confusing
 						if(marker == ESM::PRT_Cuirass && priority > pchest)
@@ -315,6 +324,11 @@ namespace MWClass
 						}
 						else if(marker == ESM::PRT_LHand && priority > phandl)
 						{
+							//handRot = Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(0, 1, 0));
+							//handRot = handRot * Ogre::Quaternion(Ogre::Radian(PI ),Ogre::Vector3(1,0,0));
+							//handRot = e;
+
+
 							handl = part;
 							phandl = priority;
 						}
@@ -360,6 +374,10 @@ namespace MWClass
 						}
 						else if(marker == ESM::PRT_RHand && priority > phandr)
 						{
+							//(51.5, 2, -110)
+							//handRot = Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(0, 1, 0));
+							//handRot = handRot * Ogre::Quaternion(Ogre::Radian(PI ),Ogre::Vector3(1,0,0));
+							
 							handr = part;
 							phandr = priority;
 						}
@@ -403,7 +421,7 @@ namespace MWClass
 							tail = part;
 							ptail = priority;
 						}
-						
+						}
 						
 						
 
@@ -436,7 +454,7 @@ namespace MWClass
 		}
 		
         if (groin){
-			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, e, skirtpos);
+			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, handRot, skirtpos);
 
 		}
 		if (tail) {
@@ -517,14 +535,7 @@ namespace MWClass
 				cellRender.insertMesh("meshes\\" + wristl->model + "*|", "Left Wrist", ref->model, e, blank);
 		
 
-		//                                        y was 50
-		//not x                y moves parallel to ground
-		//                                        -150
-		Ogre::Vector3 handPos2 = Ogre::Vector3(51.5, 2, -110);
-		Ogre::Vector3 handPos = Ogre::Vector3(-51.5, 2, -110);        //40,20, -100   //20
-		Ogre::Quaternion handRot = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 1, 0)); //1,0,0         //0,1,0
-		handRot = handRot * Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0)) *  Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0));
-		Ogre::Quaternion handRot2 = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1,0,0));
+	
 		if(handl)
 		{
 			std::string pass;

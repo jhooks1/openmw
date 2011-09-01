@@ -122,9 +122,13 @@ class NIFLoader : Ogre::ManualResourceLoader
 
 		//MeshMagick stuff
 		void processSkeleton(Ogre::Skeleton* skeleton);
-		void calculateTransform();
+		void calculateTransform(int mode);
 
-
+		void processBone(Ogre::Bone* bone);
+		void processIndexData(Ogre::IndexData* indexData);
+		void processVertexData(Ogre::VertexData* vertexData);
+		void processPositionElement(Ogre::VertexData* vertexData, const Ogre::VertexElement* vertexElem);
+		void processDirectionElement(Ogre::VertexData* vertexData, const Ogre::VertexElement* vertexElem);
 
         void warn(std::string msg);
         void fail(std::string msg);
@@ -178,6 +182,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 		std::map<std::string,std::vector<Nif::NiTriShapeCopy>> allshapesmap;
 		std::vector<Nif::NiTriShapeCopy> shapes;
 		bool flip;
+		bool center;
 		Ogre::Vector3 vector; 
 
 		  Ogre::Matrix4 mTransform;

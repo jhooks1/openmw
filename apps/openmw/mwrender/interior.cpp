@@ -94,8 +94,12 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
 }
 void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	MeshPtr good2 = NIFLoader::load(mesh);
-		  Entity* ent = scene.getMgr()->createEntity(mesh);;
+		  Entity* ent = scene.getMgr()->createEntity(mesh);
+		  
 	Ogre::MeshManager *m = MeshManager::getSingletonPtr();
+	//Ogre::SceneNode* hello = insert->createChildSceneNode(mesh);
+	//hello->attachObject(ent);
+	//hello->showBoundingBox(true);
 	 
 	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
 	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
