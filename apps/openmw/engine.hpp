@@ -121,7 +121,8 @@ namespace OMW
 
             void addResourcesDirectory (const boost::filesystem::path& path);
 
-			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, float &time, int &rindexI, int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialPos, bool &first );
+			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, aindex &a, int slot);
+			void handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre::Entity* creaturemodel, Ogre::SkeletonInstance *skel);
 
 			bool timeIndex( float time, std::vector<float> times, int & i, int & j, float & x );
 

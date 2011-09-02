@@ -88,12 +88,12 @@ void OMW::Engine::executeLocalScripts()
 
 
 
-void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
+void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, aindex &a, int slot) {//Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
 	//Ogre::AxisAlignedBox box = ent.getBoundingBox();
 	//box.setInfinite();
 	//std::cout << "i";
 	
-	if(time < data.getStartTime())
+	if(a.time < data.getStartTime())
 	{
 		return;
 	}
@@ -124,24 +124,24 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData &data, Ogre::Enti
     //std::vector<float>::iterator rtimeiter = rtime.begin() + rpos;
     int rindexJ = 0;
 	
-    timeIndex(time, rtime, rindexI, rindexJ, x);
+    timeIndex(a.time, rtime, a.rindexI[slot], rindexJ, x);
 	
 	
 
     int tindexJ = 0;
 
     Ogre::Vector3 old = bone->getPosition();
-    timeIndex(time, ttime, tindexI, tindexJ, x);
+    timeIndex(a.time, ttime, a.tindexI[slot], tindexJ, x);
 	
 	if(translist1.size() > 0){
-    Ogre::Vector3 v1 = translist1[tindexI];
+    Ogre::Vector3 v1 = translist1[a.tindexI[slot]];
     Ogre::Vector3 v2 = translist1[tindexJ];
     Ogre::Vector3 t = v1 + (v2 - v1) * x;
 	bone->setPosition(t); 
 	}
 	
 	if(quats.size() > 0){
-    Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true);
+    Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[a.rindexI[slot]], quats[rindexJ], true);
 	
     //if(data.getBonename() == "Bip01")
     // {
@@ -292,109 +292,10 @@ bool OMW::Engine::timeIndex( float time, std::vector<float> times, int & i, int 
 		return false;
 
 }
-
-bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
+void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre::Entity* creaturemodel, Ogre::SkeletonInstance *skel)
 {
-    if(mShowFPS)
-    {
-        mEnvironment.mWindowManager->wmSetFPS(mOgre.getFPS());
-    }
-
-    if(mUseSound && !(mEnvironment.mSoundManager->isMusicPlaying()))
-    {
-        // Play some good 'ol tunes
-        mEnvironment.mSoundManager->startRandomTitle();
-    }
-
-    std::string effect;
-
-    MWWorld::Ptr::CellStore *current = mEnvironment.mWorld->getPlayer().getPlayer().getCell();
-	
-	
-	
-	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List creatureData = (current->creatures).list;
-	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
-
-	first2 = true;
-	
-	//if(creatureData.size() > 0){
-	for(int i = 0; i < creatureData.size(); i++)
-	{
-		//std::cout << "Creature encounter\n";
-		//std::cout << "Testing" << i < "\n";
-		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
-		Ogre::Entity* creaturemodel = item.model;
-		std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
-		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.smodel);
-		prev = item.smodel;
-		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
-		std::vector<Nif::NiTriShapeCopy>::iterator allshapesiter;
-		
-		if(creaturea.size() == i)
-		{
-			//std::cout << "Shapes" << shapesiter->name.toString() << "\n";
-			if(i == 0)
-			{
-				/*
-				Nif::NiTriShapeCopy copy = allshapes[0];
-				std::cout << "Name" << copy.sname << "\n";
-				
-				for(int i = 0 ; i < copy.vertices.size() ; i++){
-				std::cout << "Vertex " << copy.vertices[i] << "\n";
-				std::cout << "Normal " << copy.normals[i] << "\n";
-				}
-				std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
-				for (int i = 0; i < boneinfovector.size(); i++)
-				{
-					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
-				
-					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
-					std::vector<Nif::NiSkinData::VertWeight> weights = boneinfo.weights;
-					for (int j = 0; j < weights.size(); j++){
-						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
-					}
-				}*/
-			}
-
-			aindex a;
-			a.time = 0.0;
-			a.first = true;
-			//a.absoluterot = creaturemodel->getParentSceneNode()->getOrientation();
-			//a.absolutepos = creaturemodel->getParentSceneNode()->getPosition();
-			//a.initialrot = creaturemodel->getSkeleton()->getBone("Bip01")->getOrientation();
-			
-			for(int init = 0; init < allanim.size(); init++){
-				a.rindexI.push_back(0);
-				//a.rindexJ.push_back(0);
-				a.tindexI.push_back(0);
-				//a.tindexJ.push_back(0);
-			}
-			creaturea.push_back(a);
-			
-		}
-
-		aindex& r = creaturea[i];
-		r.time += evt.timeSinceLastFrame;
-	
-		int o = 0;
-		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
-		{
-			//std::cout << "Bone" << allanimiter->getBonename() << "Rindex" << r.rindexI[o] << "\n";
-			handleAnimationTransform(*allanimiter, *creaturemodel, r.time, r.rindexI[o], r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
-			
-
-
-			o++;
-		}
-		//Ogre::AnimationState *mAnimationState = creaturemodel->getAnimationState("WholeThing");
-			//mAnimationState->setLoop(false);
-
-
-
-			//mAnimationState->setEnabled(true);
-			//mAnimationState->addTime(evt.timeSinceLastFrame);
-		
-		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
+	std::vector<Nif::NiTriShapeCopy>::iterator allshapesiter;
+	for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{
 			Nif::NiTriShapeCopy copy = *allshapesiter;
 			std::map<unsigned int, bool> vertices;
@@ -404,6 +305,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			//std::cout << "Name " << copy.sname << "\n";
 
 			    if(boneinfovector.size() > 0){
+
 				Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
 		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
 			       Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
@@ -411,7 +313,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 				for (int i = 0; i < boneinfovector.size(); i++)
 				{
 					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
-					Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(boneinfo.bonename);
+					Ogre::Bone *bonePtr = skel->getBone(boneinfo.bonename);
 					Ogre::Vector3 vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfo.trafo.trans;
 					Ogre::Quaternion vecRot = bonePtr->_getDerivedOrientation() * boneinfo.trafo.rotation;
 					//std::cout << "Bone" << bonePtr->getName() << "\n";
@@ -544,39 +446,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 					}
 
-					
-					
-					
-					// final_vector = old_vector + old_rotation*new_vector*old_scale
-					//Ogre::Vector3 transmult = bonePtr->getPosition() + bonePtr->getOrientation() * shapetrans;
-					//Ogre::Quaternion rotmult = bonePtr->getOrientation() * shaperot;
-					//float scale = bonePtr->getScale().x * shapescale;
-					
-					
-				
-					//std::cout << "Scale" << scale << "\n";
-					//std::cout << "No weights:" << copy.bonename << "\n";
-					//std::cout << "Rot: " << copy.initialBoneRotation << "Trans: " << copy.initialBoneTranslation << "\n";
-					//std::cout << "ShapeRot: " << copy.trafo.rotation << "ShapeTrans: " << copy.trafo.trans << "\n";
-
 				}
-				//if(first2){
-				//std::cout << "Shape" << copy.sname << "\n";
-				
-				//first2 = false;
-
-		    
-		//std::cout << "Sub: " << copy.sname << " Size: " << vbuf->getSizeInBytes() << "\n";
-		//float *datamod = new float[vbuf->getSizeInBytes() / 3];
-		//for (int i = 0; i < vbuf->getSizeInBytes() / 3; i++)
-		//{
-		//	pReal[i] = 0;
-		//}
-		
-
-		
-		//std::cout << "All shapes" << allshapesiter->sname << "\n";
-		//std::cout << "Vertx:" << *ptr << "\n";
 		}
 
 		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
@@ -588,6 +458,111 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 					vbuf->unlock();
 					vbufNormal->unlock();
 		}
+}
+
+bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
+{
+    if(mShowFPS)
+    {
+        mEnvironment.mWindowManager->wmSetFPS(mOgre.getFPS());
+    }
+
+    if(mUseSound && !(mEnvironment.mSoundManager->isMusicPlaying()))
+    {
+        // Play some good 'ol tunes
+        mEnvironment.mSoundManager->startRandomTitle();
+    }
+
+    std::string effect;
+
+    MWWorld::Ptr::CellStore *current = mEnvironment.mWorld->getPlayer().getPlayer().getCell();
+	
+	
+	
+	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List creatureData = (current->creatures).list;
+	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
+
+	first2 = true;
+	
+	//if(creatureData.size() > 0){
+	for(int i = 0; i < creatureData.size(); i++)
+	{
+		//std::cout << "Creature encounter\n";
+		//std::cout << "Testing" << i < "\n";
+		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
+		Ogre::Entity* creaturemodel = item.model;
+		std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
+		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.smodel);
+		prev = item.smodel;
+		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
+		std::vector<Nif::NiTriShapeCopy>::iterator allshapesiter;
+		
+		if(creaturea.size() == i)
+		{
+			//std::cout << "Shapes" << shapesiter->name.toString() << "\n";
+			if(i == 0)
+			{
+				/*
+				Nif::NiTriShapeCopy copy = allshapes[0];
+				std::cout << "Name" << copy.sname << "\n";
+				
+				for(int i = 0 ; i < copy.vertices.size() ; i++){
+				std::cout << "Vertex " << copy.vertices[i] << "\n";
+				std::cout << "Normal " << copy.normals[i] << "\n";
+				}
+				std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
+				for (int i = 0; i < boneinfovector.size(); i++)
+				{
+					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
+				
+					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
+					std::vector<Nif::NiSkinData::VertWeight> weights = boneinfo.weights;
+					for (int j = 0; j < weights.size(); j++){
+						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
+					}
+				}*/
+			}
+
+			aindex a;
+			a.time = 0.0;
+			a.first = true;
+			//a.absoluterot = creaturemodel->getParentSceneNode()->getOrientation();
+			//a.absolutepos = creaturemodel->getParentSceneNode()->getPosition();
+			//a.initialrot = creaturemodel->getSkeleton()->getBone("Bip01")->getOrientation();
+			
+			for(int init = 0; init < allanim.size(); init++){
+				a.rindexI.push_back(0);
+				//a.rindexJ.push_back(0);
+				a.tindexI.push_back(0);
+				//a.tindexJ.push_back(0);
+			}
+			creaturea.push_back(a);
+			
+		}
+
+		aindex& r = creaturea[i];
+		r.time += evt.timeSinceLastFrame;
+	
+		int o = 0;
+		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
+		{
+			//std::cout << "Bone" << allanimiter->getBonename() << "Rindex" << r.rindexI[o] << "\n";
+			handleAnimationTransform(*allanimiter, *creaturemodel, r, o);
+			
+
+
+			o++;
+		}
+		handleShapes(allshapes, creaturemodel, creaturemodel->getSkeleton());
+		//Ogre::AnimationState *mAnimationState = creaturemodel->getAnimationState("WholeThing");
+			//mAnimationState->setLoop(false);
+
+
+
+			//mAnimationState->setEnabled(true);
+			//mAnimationState->addTime(evt.timeSinceLastFrame);
+		
+		
 
 		
 
@@ -626,7 +601,6 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			//a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
 			//a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
 			//a.first = true;
-			std::cout << "Bip01" << a.rotationl << "\n";
 			for(int init = 0; init < allanim.size(); init++){
 				a.rindexI.push_back(0);
 				//a.rindexJ.push_back(0);
@@ -655,7 +629,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			//if(i == 0)
-				handleAnimationTransform(*allanimiter, *npcmodel, r.time, r.rindexI[o],r.tindexI[o], r.rotationl, r.absolutepos, r.absoluterot, r.initialrot, first);
+				handleAnimationTransform(*allanimiter, *npcmodel, r, o);
 			/*
 			if(first)
 			{
@@ -671,7 +645,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			o++;
 		}
 		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
-			mAnimationState->setLoop(true);
+			mAnimationState->setLoop(false);
 
 
 

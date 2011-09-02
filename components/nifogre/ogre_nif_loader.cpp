@@ -1445,7 +1445,6 @@ void NIFLoader::processIndexData(IndexData* indexData)
 	{
 		if (!mFlipVertexWinding)
 		{
-			std::cout << "Nothing to do";
 			// Nothing to do.
 			return;
 		}
@@ -1455,7 +1454,6 @@ void NIFLoader::processIndexData(IndexData* indexData)
             printf("Index number is not a multiple of 3, no vertex winding flipping possible. Skipped.");
             return;
 		}
-		std::cout << "Something to do";
 
 		//print("Flipping index order for vertex winding flipping.", V_HIGH);
 		Ogre::HardwareIndexBufferSharedPtr buffer = indexData->indexBuffer;
@@ -1669,6 +1667,7 @@ MeshPtr NIFLoader::load(const std::string &name,
 		{
 			Vector3 translate = Vector3::ZERO;
 			if(suffix == '>')                     //left hand
+				                                  //We align by the fingertips
 				translate = Vector3(-mBoundingBox.getMinimum().x, -mBoundingBox.getCenter().y, -mBoundingBox.getCenter().z);
 			else
 				translate = Vector3(-mBoundingBox.getMaximum().x, -mBoundingBox.getCenter().y, -mBoundingBox.getCenter().z);
