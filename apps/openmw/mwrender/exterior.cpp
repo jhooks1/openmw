@@ -194,18 +194,24 @@ void ExteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
        parent->scale(axis);
 }
 
-void ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+
+Ogre::Entity* ExteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	MeshPtr good2 = NIFLoader::load(mesh);
 	Entity *ent = mScene.getMgr()->createEntity(mesh);
-	ent->setDisplaySkeleton(true);
 
 	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
 
-	base->attachObjectToBone(bonename, ent,quat, trans);     
+	base->attachObjectToBone(bonename, ent,quat, trans);   
+	return ent;
 }
 void ExteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	
 	base->attachObjectToBone(bonename, part ,quat, trans);
+}
+void ExteriorCellRender::sendAddinToLoader(const std::string &mesh){
+	MeshPtr meshp = NIFLoader::load(mesh);
+	Entity *ent = mScene.getMgr()->createEntity(mesh);
+	NIFLoader::getSingletonPtr()->addInMesh(meshp.getPointer());
 }
 
 // insert a mesh related to the most recent insertBegin call.

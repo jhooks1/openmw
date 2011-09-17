@@ -62,8 +62,11 @@ public:
 	{
 	   passed = filename.substr(0, filename.length() - 2);
 	}
+	if(filename.at(filename.length() - 2) == '>')
+		passed = filename.substr(0, filename.length() - 6);
     // Open the file
     StreamPtr strm = narc->getFile(passed.c_str());
+
 
     // Wrap it into an Ogre::DataStream.
     return DataStreamPtr(new Mangle2OgreStream(strm));
@@ -78,6 +81,8 @@ public:
 	{
 	   passed = filename.substr(0, filename.length() - 2);
 	}
+	if(filename.at(filename.length() - 2) == '>')
+		passed = filename.substr(0, filename.length() - 6);
 	  return arc.exists(passed.c_str()); 
   
   }

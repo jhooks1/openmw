@@ -37,8 +37,11 @@ namespace ESMS
 	//std::vector<Nif::NiTriShapeCopy> shapes;
     std::string smodel;
 	
-
+	std::string lhand;
+	
 	Ogre::Entity *model;
+	Ogre::Entity *lhandmodel;
+	
 
     /* Information about this instance, such as 3D location and
        rotation and individual type-dependent data.

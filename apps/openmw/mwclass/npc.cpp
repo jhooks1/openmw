@@ -37,6 +37,9 @@ namespace MWClass
     void Npc::insertObj (const MWWorld::Ptr& ptr, MWRender::CellRenderImp& cellRender,
         MWWorld::Environment& environment) const
     {
+		static int counter = 0;
+		
+		counter++;
         //Ogre::SceneNode *chest;
         ESMS::LiveCellRef<ESM::NPC, MWWorld::RefData> *ref =
             ptr.get<ESM::NPC>();
@@ -99,12 +102,29 @@ namespace MWClass
 		
 		std::string smodel = "meshes\\base_anim.nif";
 		if(beast)
-			smodel = "meshes\\base_animkna.nif"; 
+			smodel = "meshes\\base_animkna.nif";
 		
+		std::stringstream out;
+		
+		
+		
+		if(counter > 99 && counter < 1000)
+			out << "0";
+		else if(counter > 9)
+			out << "00";
+		else
+			out << "000";
+		out << counter;
+		
+		out << ">|";
+
+		smodel += out.str();
+		std::cout << "Smodel" << smodel << "\n";
 	
+		ref->smodel = smodel;
+		
 			
-			ref->smodel = smodel;
-			ref->model = cellRender.insertAndDeliverMesh(smodel);
+			
 
 		//ref->model->getParentSceneNode()->showBoundingBox(true);
 	
@@ -442,13 +462,38 @@ namespace MWClass
 		std::string upperarmpath[2] = {npcName + "chest", npcName + "upper arm"};
 		
 		Ogre::Quaternion p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0)); //1,0,0
-		q  = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 0, 1)); //1,0,0
+
+		
+
+		if(handl)
+		{
+			std::string pass;
+				pass = handl->model;
+				
+				cellRender.sendAddinToLoader("meshes\\" + pass + "|>");
+				ref->lhand = "meshes\\" + pass + "|>";
+			//ref->handl = 
+				//cellRender.insertMeshInsideBase("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
+				//ref->lhandmodel = cellRender.insertMesh("meshes\\" + pass + "|>", "Test", ref->model, handRot, handPos);
+		}
+		else
+			;//ref->handl = 0;
+		if(handr){
+			//ref->handr = cellRender.insertMesh("meshes\\" + handr->model + "|?", "Right Hand", ref->model, handRot, handPos2);
+		}
+		else
+			;//ref->handr = 0;
+
+		ref->model = cellRender.insertAndDeliverMesh(smodel);
+		
+		
 
 		//cellRender.insertMesh("meshes\\b\\B_N_Breton_F_Foot.nif", Ogre::Vector3(-1,1,1));        //1, -1, 1
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
+		Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
 		if (bodyPart){
 			
-			Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
+			
 
 				cellRender.insertMesh("meshes\\" + bodyPart->model + "|\"", "Chest", ref->model, q, chestPos);
 		}
@@ -462,17 +507,18 @@ namespace MWClass
 			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
 			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
 			cellRender.insertMesh("meshes\\" + tail->model + "|*", "Bip01 Tail", ref->model, p2, tailpos);
+			//ref->tail = cellRender.insertMesh("meshes\\" + tail->model + "|*", "Chest", ref->model, q, chestPos);
+			//ref->tail = cellRender.insertMesh("meshes\\" + tail->model + "|*", "Chest", ref->model, e, blank);
 		}
 		else
 		{
-			
+			//ref->tail = 0;
 			Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
 			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
 			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
 			//cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, p2, tailpos);
 		}
 		
-		q = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 1, 0)); //1,0,0
 		p = Ogre::Quaternion(Ogre::Radian(3.14 ), Ogre::Vector3(0, 0, 1));
 
 		if(upperleg){
@@ -531,20 +577,12 @@ namespace MWClass
 			cellRender.insertMesh("meshes\\" + wristr->model, "Right Wrist", ref->model, e, blank);
 		}
 
-		if(wristl)
+		if(wristl);
 				cellRender.insertMesh("meshes\\" + wristl->model + "*|", "Left Wrist", ref->model, e, blank);
 		
 
 	
-		if(handl)
-		{
-			std::string pass;
-				pass = handl->model;
-
-			cellRender.insertMesh("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
-		}
-		if(handr)
-			cellRender.insertMesh("meshes\\" + handr->model + "|?", "Right Hand", ref->model, handRot, handPos2);
+		
 
 		if(claviclel)
 			cellRender.insertMesh("meshes\\" + claviclel->model + "*|", "Left Clavicle", ref->model, e, blank);

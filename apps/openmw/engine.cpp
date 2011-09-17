@@ -573,107 +573,104 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
 	
 	
-	
-		
 	for(int i = 0; i < npcdata.size(); i++)
 	{
-	
+
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
-	
-		if(prev != item.smodel)
-		{
-			prev = item.smodel;
-			//std::cout << "New:" << prev << "\n";
-			allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
-			//std::cout << "Size" << allanim.size()<< "\n";
-			if(allanim.size() == 0){
-				break;
-			}
+		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lhand);
 
-		}
+        if(prev != item.smodel)
+        {
+            prev = item.smodel;
+            //std::cout << "New:" << prev << "\n";
+            allanim = NIFLoader::getSingletonPtr()->getAnim(prev);
 
-		if(npca.size() == i)
-		{
-			aindex a;
-			a.time = 0.0;
-			//a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
-			//a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
-			//a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
-			//a.first = true;
-			for(int init = 0; init < allanim.size(); init++){
-				a.rindexI.push_back(0);
-				//a.rindexJ.push_back(0);
-				a.tindexI.push_back(0);
-				//a.tindexJ.push_back(0);
-			}
-			npca.push_back(a);
-		}
-		//std::cout << "Filename" << item.smodel << "\n";
-		//std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
-		std::vector<Nif::NiKeyframeData>::iterator allanimiter;
-		
+            //std::cout << "Size" << allanim.size()<< "\n";
+            if(allanim.size() == 0){
+                 break;
+            }
 
-		aindex& r = npca[i];
+       }
 
-		int to = r.time + evt.timeSinceLastFrame;
-		//if( to > ((int) r.time))
-		//	std::cout << "TimePosition: " << r.time << "\n";
+       if(npca.size() == i)
+       {
+            aindex a;
+            a.time = 0.0;
+            //a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
+            //a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
+            //a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
+            //a.first = true;
+            for(int init = 0; init < allanim.size(); init++){
+                 a.rindexI.push_back(0);
+                 //a.rindexJ.push_back(0);
+                 a.tindexI.push_back(0);
+                 //a.tindexJ.push_back(0);
+            }
+            npca.push_back(a);
+       }
+       //std::cout << "Filename" << item.smodel << "\n";
+       //std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
+       std::vector<Nif::NiKeyframeData>::iterator allanimiter;
 
-		r.time += evt.timeSinceLastFrame;
-		//std::cout << "s\n";
-	   
-		
-		
-		int o = 0;
-		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
-		{
-			//if(i == 0)
-				handleAnimationTransform(*allanimiter, *npcmodel, r, o);
-			/*
-			if(first)
-			{
-			    std::cout << "Size:" << allanimiter->getQuat().size() << "\n";
-			    std::cout << "Bonename" << allanimiter->getBonename() << "\n";
-				std::vector<Ogre::Quaternion>::iterator quatiter = allanimiter->getQuat().begin();
-				for (; quatiter != allanimiter->getQuat().end(); quatiter++)
-					std::cout << "X:" << quatiter->x << "Y:" << quatiter->y << "Z:" << quatiter->z << "W:" << quatiter->w << "\n";
 
-			    first = false;
-			}*/
+       aindex& r = npca[i];
 
-			o++;
-		}
-		Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
-			mAnimationState->setLoop(false);
+       int to = r.time + evt.timeSinceLastFrame;
+       //if( to > ((int) r.time))
+       // std::cout << "TimePosition: " << r.time << "\n";
+
+       r.time += evt.timeSinceLastFrame;
+       //std::cout << "s\n";
 
 
 
-			mAnimationState->setEnabled(true);  
-			
-			/*
-			Ogre::AnimationState *mAnimationState2 = npcmodel->getAnimationState("WholeThing2");
-			mAnimationState2->setLoop(false);
+       int o = 0;
+       for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
+       {
+        //if(i == 0)
+             handleAnimationTransform(*allanimiter, *npcmodel, r, o);
+            /*
+            if(first)
+            {
+                 std::cout << "Size:" << allanimiter->getQuat().size() << "\n";
+                 std::cout << "Bonename" << allanimiter->getBonename() << "\n";
+                 std::vector<Ogre::Quaternion>::iterator quatiter = allanimiter->getQuat().begin();
+                 for (; quatiter != allanimiter->getQuat().end(); quatiter++)
+                 std::cout << "X:" << quatiter->x << "Y:" << quatiter->y << "Z:" << quatiter->z << "W:" << quatiter->w << "\n";
 
-			mAnimationState2->setEnabled(true);  
-			int bones = npcmodel->getSkeleton()->getNumBones();
-			mAnimationState2->createBlendMask(bones,1);
-			 mAnimationState->createBlendMask(bones,1);
-			 for(int j = 0; j < bones; j++)
-			 {
-				mAnimationState->setBlendMaskEntry(bones,1);
-				mAnimationState2->setBlendMaskEntry(bones,1);
-			 }
-			 mAnimationState2->addTime(evt.timeSinceLastFrame);*/
-			 mAnimationState->addTime(evt.timeSinceLastFrame);
+                 first = false;
+            }*/
+
+            o++;
+       }
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       //Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
+       //mAnimationState->setLoop(false);
 
 
 
-		
+//mAnimationState->setEnabled(true);
 
-	
-		npcdataiter++;
-	}
+/*
+Ogre::AnimationState *mAnimationState2 = npcmodel->getAnimationState("WholeThing2");
+mAnimationState2->setLoop(false);
+
+mAnimationState2->setEnabled(true);
+int bones = npcmodel->getSkeleton()->getNumBones();
+
+mAnimationState2->addTime(evt.timeSinceLastFrame);*/
+//mAnimationState->addTime(evt.timeSinceLastFrame);
+
+
+
+
+
+
+       npcdataiter++;
+}
+
+
 
 	
 

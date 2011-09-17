@@ -370,7 +370,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     HardwareVertexBufferSharedPtr vbuf =
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
-            numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
+            numVerts, HardwareBuffer::HBU_DYNAMIC, true);
 
 	
 	if(flip)
@@ -398,6 +398,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 	}
 	else
 	{
+		//std::cout << "X " << data->vertices.ptr[0] << "Y " << data->vertices.ptr[1] << "Z " << data->vertices.ptr[2] << "NIFLOADER" <<  "\n";
 		vbuf->writeData(0, vbuf->getSizeInBytes(), data->vertices.ptr, false);
 	}
     
@@ -410,7 +411,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT3, VES_NORMAL);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT3),
-                   numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
+                   numVerts, HardwareBuffer::HBU_DYNAMIC,true);
 		
 		if(flip)
 		{
@@ -459,7 +460,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+                   numVerts, HardwareBuffer::HBU_STATIC,true);
         vbuf->writeData(0, vbuf->getSizeInBytes(), &colorsRGB.front(), false);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -473,7 +474,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+                   numVerts, HardwareBuffer::HBU_STATIC,true);
 
 		if(flip)
 		{
@@ -509,7 +510,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
                                             createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
                                                               numFaces,
-                                                              HardwareBuffer::HBU_DYNAMIC);
+                                                              HardwareBuffer::HBU_DYNAMIC, true);
 
 		if(flip && mFlipVertexWinding && sub->indexData->indexCount % 3 == 0){
 			sub->indexData->indexBuffer = ibuf;
@@ -1036,7 +1037,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
 
     }
-    else if (node->recType == RC_NiTriShape)   //57,58,59
+    else if (node->recType == RC_NiTriShape && bNiTri)   //57,58,59
     {
 
 		
@@ -1059,18 +1060,18 @@ std::vector<Nif::NiKeyframeData> NIFLoader::getAllanim(){
 		return allanim;
 }
 
-std::vector<Nif::NiKeyframeData> NIFLoader::getAnim(std::string lowername){
+std::vector<Nif::NiKeyframeData>& NIFLoader::getAnim(std::string lowername){
 		std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
-		std::vector<Nif::NiKeyframeData> anim;
+		
 		std::map<std::string,std::vector<Nif::NiKeyframeData>>::iterator iter = allanimmap.find(lowername);
 		if(iter != allanimmap.end())
 			anim = iter->second;
 		return anim;
 			
 }
-std::vector<Nif::NiTriShapeCopy> NIFLoader::getShapes(std::string lowername){
+std::vector<Nif::NiTriShapeCopy>& NIFLoader::getShapes(std::string lowername){
 		std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
-		std::vector<Nif::NiTriShapeCopy> s;
+		
 		std::map<std::string,std::vector<Nif::NiTriShapeCopy>>::iterator iter = allshapesmap.find(lowername);
 		if(iter != allshapesmap.end())
 			s = iter->second;
@@ -1096,16 +1097,29 @@ void NIFLoader::loadResource(Resource *resource)
 	std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
 	//std::cout << "Name" << name << "\n";
 	suffix = name.at(name.length() - 2);
-	if( suffix == '*' || suffix == '?' || suffix == '<')
-	{
+	
+	baddin = false;
 		if(suffix == '*')
+		{
 			vector = Ogre::Vector3(-1,1,1);
-		if(suffix == '?')
+			flip = true;
+		}
+		else if(suffix == '?'){
 			vector = Ogre::Vector3(1,-1,1);
-		if(suffix == '<')
+			flip = true;
+		}
+		else if(suffix == '<'){
 			vector = Ogre::Vector3(1,1,-1);
-		flip = true;
-	}
+			flip = true;
+		}
+		else if(suffix == '>')
+		{
+			bNiTri = false;
+			baddin = true;
+			//std::cout << "We will not link shapes";
+		}
+		else
+			bNiTri = true;
 
 
 	
@@ -1141,11 +1155,9 @@ void NIFLoader::loadResource(Resource *resource)
 			break;
 		case '>':
 			triname = "tri left hand";
-			center = true;
 			break;
 		case '?':
 			triname = "tri right hand";
-			center = true;
 			break;
 		default:
 			triname = "";
@@ -1242,7 +1254,6 @@ void NIFLoader::loadResource(Resource *resource)
 	}*/
 
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
-
 	
 
 
@@ -1388,8 +1399,12 @@ void NIFLoader::loadResource(Resource *resource)
 	if(hasAnim){
 		//std::cout << "Lower" << lowername << "\n";
 		allanimmap[lowername] = allanim;
+	}
+	if(!mSkel.isNull() && shapes.size() > 0)
+	{
 		allshapesmap[lowername] = shapes;
 	}
+	/*
 	if(center)
 	{
 		calculateTransform(1);
@@ -1426,15 +1441,21 @@ void NIFLoader::loadResource(Resource *resource)
 		}
 		vbuf->unlock();
 		}*/
-	}
+	//}
+	
 	if(flip){
 	mesh->_setBounds(mBoundingBox, false);
 	}
 	
+	
+	
+	if(baddin)
+		insertMeshInsideBase();
+
+	
     // set skeleton
   if (!mSkel.isNull())
   {
-	  //std::cout << "Mskel" << mSkel->getNumBones();
        mesh->_notifySkeleton(mSkel);
   }
   flip = false;
@@ -1650,6 +1671,167 @@ MeshPtr NIFLoader::load(const std::string &name,
 
 }
 
+void NIFLoader::insertMeshInsideBase()
+{
+	/*if(addin)
+	{
+		std::cout << "InsideBase:" << addin->getName() << "\n";
+	}*/
+	if(addin)
+	{
+		std::vector<Nif::NiTriShapeCopy> shapes = NIFLoader::getSingletonPtr()->getShapes(addin->getName());
+		for(int i = 0; i < shapes.size(); i++){
+		
+		//std::cout << "Shapes" << shapes[i].sname;
+	
+		Ogre::SubMesh* sub = addin->getSubMesh(shapes[i].sname);
+		Ogre::SubMesh* subNew = mesh->createSubMesh(shapes[i].sname);
+		
+	
+		int nextBuf = 0;
+
+
+		 //----------------------------------------VERTICES----------------------------------------
+		int numVerts = shapes[i].vertices.size();
+		subNew->vertexData = new VertexData();
+		subNew->vertexData->vertexCount = numVerts;
+		subNew->useSharedVertices = false;
+
+		//-----------------------------------------POSITIONS---------------------------------------
+
+	
+		VertexDeclaration *decl = subNew->vertexData->vertexDeclaration;
+		const VertexElement* position =
+            sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
+		Ogre::HardwareVertexBufferSharedPtr vbuf;
+		HardwareVertexBufferSharedPtr newvbuf;
+		VertexBufferBinding* bind;
+		if(position){
+		decl->addElement(nextBuf, 0, VET_FLOAT3, VES_POSITION);
+		
+		 
+    
+		newvbuf =
+        HardwareBufferManager::getSingleton().createVertexBuffer(
+            VertexElement::getTypeSize(VET_FLOAT3),
+            numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
+		vbuf = sub->vertexData->vertexBufferBinding->getBuffer(position->getSource());
+		
+		 Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+		 //std::cout << "X " << pReal[0] << "Y " << pReal[1] << "Z" << pReal[2] << "\n";
+		
+
+		  newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal, false);
+		   vbuf->unlock();
+
+		   bind = subNew->vertexData->vertexBufferBinding;
+			bind->setBinding(nextBuf++, newvbuf);
+		}
+		//----------------------------------------NORMALS-------------------------------------------
+
+
+			const VertexElement* normal =
+            sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_NORMAL);
+			if(normal)
+			{
+			decl->addElement(nextBuf, 0, VET_FLOAT3, VES_NORMAL);
+        newvbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
+                   VertexElement::getTypeSize(VET_FLOAT3),
+                   numVerts, HardwareBuffer::HBU_DYNAMIC);
+		 vbuf = sub->vertexData->vertexBufferBinding->getBuffer(normal->getSource());
+		Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+
+		 newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal, false);
+		   vbuf->unlock();
+
+		   bind->setBinding(nextBuf++, newvbuf);
+			}
+
+		//--------------------------------------COLORS--------------------------------------------
+		    const VertexElement* color =
+            sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_DIFFUSE);
+			if(color)
+			{
+
+		   decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
+		  
+		    vbuf = sub->vertexData->vertexBufferBinding->getBuffer(color->getSource());
+        newvbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
+                   VertexElement::getTypeSize(VET_COLOUR),
+                   numVerts, HardwareBuffer::HBU_STATIC);
+		RGBA* pReal2 = static_cast<RGBA*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+        newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal2, false);
+
+		   vbuf->unlock();
+
+		   bind->setBinding(nextBuf++, newvbuf);
+			}
+
+		//-------------------------------------TEXTURES-------------------------------------------
+
+		    const VertexElement* text =
+            sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_TEXTURE_COORDINATES);
+			if(text){
+		   vbuf = sub->vertexData->vertexBufferBinding->getBuffer(text->getSource());
+		  
+		   decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
+        newvbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
+                   VertexElement::getTypeSize(VET_FLOAT2),
+                   numVerts, HardwareBuffer::HBU_STATIC);
+		float* pRealf = static_cast<float*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+
+		//std::cout << "SIze" << vbuf->getSizeInBytes();
+		
+		 newvbuf->writeData(0, vbuf->getSizeInBytes(), pRealf, false);
+		 vbuf->unlock();
+		 bind->setBinding(nextBuf++, vbuf);
+			}
+
+		 //----------------------------------INDEX DATA--------------------------------------
+		 int numFaces = sub->indexData->indexCount;
+		subNew->indexData->indexCount = numFaces;
+        subNew->indexData->indexStart = 0;
+		 HardwareIndexBufferSharedPtr ibufNew = HardwareBufferManager::getSingleton().
+                                            createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
+                                                              numFaces,
+                                                              HardwareBuffer::HBU_DYNAMIC);
+		 HardwareIndexBufferSharedPtr ibuf = sub->indexData->indexBuffer;
+
+		 uint16* tri = static_cast<uint16*>(ibuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+		 ibufNew->writeData(0, ibuf->getSizeInBytes(), tri, false);
+		 subNew->indexData->indexBuffer = ibufNew;
+		 ibuf->unlock();
+
+		 if (!sub->getMaterialName().empty()){ 
+			 subNew->setMaterialName(sub->getMaterialName());
+		 }
+
+		  //Ogre::SubMesh::VertexBoneAssignmentList bonelist = sub->getBoneAssignments();
+		
+		 /*
+		 Ogre::VertexBoneAssignment assign;
+		 assign.boneIndex = 0;
+		 assign.vertexIndex = 0;
+		 assign.weight = 1.0;
+		 subNew->addBoneAssignment(assign);*/
+		 
+		 Ogre::SubMesh::BoneAssignmentIterator boneiter = sub->getBoneAssignmentIterator();
+		 while(boneiter.hasMoreElements())
+		 {
+			 subNew->addBoneAssignment(boneiter.current()->second);
+			 boneiter.getNext();
+		 }
+		 subNew->addBoneAssignment(boneiter.current()->second);
+
+
+
+	}
+	}
+
+}
+void NIFLoader::addInMesh(Ogre::Mesh* input){
+	addin = input;
+}
 
 
 

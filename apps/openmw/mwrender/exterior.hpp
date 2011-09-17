@@ -70,7 +70,7 @@ namespace MWRender
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec,  Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements);
     virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec, Ogre::Vector3 axis, Ogre::Radian angle, std::string sceneNodeName, std::string sceneParent[], int elements, bool translateFirst);
 
-	virtual void insertMesh(const std::string &mesh, std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
+	virtual Ogre::Entity* insertMesh(const std::string &mesh, std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
     virtual void insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat = Ogre::Quaternion::IDENTITY, Ogre::Vector3 trans = Ogre::Vector3::ZERO);
     virtual void insertMesh(const std::string &mesh);
 	virtual void insertMesh(const std::string &mesh, Ogre::Vector3 vec);
@@ -78,6 +78,7 @@ namespace MWRender
 	virtual Ogre::Entity* insertAndDeliverMesh(const std::string &mesh);
      virtual void rotateMesh(Ogre::Vector3 axis, Ogre::Radian angle,  std::string sceneNodeName[], int elements);
      virtual void scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeName[], int elements);
+	 virtual void sendAddinToLoader(const std::string &mesh);
 
     virtual void insertObjectPhysics();
 

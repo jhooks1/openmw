@@ -105,9 +105,10 @@ class NIFLoader : Ogre::ManualResourceLoader
 
 		void setFlip(bool fl);
 		void setVector(Ogre::Vector3 vec);
+		void addInMesh(Ogre::Mesh* input);
 		std::vector<Nif::NiKeyframeData> getAllanim();
-		std::vector<Nif::NiKeyframeData> getAnim(std::string lowername);
-		std::vector<Nif::NiTriShapeCopy> getShapes(std::string lowername);
+		std::vector<Nif::NiKeyframeData>& getAnim(std::string lowername);
+		std::vector<Nif::NiTriShapeCopy>& getShapes(std::string lowername);
         
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
@@ -149,6 +150,8 @@ class NIFLoader : Ogre::ManualResourceLoader
                             int alphaFlags, float alphaTest,
                             const Ogre::String &texName);
 
+		void insertMeshInsideBase();
+
         void findRealTexture(Ogre::String &texName);
 
         Ogre::String getUniqueName(const Ogre::String &input);
@@ -184,17 +187,22 @@ class NIFLoader : Ogre::ManualResourceLoader
 		bool flip;
 		bool center;
 		Ogre::Vector3 vector; 
+		std::vector<Nif::NiKeyframeData> anim;
+		std::vector<Nif::NiTriShapeCopy> s;
 
 		  Ogre::Matrix4 mTransform;
         Ogre::AxisAlignedBox mBoundingBox;
 		 bool mNormaliseNormals;
         bool mUpdateBoundingBox;
         bool mFlipVertexWinding;
+		bool bNiTri;
+		bool baddin;
 		std::string triname;
 
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;
         Ogre::SkeletonPtr mSkel;
+		Ogre::Mesh *addin;
 		
 };
 

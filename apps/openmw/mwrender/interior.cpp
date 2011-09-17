@@ -92,7 +92,14 @@ void InteriorCellRender::scaleMesh(Ogre::Vector3 axis,  std::string sceneNodeNam
     }
        parent->scale(axis);
 }
-void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
+void InteriorCellRender::sendAddinToLoader(const std::string &mesh)
+{
+	MeshPtr meshp = NIFLoader::load(mesh);
+	Entity *ent = scene.getMgr()->createEntity(mesh);
+	NIFLoader::getSingletonPtr()->addInMesh(ent->getMesh().getPointer());
+}
+
+Ogre::Entity* InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
 	MeshPtr good2 = NIFLoader::load(mesh);
 		  Entity* ent = scene.getMgr()->createEntity(mesh);
 		  
@@ -103,6 +110,7 @@ void InteriorCellRender::insertMesh(const std::string &mesh,std::string bonename
 	 
 	base->attachObjectToBone(bonename, ent,quat, trans);       //b->_getDerivedOrientation().Inverse() * npcPart->getOrientation()
 	Ogre::Bone* b = base->getSkeleton()->getBone(bonename);
+	return ent;
 				
 }
 void InteriorCellRender::insertMesh(Ogre::Entity* part,std::string bonename, Ogre::Entity* base, Ogre::Quaternion quat, Ogre::Vector3 trans){
@@ -233,6 +241,7 @@ Ogre::Entity* InteriorCellRender::insertAndDeliverMesh(const std::string &mesh)
 
   NIFLoader::load(mesh);
   Entity *ent = scene.getMgr()->createEntity(mesh);
+ 
 
 				//mesh->_updateAnimation();
   
@@ -259,7 +268,6 @@ for (std::vector<Nif::NiKeyframeData>::iterator allanimiter = allanim.begin(); a
  
  */
 
-  ent->setDisplaySkeleton(true);
 
 
       insert->attachObject(ent);
