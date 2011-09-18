@@ -118,6 +118,7 @@ namespace MWClass
 		
 		out << ">|";
 
+
 		smodel += out.str();
 		std::cout << "Smodel" << smodel << "\n";
 	
@@ -477,12 +478,14 @@ namespace MWClass
 				//ref->lhandmodel = cellRender.insertMesh("meshes\\" + pass + "|>", "Test", ref->model, handRot, handPos);
 		}
 		else
-			;//ref->handl = 0;
+			ref->lhand = "";//ref->handl = 0;
 		if(handr){
 			//ref->handr = cellRender.insertMesh("meshes\\" + handr->model + "|?", "Right Hand", ref->model, handRot, handPos2);
+			cellRender.sendAddinToLoader("meshes\\" + handr->model + "|?");
+				ref->rhand = "meshes\\" + handr->model + "|?";
 		}
 		else
-			;//ref->handr = 0;
+			ref->rhand = "";
 
 		ref->model = cellRender.insertAndDeliverMesh(smodel);
 		

@@ -1099,6 +1099,7 @@ void NIFLoader::loadResource(Resource *resource)
 	suffix = name.at(name.length() - 2);
 	
 	baddin = false;
+	bNiTri = true;
 		if(suffix == '*')
 		{
 			vector = Ogre::Vector3(-1,1,1);
@@ -1118,8 +1119,6 @@ void NIFLoader::loadResource(Resource *resource)
 			baddin = true;
 			//std::cout << "We will not link shapes";
 		}
-		else
-			bNiTri = true;
 
 
 	
@@ -1449,8 +1448,12 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	
 	
-	if(baddin)
-		insertMeshInsideBase();
+	if(baddin){
+		for(int i = 0; i < addin.size(); i++){
+		insertMeshInsideBase(addin[i]);
+		}
+		addin.clear();
+	}
 
 	
     // set skeleton
@@ -1671,20 +1674,20 @@ MeshPtr NIFLoader::load(const std::string &name,
 
 }
 
-void NIFLoader::insertMeshInsideBase()
+void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
 {
 	/*if(addin)
 	{
 		std::cout << "InsideBase:" << addin->getName() << "\n";
 	}*/
-	if(addin)
+	if(input)
 	{
-		std::vector<Nif::NiTriShapeCopy> shapes = NIFLoader::getSingletonPtr()->getShapes(addin->getName());
+		std::vector<Nif::NiTriShapeCopy> shapes = NIFLoader::getSingletonPtr()->getShapes(input->getName());
 		for(int i = 0; i < shapes.size(); i++){
 		
 		//std::cout << "Shapes" << shapes[i].sname;
 	
-		Ogre::SubMesh* sub = addin->getSubMesh(shapes[i].sname);
+		Ogre::SubMesh* sub = input->getSubMesh(shapes[i].sname);
 		Ogre::SubMesh* subNew = mesh->createSubMesh(shapes[i].sname);
 		
 	
@@ -1756,13 +1759,11 @@ void NIFLoader::insertMeshInsideBase()
 		   decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
 		  
 		    vbuf = sub->vertexData->vertexBufferBinding->getBuffer(color->getSource());
-        newvbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
-                   VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_STATIC);
-		RGBA* pReal2 = static_cast<RGBA*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-        newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal2, false);
+        newvbuf = vbuf;
+		//RGBA* pReal2 = static_cast<RGBA*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+        //newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal2, false);
 
-		   vbuf->unlock();
+		   //vbuf->unlock();
 
 		   bind->setBinding(nextBuf++, newvbuf);
 			}
@@ -1775,32 +1776,28 @@ void NIFLoader::insertMeshInsideBase()
 		   vbuf = sub->vertexData->vertexBufferBinding->getBuffer(text->getSource());
 		  
 		   decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
-        newvbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
-                   VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_STATIC);
-		float* pRealf = static_cast<float*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+        newvbuf = vbuf;
+		//float* pRealf = static_cast<float*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
 
 		//std::cout << "SIze" << vbuf->getSizeInBytes();
 		
-		 newvbuf->writeData(0, vbuf->getSizeInBytes(), pRealf, false);
-		 vbuf->unlock();
-		 bind->setBinding(nextBuf++, vbuf);
+		// newvbuf->writeData(0, vbuf->getSizeInBytes(), pRealf, false);
+		 //vbuf->unlock();
+		 bind->setBinding(nextBuf++, newvbuf);
 			}
 
 		 //----------------------------------INDEX DATA--------------------------------------
 		 int numFaces = sub->indexData->indexCount;
 		subNew->indexData->indexCount = numFaces;
         subNew->indexData->indexStart = 0;
-		 HardwareIndexBufferSharedPtr ibufNew = HardwareBufferManager::getSingleton().
-                                            createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
-                                                              numFaces,
-                                                              HardwareBuffer::HBU_DYNAMIC);
+		 
 		 HardwareIndexBufferSharedPtr ibuf = sub->indexData->indexBuffer;
+		 HardwareIndexBufferSharedPtr ibufNew = ibuf;
 
-		 uint16* tri = static_cast<uint16*>(ibuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-		 ibufNew->writeData(0, ibuf->getSizeInBytes(), tri, false);
+		 //uint16* tri = static_cast<uint16*>(ibuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+		 //ibufNew->writeData(0, ibuf->getSizeInBytes(), tri, false);
 		 subNew->indexData->indexBuffer = ibufNew;
-		 ibuf->unlock();
+		 //ibuf->unlock();
 
 		 if (!sub->getMaterialName().empty()){ 
 			 subNew->setMaterialName(sub->getMaterialName());
@@ -1830,7 +1827,7 @@ void NIFLoader::insertMeshInsideBase()
 
 }
 void NIFLoader::addInMesh(Ogre::Mesh* input){
-	addin = input;
+	addin.push_back(input);
 }
 
 

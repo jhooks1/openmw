@@ -150,7 +150,7 @@ class NIFLoader : Ogre::ManualResourceLoader
                             int alphaFlags, float alphaTest,
                             const Ogre::String &texName);
 
-		void insertMeshInsideBase();
+		void insertMeshInsideBase(Ogre::Mesh* mesh);
 
         void findRealTexture(Ogre::String &texName);
 
@@ -202,7 +202,7 @@ class NIFLoader : Ogre::ManualResourceLoader
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;
         Ogre::SkeletonPtr mSkel;
-		Ogre::Mesh *addin;
+		std::vector<Ogre::Mesh*> addin;
 		
 };
 

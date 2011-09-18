@@ -38,7 +38,12 @@ namespace ESMS
     std::string smodel;
 	
 	std::string lhand;
-	
+	std::string rhand;
+	std::string tail;
+	std::string lfoot;       
+    std::string rfoot;
+	std::string chest;
+
 	Ogre::Entity *model;
 	Ogre::Entity *lhandmodel;
 	

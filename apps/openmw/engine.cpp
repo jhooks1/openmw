@@ -578,7 +578,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
-		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lhand);
+		
 
         if(prev != item.smodel)
         {
@@ -644,7 +644,14 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
             o++;
        }
+	   if(item.lhand != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lhand);
        handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
+	   if(item.rhand != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.rhand);
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
        //Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
        //mAnimationState->setLoop(false);
 
