@@ -38,8 +38,9 @@ namespace MWClass
         MWWorld::Environment& environment) const
     {
 		static int counter = 0;
+		static int knacounter = 0;
 		
-		counter++;
+		
         //Ogre::SceneNode *chest;
         ESMS::LiveCellRef<ESM::NPC, MWWorld::RefData> *ref =
             ptr.get<ESM::NPC>();
@@ -106,6 +107,7 @@ namespace MWClass
 		
 		std::stringstream out;
 		
+	
 		
 		
 		if(counter > 99 && counter < 1000)
@@ -114,7 +116,10 @@ namespace MWClass
 			out << "00";
 		else
 			out << "000";
-		out << counter;
+		if(beast)
+			out << knacounter;
+		else
+			out << counter;
 		
 		out << ">|";
 
@@ -123,7 +128,8 @@ namespace MWClass
 		std::cout << "Smodel" << smodel << "\n";
 	
 		ref->smodel = smodel;
-		
+		counter++;
+		knacounter++;
 			
 			
 
@@ -296,9 +302,11 @@ namespace MWClass
 					//std::cout << "PartF:" << appareliter->female <<"\n";
 					char marker = appareliter->part;
 					const ESM::BodyPart *part = environment.mWorld->getStore().bodyParts.search (appareliter->male);
-					if(female && environment.mWorld->getStore().bodyParts.search (appareliter->female))
-						part = environment.mWorld->getStore().bodyParts.search (appareliter->female);
-					if(part){
+					//if(female && environment.mWorld->getStore().bodyParts.search (appareliter->female))
+						//part = environment.mWorld->getStore().bodyParts.search (appareliter->female);
+
+					
+					if(true){
 					
 						//Cuirass represents chest, we should change this, it is confusing
 						if(marker == ESM::PRT_Cuirass && priority > pchest)
@@ -473,6 +481,7 @@ namespace MWClass
 				
 				cellRender.sendAddinToLoader("meshes\\" + pass + "|>");
 				ref->lhand = "meshes\\" + pass + "|>";
+				std::cout << ref->lhand << "\n";
 			//ref->handl = 
 				//cellRender.insertMeshInsideBase("meshes\\" + pass + "|>", "Left Hand", ref->model, handRot, handPos);
 				//ref->lhandmodel = cellRender.insertMesh("meshes\\" + pass + "|>", "Test", ref->model, handRot, handPos);
@@ -483,44 +492,73 @@ namespace MWClass
 			//ref->handr = cellRender.insertMesh("meshes\\" + handr->model + "|?", "Right Hand", ref->model, handRot, handPos2);
 			cellRender.sendAddinToLoader("meshes\\" + handr->model + "|?");
 				ref->rhand = "meshes\\" + handr->model + "|?";
+				std::cout << ref->rhand << "\n";
 		}
 		else
 			ref->rhand = "";
+		if (bodyPart){
+				
+			
+				ref->chest = "meshes\\" + bodyPart->model + "|\"";
+				std::cout << ref->chest << "\n";
+				cellRender.sendAddinToLoader(ref->chest);
+		}
+		else
+			ref->chest = "";
+
+		if (tail) {
+			//Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
+			//p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
+			//Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
+			ref->tail = "meshes\\" + tail->model + "|*";
+			cellRender.sendAddinToLoader(ref->tail);
+			//ref->tail = cellRender.insertMesh("meshes\\" + tail->model + "|*", "Chest", ref->model, q, chestPos);
+			//ref->tail = cellRender.insertMesh("meshes\\" + tail->model + "|*", "Chest", ref->model, e, blank);
+		}
+		else
+		{
+			ref->tail = "";
+			//ref->tail = 0;
+			//Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
+			//p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
+			//Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
+			//cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, p2, tailpos);
+		}
+
+		if(beast && bodyRaceID.compare("b_n_khajiit_m_") == 0)
+			feet = foot;
+
+		if(feet){
+			//Ogre::Vector3 pos = Ogre::Vector3(-6,5,0);  //y is up
+			//Ogre::Vector3 pos2 = Ogre::Vector3(6,5,0);
+			ref->lfoot = "meshes\\" + feet->model + "|:";
+			ref->rfoot = "meshes\\" + feet->model + "|<";
+
+			cellRender.sendAddinToLoader(ref->lfoot);
+			cellRender.sendAddinToLoader(ref->rfoot);
+			//cellRender.scaleMesh(Ogre::Vector3(1, -1, 1), addresses, numbers);
+		}
+		else{
+			ref->lfoot = "";
+			ref->rfoot = "";
+		}
+
 
 		ref->model = cellRender.insertAndDeliverMesh(smodel);
+		
 		
 		
 
 		//cellRender.insertMesh("meshes\\b\\B_N_Breton_F_Foot.nif", Ogre::Vector3(-1,1,1));        //1, -1, 1
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
 		Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
-		if (bodyPart){
-			
-			
-
-				cellRender.insertMesh("meshes\\" + bodyPart->model + "|\"", "Chest", ref->model, q, chestPos);
-		}
+		
 		
         if (groin){
 			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, handRot, skirtpos);
 
 		}
-		if (tail) {
-			Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
-			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
-			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
-			cellRender.insertMesh("meshes\\" + tail->model + "|*", "Bip01 Tail", ref->model, p2, tailpos);
-			//ref->tail = cellRender.insertMesh("meshes\\" + tail->model + "|*", "Chest", ref->model, q, chestPos);
-			//ref->tail = cellRender.insertMesh("meshes\\" + tail->model + "|*", "Chest", ref->model, e, blank);
-		}
-		else
-		{
-			//ref->tail = 0;
-			Ogre::Quaternion p2 = Ogre::Quaternion(Ogre::Radian(3.14 / 2), Ogre::Vector3(0, 0, 1)); //1,0,0
-			p2 = p2 * Ogre::Quaternion(Ogre::Radian(-3.14 / 2), Ogre::Vector3(0, 1, 0));
-			Ogre::Vector3 tailpos = Ogre::Vector3(0, 75, 0);
-			//cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, p2, tailpos);
-		}
+		
 		
 		p = Ogre::Quaternion(Ogre::Radian(3.14 ), Ogre::Vector3(0, 0, 1));
 
@@ -551,14 +589,7 @@ namespace MWClass
 				cellRender.insertMesh("meshes\\" + foot->model + "*|", "Left Foot", ref->model, e, blank);
 			}
 		}
-		if(feet){
-			Ogre::Vector3 pos = Ogre::Vector3(-6,5,0);  //y is up
-			Ogre::Vector3 pos2 = Ogre::Vector3(6,5,0);
-
-			cellRender.insertMesh("meshes\\" + feet->model + "|:", "Left Foot", ref->model, p, pos);
-			cellRender.insertMesh("meshes\\" + feet->model + "|<", "Right Foot", ref->model, p, pos2);
-			//cellRender.scaleMesh(Ogre::Vector3(1, -1, 1), addresses, numbers);
-		}
+		
 		
 		 
 		if (armr){
@@ -580,7 +611,7 @@ namespace MWClass
 			cellRender.insertMesh("meshes\\" + wristr->model, "Right Wrist", ref->model, e, blank);
 		}
 
-		if(wristl);
+		if(wristl)
 				cellRender.insertMesh("meshes\\" + wristl->model + "*|", "Left Wrist", ref->model, e, blank);
 		
 
@@ -607,7 +638,7 @@ namespace MWClass
 	
 
 			
-			
+			std::cout << "F\n";
 
 
 

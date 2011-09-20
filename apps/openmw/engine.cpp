@@ -652,6 +652,22 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.rhand);
        handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
 	   }
+	   if(item.chest != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.chest);
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
+	   if(item.tail != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.tail);
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
+	   if(item.rfoot != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.rfoot);
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
+	   if(item.lfoot != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lfoot);
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
        //Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");
        //mAnimationState->setLoop(false);
 
