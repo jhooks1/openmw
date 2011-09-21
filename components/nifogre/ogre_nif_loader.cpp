@@ -1708,9 +1708,76 @@ void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
             sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
 		Ogre::HardwareVertexBufferSharedPtr vbuf;
 		HardwareVertexBufferSharedPtr newvbuf;
+		float* pRealNormal = new float[numVerts * 3];
 		VertexBufferBinding* bind;
-		if(position){
-		decl->addElement(nextBuf, 0, VET_FLOAT3, VES_POSITION);
+		
+		
+
+
+
+		
+		 //std::cout << "X " << pReal[0] << "Y " << pReal[1] << "Z" << pReal[2] << "\n";
+		float* pReal = new float[numVerts * 3];
+
+		std::map<unsigned int, bool> vertices;
+			std::map<unsigned int, bool> normals;
+			std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  shapes[i].boneinfo;
+	
+			//std::cout << "Name " << copy.sname << "\n";
+
+			    if(boneinfovector.size() > 0){
+
+				
+				for (int j = 0; j < boneinfovector.size(); j++)
+				{
+					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[j];
+					Ogre::Bone *bonePtr = mSkel->getBone(boneinfo.bonename);
+					Ogre::Vector3 vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfo.trafo.trans;
+					Ogre::Quaternion vecRot = bonePtr->_getDerivedOrientation() * boneinfo.trafo.rotation;
+					//std::cout << "Bone" << bonePtr->getName() << "\n";
+					 for (unsigned int k=0; k< boneinfo.weights.size(); k++)
+					 {
+						  unsigned int verIndex = boneinfo.weights[k].vertex;
+						  if(vertices.find(verIndex) == vertices.end())
+						  {
+							  Ogre::Vector3 absVertPos = vecPos + vecRot * shapes[i].vertices[verIndex];
+							  vertices[verIndex] = true;
+							   Ogre::Real* addr = (pReal + 3 * verIndex);
+							  *addr = absVertPos.x;
+							  *(addr+1) = absVertPos.y;
+				              *(addr+2) = absVertPos.z;
+
+								//std::cout << "Vertex" << vertices[verIndex] << "\n";
+						  }
+						  else 
+						  {
+							  //std::cout << "Vertex" << verIndex << "Weight: " << boneinfo.weights[i].weight << "was seen twice\n";
+
+						  }
+						  
+						  if(normals.find(verIndex) == normals.end() &&  verIndex < shapes[i].normals.size() )
+						  {
+							  Ogre::Vector3 absNormalsPos = vecRot * shapes[i].normals[verIndex];
+							  normals[verIndex] = true;
+							  Ogre::Real* addr = (pRealNormal + 3 * verIndex);
+							  *addr = absNormalsPos.x;
+				              *(addr+1) = absNormalsPos.y;
+				              *(addr+2) = absNormalsPos.z;
+						  }
+
+					 }
+				
+					/*
+					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
+					std::vector<Nif::NiSkinData::VertWeight> weights = boneinfo.weights;
+					for (int j = 0; j < weights.size(); j++){
+						std::cout << "Vertex: " << weights[j].vertex << " Weight: " << weights[j].weight << "\n";
+					}*/
+				}
+			}
+
+				if(position){
+				decl->addElement(nextBuf, 0, VET_FLOAT3, VES_POSITION);
 		
 		 
     
@@ -1718,20 +1785,16 @@ void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
             numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY);
-		vbuf = sub->vertexData->vertexBufferBinding->getBuffer(position->getSource());
-		
-		 Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
-		 //std::cout << "X " << pReal[0] << "Y " << pReal[1] << "Z" << pReal[2] << "\n";
-		
 
-		  newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal, false);
-		   vbuf->unlock();
+		  newvbuf->writeData(0, newvbuf->getSizeInBytes(), pReal, false);
+		  
 
 		   bind = subNew->vertexData->vertexBufferBinding;
 			bind->setBinding(nextBuf++, newvbuf);
+		
+
 		}
 		//----------------------------------------NORMALS-------------------------------------------
-
 
 			const VertexElement* normal =
             sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_NORMAL);
@@ -1741,15 +1804,14 @@ void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
         newvbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT3),
                    numVerts, HardwareBuffer::HBU_DYNAMIC);
-		 vbuf = sub->vertexData->vertexBufferBinding->getBuffer(normal->getSource());
-		Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+		
 
-		 newvbuf->writeData(0, vbuf->getSizeInBytes(), pReal, false);
-		   vbuf->unlock();
+		 newvbuf->writeData(0, newvbuf->getSizeInBytes(), pRealNormal, false);
 
 		   bind->setBinding(nextBuf++, newvbuf);
 			}
 
+			
 		//--------------------------------------COLORS--------------------------------------------
 		    const VertexElement* color =
             sub->vertexData->vertexDeclaration->findElementBySemantic(Ogre::VES_DIFFUSE);

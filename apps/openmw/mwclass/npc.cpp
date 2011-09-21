@@ -117,9 +117,9 @@ namespace MWClass
 		else
 			out << "000";
 		if(beast)
-			out << knacounter;
+			out << knacounter++;
 		else
-			out << counter;
+			out << counter++;
 		
 		out << ">|";
 
@@ -128,8 +128,7 @@ namespace MWClass
 		std::cout << "Smodel" << smodel << "\n";
 	
 		ref->smodel = smodel;
-		counter++;
-		knacounter++;
+
 			
 			
 
@@ -261,6 +260,8 @@ namespace MWClass
 			    {
 				    brobe = true;
 					priority = 5;
+		pupperleg = pgroin = parml = pknee = pforearml = pclaviclel = pclavicler = pforearmr = parmr = 5;
+				groin = upperleg = arml = armr =claviclel =clavicler =forearml = forearmr = knee = 0;
 			    }
 			    else if(!bshirt && clothes->data.type == ESM::Clothing::Shirt)
 			    {
