@@ -670,6 +670,10 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lfoot);
        handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
 	   }
+	   if(item.groin != ""){
+	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.groin);
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+	   }
 	   
 	   
        //Ogre::AnimationState *mAnimationState = npcmodel->getAnimationState("WholeThing");

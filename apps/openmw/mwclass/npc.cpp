@@ -179,6 +179,7 @@ namespace MWClass
 		const ESM::BodyPart* forearmr = forearml;
 		const ESM::BodyPart* wristr = wristl;
 		const ESM::BodyPart* armr = arml;
+		ref->groin = "";
 
 		int pchest = 1;
 		int pupperleg = 1;
@@ -231,6 +232,7 @@ namespace MWClass
 		//handRot * Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0)) *  Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0));
 		Ogre::Quaternion handRot2 = e; //Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1,0,0));
 		int priority = 1;
+		
 		while(ilistiter != ilist.end())
 		{
 			//std::cout << "Item:" <<ilistiter->item.toString();
@@ -277,6 +279,8 @@ namespace MWClass
 			    }
 			    else if(!bskirt && clothes->data.type == ESM::Clothing::Skirt)
 			    {
+					pupperleg = pknee = 4;
+					upperleg = knee = 0;
 				    bskirt = true;
 					priority = 4;
 			    }
@@ -310,6 +314,7 @@ namespace MWClass
 					if(true){
 					
 						//Cuirass represents chest, we should change this, it is confusing
+				
 						if(marker == ESM::PRT_Cuirass && priority > pchest)
 						{
 							bodyPart = part;
@@ -319,6 +324,7 @@ namespace MWClass
 						{
 							groin = part;
 							pgroin = priority;
+							
 						}
 						else if(marker == ESM::PRT_Head && priority > phead)
 						{
@@ -444,6 +450,9 @@ namespace MWClass
 						{
 							groin = part;
 							pgroin = priority;
+							if(pgroin == 4){
+								ref->groin = "meshes\\" + groin->model;
+							}
 							skirtpos = Ogre::Vector3(0, -5, -80);
 						}
 						else if(marker == ESM::PRT_Tail && priority > ptail)
@@ -543,6 +552,10 @@ namespace MWClass
 			ref->lfoot = "";
 			ref->rfoot = "";
 		}
+		if(ref->groin != "" && groin){
+			std::cout << "Sending to loader";
+			cellRender.sendAddinToLoader(ref->groin);
+		}
 
 
 		ref->model = cellRender.insertAndDeliverMesh(smodel);
@@ -555,7 +568,7 @@ namespace MWClass
 		Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
 		
 		
-        if (groin){
+        if (ref->groin == "" && groin){
 			cellRender.insertMesh("meshes\\" + groin->model, "Groin", ref->model, handRot, skirtpos);
 
 		}

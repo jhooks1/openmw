@@ -43,6 +43,7 @@ namespace ESMS
 	std::string lfoot;       
     std::string rfoot;
 	std::string chest;
+	std::string groin;
 
 	Ogre::Entity *model;
 	Ogre::Entity *lhandmodel;
