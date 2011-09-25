@@ -482,7 +482,6 @@ namespace MWClass
 		
 		Ogre::Quaternion p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0)); //1,0,0
 
-		
 
 		if(handl)
 		{
@@ -556,13 +555,13 @@ namespace MWClass
 			std::cout << "Sending to loader";
 			cellRender.sendAddinToLoader(ref->groin);
 		}
-
-
+		
+		
 		ref->model = cellRender.insertAndDeliverMesh(smodel);
 		
 		
 		
-
+		
 		//cellRender.insertMesh("meshes\\b\\B_N_Breton_F_Foot.nif", Ogre::Vector3(-1,1,1));        //1, -1, 1
 		//cellRender.insertMesh(headModel, "Bip01 Head", ref->model, q * p,Ogre::Vector3(-75, 20, 2));
 		Ogre::Vector3 chestPos = Ogre::Vector3(0, 3.5, -98);
@@ -646,7 +645,6 @@ namespace MWClass
 			cellRender.insertMesh("meshes\\" + head->model, "Head", ref->model, e, blank);
 		if(hair)
 			cellRender.insertMesh("meshes\\" + hair->model, "Head", ref->model, e, blank);
-
 
 		
 	

@@ -234,6 +234,13 @@ void NIFLoader::createMaterial(const String &name,
 {
     MaterialPtr material = MaterialManager::getSingleton().create(name, resourceGroup);
 
+	MaterialPtr mat = MaterialManager::getSingleton().getByName("customunique");
+	if(!mat.isNull() && !mSkel.isNull())
+	{
+		//std::cout << "MATERIALCOPY";
+		//mat->copyDetailsTo(material);
+	}
+
     // This assigns the texture to this material. If the texture name is
     // a file name, and this file exists (in a resource directory), it
     // will automatically be loaded when needed. If not (such as for
@@ -771,6 +778,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		
         // vector that stores if the position if a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
+		std::vector<Ogre::Vector3> vertexPosOriginal(numVerts, Ogre::Vector3::ZERO);
+		std::vector<Ogre::Vector3> vertexNormalOriginal(numVerts, Ogre::Vector3::ZERO);
 
         float *ptrNormals = (float*)data->normals.ptr;
         //the bone from skin->bones[boneIndex] is linked to skin->data->bones[boneIndex]
@@ -821,6 +830,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 {
                     //apply transformation to the vertices
                     Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
+					absVertPos = absVertPos * (it->weights.ptr + i)->weight;
+					vertexPosOriginal[verIndex] = Vector3(ptr + verIndex *3);
 
 					mBoundingBox.merge(absVertPos);
                     //convert it back to float *
@@ -832,6 +843,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     if (verIndex < data->normals.length)
                     {
                         Vector3 absNormalsPos = vecRot * Vector3(ptrNormals + verIndex *3);
+						absNormalsPos = absNormalsPos * (it->weights.ptr + i)->weight;
+						vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
                         
                         for (int j=0; j<3; j++)
                             (ptrNormals + verIndex*3)[j] = absNormalsPos[j];
@@ -839,6 +852,31 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
                     vertexPosAbsolut[verIndex] = true;
                 }
+				else
+				{
+					Vector3 absVertPos = vecPos + vecRot * vertexPosOriginal[verIndex];
+					absVertPos = absVertPos * (it->weights.ptr + i)->weight;
+					Vector3 old = Vector3(ptr + verIndex *3);
+					absVertPos = absVertPos + old;
+
+					mBoundingBox.merge(absVertPos);
+                    //convert it back to float *
+                    for (int j=0; j<3; j++)
+                        (ptr + verIndex*3)[j] = absVertPos[j];
+
+                    //apply rotation to the normals (not every vertex has a normal)
+                    //FIXME: I guessed that vertex[i] = normal[i], is that true?
+                    if (verIndex < data->normals.length)
+                    {
+                        Vector3 absNormalsPos = vecRot * vertexNormalOriginal[verIndex];
+						absNormalsPos = absNormalsPos * (it->weights.ptr + i)->weight;
+						Vector3 oldNormal = Vector3(ptrNormals + verIndex *3);
+						absNormalsPos = absNormalsPos + oldNormal;
+                        
+                        for (int j=0; j<3; j++)
+                            (ptrNormals + verIndex*3)[j] = absNormalsPos[j];
+                    }
+				}
 
 
                 VertexBoneAssignment vba;
