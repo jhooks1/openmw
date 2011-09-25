@@ -262,8 +262,8 @@ namespace MWClass
 			    {
 				    brobe = true;
 					priority = 5;
-		pupperleg = pgroin = parml = pknee = pforearml = pclaviclel = pclavicler = pforearmr = parmr = 5;
-				groin = upperleg = arml = armr =claviclel =clavicler =forearml = forearmr = knee = 0;
+		pupperleg = pgroin = parml = pforearml = pclaviclel = pclavicler = pforearmr = parmr = pknee = 5;
+				groin = upperleg = arml = armr =claviclel =clavicler =forearml = forearmr = knee =  0;
 			    }
 			    else if(!bshirt && clothes->data.type == ESM::Clothing::Shirt)
 			    {
@@ -279,8 +279,8 @@ namespace MWClass
 			    }
 			    else if(!bskirt && clothes->data.type == ESM::Clothing::Skirt)
 			    {
-					pupperleg = pknee = 4;
-					upperleg = knee = 0;
+					pupperleg = 4;
+					upperleg = 0;
 				    bskirt = true;
 					priority = 4;
 			    }
