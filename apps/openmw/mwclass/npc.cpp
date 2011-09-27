@@ -122,12 +122,12 @@ namespace MWClass
 			out << counter++;
 		
 		out << ">|";
-
+		ref->smodel = smodel + "0000>|";
 
 		smodel += out.str();
 		std::cout << "Smodel" << smodel << "\n";
 	
-		ref->smodel = smodel;
+		
 
 			
 			

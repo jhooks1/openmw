@@ -377,7 +377,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     HardwareVertexBufferSharedPtr vbuf =
         HardwareBufferManager::getSingleton().createVertexBuffer(
             VertexElement::getTypeSize(VET_FLOAT3),
-            numVerts, HardwareBuffer::HBU_DYNAMIC, true);
+            numVerts, HardwareBuffer::HBU_DYNAMIC_WRITE_ONLY, true);
 
 	
 	if(flip)
@@ -467,7 +467,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_COLOUR, VES_DIFFUSE);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_COLOUR),
-                   numVerts, HardwareBuffer::HBU_STATIC,true);
+                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY,false);
         vbuf->writeData(0, vbuf->getSizeInBytes(), &colorsRGB.front(), false);
         bind->setBinding(nextBuf++, vbuf);
     }
@@ -481,7 +481,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         decl->addElement(nextBuf, 0, VET_FLOAT2, VES_TEXTURE_COORDINATES);
         vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
                    VertexElement::getTypeSize(VET_FLOAT2),
-                   numVerts, HardwareBuffer::HBU_STATIC,true);
+                   numVerts, HardwareBuffer::HBU_STATIC_WRITE_ONLY,false);
 
 		if(flip)
 		{
@@ -517,7 +517,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
                                             createIndexBuffer(HardwareIndexBuffer::IT_16BIT,
                                                               numFaces,
-                                                              HardwareBuffer::HBU_DYNAMIC, true);
+                                                              HardwareBuffer::HBU_STATIC_WRITE_ONLY, true);
 
 		if(flip && mFlipVertexWinding && sub->indexData->indexCount % 3 == 0){
 			sub->indexData->indexBuffer = ibuf;
@@ -1138,6 +1138,7 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	baddin = false;
 	bNiTri = true;
+	bool addAnim = true;
 		if(suffix == '*')
 		{
 			vector = Ogre::Vector3(-1,1,1);
@@ -1155,7 +1156,10 @@ void NIFLoader::loadResource(Resource *resource)
 		{
 			bNiTri = false;
 			baddin = true;
-			//std::cout << "We will not link shapes";
+			std::string sub = name.substr(name.length() - 6, 4);
+			if(sub.compare("0000") != 0)
+				addAnim = false;
+				
 		}
 
 
@@ -1211,7 +1215,7 @@ void NIFLoader::loadResource(Resource *resource)
     if (!vfs) vfs = new OgreVFS(resourceGroup);
 
     // Get the mesh
-    mesh = dynamic_cast<Mesh*>(resource);
+		mesh = dynamic_cast<Mesh*>(resource);
 
     assert(mesh);
 
@@ -1342,6 +1346,8 @@ void NIFLoader::loadResource(Resource *resource)
 		c.setStartTime(f->timeStart);
 		allanim.push_back(c);
 		
+		/*
+
 		if(o->name.toString() == "Bip01"){
 			std::cout <<"Creating WholeThing\n";
 			animcore = mSkel->createAnimation("WholeThing", f->timeStop);
@@ -1427,17 +1433,17 @@ void NIFLoader::loadResource(Resource *resource)
 
 
 
-		}
+		}*/
 
 		//std::cout << "Controller's Rtype:" <<  data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
 	}
 	
 	}
-	if(hasAnim){
+	if(hasAnim && addAnim){
 		//std::cout << "Lower" << lowername << "\n";
 		allanimmap[lowername] = allanim;
 	}
-	if(!mSkel.isNull() && shapes.size() > 0)
+	if(!mSkel.isNull() && shapes.size() > 0 && addAnim)
 	{
 		allshapesmap[lowername] = shapes;
 	}
