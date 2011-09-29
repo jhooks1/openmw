@@ -37,6 +37,7 @@ namespace ESMS
 	//std::vector<Nif::NiTriShapeCopy> shapes;
     std::string smodel;
 	
+
 	std::string lhand;
 	std::string rhand;
 	std::string tail;
@@ -46,7 +47,7 @@ namespace ESMS
 	std::string groin;
 
 	Ogre::Entity *model;
-	Ogre::Entity *lhandmodel;
+	
 	
 
     /* Information about this instance, such as 3D location and

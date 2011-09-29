@@ -28,7 +28,10 @@ struct aindex{
 	Ogre::Quaternion initialrot;
 	std::vector<int>rindexI;
 	std::vector<int>tindexI;
+	Ogre::Entity* base;
+	Ogre::SkeletonInstance* skel;
 	bool first;
+	float sinceUpdate;
 };
 
 namespace Compiler
@@ -121,7 +124,7 @@ namespace OMW
 
             void addResourcesDirectory (const boost::filesystem::path& path);
 
-			void handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, aindex &a, int slot);
+			void handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a, int slot);
 			void handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre::Entity* creaturemodel, Ogre::SkeletonInstance *skel);
 
 			bool timeIndex( float time, std::vector<float> times, int & i, int & j, float & x );

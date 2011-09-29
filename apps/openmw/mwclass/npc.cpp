@@ -120,6 +120,7 @@ namespace MWClass
 			out << knacounter++;
 		else
 			out << counter++;
+	
 		
 		out << ">|";
 		ref->smodel = smodel + "0000>|";
@@ -228,7 +229,7 @@ namespace MWClass
 		//                                        -150
 		Ogre::Vector3 handPos2 = Ogre::Vector3(-8, 0, 0);
 		Ogre::Vector3 handPos = Ogre::Vector3(8, 0, 0);        //40,20, -100   //20
-		Ogre::Quaternion handRot = Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(0, 1, 0)) * Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(1, 0, 0));//Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 1, 0)); //1,0,0         //0,1,0
+		Ogre::Quaternion handRot = e;//Ogre::Quaternion(Ogre::Radian(PI), Ogre::Vector3(0, 1, 0));//Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(0, 1, 0)); //1,0,0         //0,1,0
 		//handRot * Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0)) *  Ogre::Quaternion(Ogre::Radian(3.14/2 ),Ogre::Vector3(1,0,0));
 		Ogre::Quaternion handRot2 = e; //Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1,0,0));
 		int priority = 1;
@@ -482,7 +483,7 @@ namespace MWClass
 		
 		Ogre::Quaternion p = Ogre::Quaternion(Ogre::Radian(3.14), Ogre::Vector3(1, 0, 0)); //1,0,0
 
-
+		
 		if(handl)
 		{
 			std::string pass;
@@ -650,7 +651,6 @@ namespace MWClass
 	
 
 			
-			std::cout << "F\n";
 
 
 

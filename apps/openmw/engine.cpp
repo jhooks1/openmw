@@ -88,18 +88,16 @@ void OMW::Engine::executeLocalScripts()
 
 
 
-void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Entity &ent, aindex &a, int slot) {//Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
+void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a, int slot) {//Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
 	//Ogre::AxisAlignedBox box = ent.getBoundingBox();
 	//box.setInfinite();
-	//std::cout << "i";
 	
 	if(a.time < data.getStartTime())
 	{
 		return;
 	}
-    Ogre::SkeletonInstance *skel = ent.getSkeleton();
+    Ogre::SkeletonInstance *skel = a.skel;
     if(skel->hasBone(data.getBonename())){
-    //std::cout << "INHERE\n";
     Ogre::Bone* bone = skel->getBone(data.getBonename());
 	
     float x;
@@ -143,6 +141,8 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Enti
 	if(quats.size() > 0){
     Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[a.rindexI[slot]], quats[rindexJ], true);
 	
+	
+
     //if(data.getBonename() == "Bip01")
     // {
      //Ogre::SceneNode* s = ent.getParentSceneNode();
@@ -210,21 +210,24 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, Ogre::Enti
    //}
 
     bone->setOrientation(r);
+	//const Ogre::Quaternion e = r;
+	//std::cout << a.time << "-" << r << "\n";
+	//std::cout << a.time << "-" << bone->getOrientation() << "\n";
 	}
 
     //bone->yaw(Ogre::Degree(10));
 
-
+	//std::cout << "LALA";
 
     skel->getManualBonesDirty();
     skel->_updateTransforms();
 	skel->_notifyManualBonesDirty();
 	
-	
+	Ogre::Entity* ent = a.base;
 
-    ent.getAllAnimationStates()->_notifyDirty();
-    ent._updateAnimation();
-	ent._notifyMoved();
+    ent->getAllAnimationStates()->_notifyDirty();
+    ent->_updateAnimation();
+	ent->_notifyMoved();
 
 
 		
@@ -313,6 +316,7 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 				for (int i = 0; i < boneinfovector.size(); i++)
 				{
 					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
+					if(skel->hasBone(boneinfo.bonename)){
 					Ogre::Bone *bonePtr = skel->getBone(boneinfo.bonename);
 					Ogre::Vector3 vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfo.trafo.trans;
 					Ogre::Quaternion vecRot = bonePtr->_getDerivedOrientation() * boneinfo.trafo.rotation;
@@ -372,6 +376,7 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						  }
 
 					 }
+				}
 				
 					/*
 					std::cout << "TransformRot:" << boneinfo.trafo.rotation << "TransformTrans:" << boneinfo.trafo.trans << "\n";
@@ -407,12 +412,14 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 					float shapescale = copy.trafo.scale;
 					std::vector<std::string> boneSequence = copy.boneSequence;
 					std::vector<std::string>::iterator boneSequenceIter = boneSequence.begin();
-					Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(*boneSequenceIter);
 					Ogre::Vector3 transmult;
 						Ogre::Quaternion rotmult;
 						float scale;
-					if(bonePtr)
-					{
+					if(creaturemodel->getSkeleton()->hasBone(*boneSequenceIter)){
+					Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(*boneSequenceIter);
+					
+						
+					
 
 						transmult = bonePtr->getPosition();
 						rotmult = bonePtr->getOrientation();
@@ -420,9 +427,8 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						boneSequenceIter++;
 					    for(; boneSequenceIter != boneSequence.end(); boneSequenceIter++)
 					    {
+							if(creaturemodel->getSkeleton()->hasBone(*boneSequenceIter)){
 							Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(*boneSequenceIter);
-							if(bonePtr)
-							{
 								// Computes C = B + AxC*scale
 								transmult = transmult + rotmult * bonePtr->getPosition();
 								rotmult = rotmult * bonePtr->getOrientation();
@@ -513,8 +519,9 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	{
 		//std::cout << "Creature encounter\n";
 		//std::cout << "Testing" << i < "\n";
+		
 		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
-		Ogre::Entity* creaturemodel = item.model;
+		//Ogre::Entity* creaturemodel = item.model;
 		std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
 		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.smodel);
 		prev = item.smodel;
@@ -548,8 +555,11 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			}
 
 			aindex a;
-			a.time = 0.0;
+			
+			a.time = 0.0 ;
 			a.first = true;
+			a.base = item.model;
+			a.skel = a.base->getSkeleton();
 			//a.absoluterot = creaturemodel->getParentSceneNode()->getOrientation();
 			//a.absolutepos = creaturemodel->getParentSceneNode()->getPosition();
 			//a.initialrot = creaturemodel->getSkeleton()->getBone("Bip01")->getOrientation();
@@ -571,13 +581,13 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			//std::cout << "Bone" << allanimiter->getBonename() << "Rindex" << r.rindexI[o] << "\n";
-			handleAnimationTransform(*allanimiter, *creaturemodel, r, o);
+			handleAnimationTransform(*allanimiter, r, o);
 			
 
 
 			o++;
 		}
-		handleShapes(allshapes, creaturemodel, creaturemodel->getSkeleton());
+		handleShapes(allshapes, r.base, r.skel);
 		//Ogre::AnimationState *mAnimationState = creaturemodel->getAnimationState("WholeThing");
 			//mAnimationState->setLoop(false);
 
@@ -599,11 +609,14 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	
 	for(int i = 0; i < npcdata.size(); i++)
 	{
+		//std::cout << "I" << i << "\n";
 
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
 		
-
+		//std::cout << "Item" << item.model->getMesh()->getName() << "\n";
+		
+		
         if(prev != item.smodel)
         {
             prev = item.smodel;
@@ -621,6 +634,10 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
        {
             aindex a;
             a.time = 0.0;
+			a.sinceUpdate = 0.0;
+			a.base = item.model;
+			a.skel = a.base->getSkeleton();
+			
             //a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
             //a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
             //a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
@@ -633,6 +650,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
             }
             npca.push_back(a);
        }
+	   //std::cout << "Go" << npca[i].base->getMesh()->getName() << "\n";
+	   
        //std::cout << "Filename" << item.smodel << "\n";
        //std::vector<Nif::NiKeyframeData> allanim = (item.allanim);
        std::vector<Nif::NiKeyframeData>::iterator allanimiter;
@@ -641,19 +660,28 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
        aindex& r = npca[i];
 
        int to = r.time + evt.timeSinceLastFrame;
+	   
        //if( to > ((int) r.time))
        // std::cout << "TimePosition: " << r.time << "\n";
 
        r.time += evt.timeSinceLastFrame;
+	  
+
+	   if(!mOgre.getCamera()->isVisible(npcmodel->getWorldBoundingBox())){
+		  npcdataiter++;
+		   continue;
+	   }
        //std::cout << "s\n";
-
-
-
+	  
        int o = 0;
        for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
        {
+		//  std::cout << "Num Bones" <<  r.skel->getNumBones() << "\n";
+		    //std::cout << "BEFORE";
         //if(i == 2)
-             handleAnimationTransform(*allanimiter, *npcmodel, r, o);
+             handleAnimationTransform(*allanimiter, r, o);
+			// std::cout << "AFTER";
+			
             /*
             if(first)
             {
@@ -669,7 +697,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
             o++;
        }
 	   
-	   
+	
 	   if(item.lhand != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lhand);
        handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
@@ -917,6 +945,7 @@ void OMW::Engine::setResourceDir (const boost::filesystem::path& parResDir)
 
 void OMW::Engine::setCell (const std::string& cellName)
 {
+	std::cout << "Change cell\n";
     mCellName = cellName;
 }
 

@@ -232,14 +232,13 @@ void NIFLoader::createMaterial(const String &name,
                            int alphaFlags, float alphaTest,
                            const String &texName)
 {
-    MaterialPtr material = MaterialManager::getSingleton().create(name, resourceGroup);
-
-	MaterialPtr mat = MaterialManager::getSingleton().getByName("customunique");
-	if(!mat.isNull() && !mSkel.isNull())
-	{
-		//std::cout << "MATERIALCOPY";
+    MaterialPtr material;// = MaterialManager::getSingleton().create(name + ":customunique", resourceGroup);
+	//MaterialPtr mat = MaterialManager::getSingleton().getByName("customunique");
+	material = MaterialManager::getSingleton().create(name, resourceGroup);
+	if(!mSkel.isNull()){
 		//mat->copyDetailsTo(material);
 	}
+	
 
     // This assigns the texture to this material. If the texture name is
     // a file name, and this file exists (in a resource directory), it
@@ -559,6 +558,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     //add vertex bone assignments
 	
 
+	
     for (std::list<VertexBoneAssignment>::iterator it = vertexBoneAssignments.begin();
         it != vertexBoneAssignments.end(); it++)
     {
@@ -1135,10 +1135,13 @@ void NIFLoader::loadResource(Resource *resource)
 	std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
 	//std::cout << "Name" << name << "\n";
 	suffix = name.at(name.length() - 2);
+	bool hasAnim = false;
 	
 	baddin = false;
 	bNiTri = true;
 	bool addAnim = true;
+	bool isBeast = (lowername.find("kna", 0) < lowername.size());
+	
 		if(suffix == '*')
 		{
 			vector = Ogre::Vector3(-1,1,1);
@@ -1154,6 +1157,7 @@ void NIFLoader::loadResource(Resource *resource)
 		}
 		else if(suffix == '>')
 		{
+
 			bNiTri = false;
 			baddin = true;
 			std::string sub = name.substr(name.length() - 6, 4);
@@ -1244,6 +1248,7 @@ void NIFLoader::loadResource(Resource *resource)
         return;
     }
 	
+	if(addAnim){
 	for(int i = 0; i < nif.numRecords(); i++)
 
 	{
@@ -1295,28 +1300,7 @@ void NIFLoader::loadResource(Resource *resource)
 	}*/
 
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
-	
 
-
-	handle = 0;
-	
-    // set the bounding value.
-    if (bounds.isValid())
-    {
-		//float widthhalf = (bounds.maxX() - bounds.minX()) / 2;
-		//float heighthalf = (bounds.maxY() - bounds.minY()) / 2;
-		//float depthhalf = (bounds.maxZ() - bounds.minZ()) / 2;
-
-        mesh->_setBounds(AxisAlignedBox(bounds.minX(), bounds.minY(), bounds.minZ(),
-                                        bounds.maxX(), bounds.maxY(), bounds.maxZ()));
-        mesh->_setBoundingSphereRadius(bounds.getRadius());
-    }
-
-	int acounter = 1;
-
-	
-	bool hasAnim = false;
-	
 	for(int i = 0; i < nif.numRecords(); i++)
 	{
 		
@@ -1439,6 +1423,36 @@ void NIFLoader::loadResource(Resource *resource)
 	}
 	
 	}
+	
+	}
+	else if (isBeast){
+		//std::cout << "Setting npc skel to occuring\n";
+	
+		mSkel = npcknaSkel;
+	}
+	else
+		mSkel = npcSkel;
+
+	handle = 0;
+	
+    // set the bounding value.
+    if (bounds.isValid())
+    {
+		//float widthhalf = (bounds.maxX() - bounds.minX()) / 2;
+		//float heighthalf = (bounds.maxY() - bounds.minY()) / 2;
+		//float depthhalf = (bounds.maxZ() - bounds.minZ()) / 2;
+
+        mesh->_setBounds(AxisAlignedBox(bounds.minX(), bounds.minY(), bounds.minZ(),
+                                        bounds.maxX(), bounds.maxY(), bounds.maxZ()));
+        mesh->_setBoundingSphereRadius(bounds.getRadius());
+    }
+
+	int acounter = 1;
+
+	
+	
+	
+	
 	if(hasAnim && addAnim){
 		//std::cout << "Lower" << lowername << "\n";
 		allanimmap[lowername] = allanim;
@@ -1493,6 +1507,12 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	
 	if(baddin){
+		if(addAnim){
+			if(isBeast)
+				npcknaSkel = mSkel;
+			else
+				npcSkel = mSkel;
+		}
 		for(int i = 0; i < addin.size(); i++){
 		insertMeshInsideBase(addin[i]);
 		}
