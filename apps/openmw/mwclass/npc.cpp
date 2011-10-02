@@ -110,16 +110,26 @@ namespace MWClass
 	
 		
 		
-		if(counter > 99 && counter < 1000)
-			out << "0";
-		else if(counter > 9)
-			out << "00";
-		else
-			out << "000";
-		if(beast)
+		
+		if(beast){
+			if(knacounter > 99 && knacounter < 1000)
+				out << "0";
+			else if(knacounter > 9)
+				out << "00";
+			else
+				out << "000";
 			out << knacounter++;
-		else
+		}
+
+		else{
+			if(counter > 99 && counter < 1000)
+				out << "0";
+			else if(counter > 9)
+				out << "00";
+			else
+				out << "000";
 			out << counter++;
+		}
 	
 		
 		out << ">|";
