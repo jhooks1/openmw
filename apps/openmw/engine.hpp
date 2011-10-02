@@ -143,6 +143,7 @@ namespace OMW
             Engine();
 
             ~Engine();
+			void clearIndices();
 
             /// Set data dir
             void setDataDir (const boost::filesystem::path& dataDir);

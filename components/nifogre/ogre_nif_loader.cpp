@@ -1738,6 +1738,15 @@ MeshPtr NIFLoader::load(const std::string &name,
 
 }
 
+
+/*
+This function shares much of the same code handleShapes() in engine.
+This function also creates new position and normal buffers for submeshes. 
+This function points to existing texture and IndexData buffers
+*/
+
+
+
 void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
 {
 	/*if(addin)

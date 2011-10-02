@@ -86,7 +86,10 @@ void OMW::Engine::executeLocalScripts()
     mIgnoreLocalPtr = MWWorld::Ptr();
 }
 
-
+void OMW::Engine::clearIndices(){
+	creaturea.clear();
+	npca.clear();
+}
 
 void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a, int slot) {//Nif::NiKeyframeData &data, Ogre::Entity &ent, float &time, int &rindexI,int &tindexI, Ogre::Quaternion &rotationl, Ogre::Vector3 absolutePos, Ogre::Quaternion absoluteRot, Ogre::Quaternion initialrot, bool &first){
 	//Ogre::AxisAlignedBox box = ent.getBoundingBox();
@@ -512,15 +515,35 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List creatureData = (current->creatures).list;
 	ESMS::CellRefList<ESM::Creature,MWWorld::RefData>::List::iterator creaturedataiter = creatureData.begin();
 
+		ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
+	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
+
 	first2 = true;
+
 	
 	//if(creatureData.size() > 0){
+	if(creatureData.size() > 0 && creaturea.size() > 0)
+	{
+		if(creaturedataiter->model != creaturea[0].base)
+			clearIndices();
+	}
+	else if(npcdata.size() > 0 && npca.size() > 0)
+	{
+		if(npcdataiter->model != npca[0].base)
+			clearIndices();
+	}
+	
+
+
+
 	for(int i = 0; i < creatureData.size(); i++)
 	{
 		//std::cout << "Creature encounter\n";
 		//std::cout << "Testing" << i < "\n";
 		
 		ESMS::LiveCellRef<ESM::Creature,MWWorld::RefData> item = *creaturedataiter;
+
+
 		//Ogre::Entity* creaturemodel = item.model;
 		std::vector<Nif::NiKeyframeData> allanim = NIFLoader::getSingletonPtr()->getAnim(item.smodel);
 		std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.smodel);
@@ -576,6 +599,10 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 		aindex& r = creaturea[i];
 		r.time += evt.timeSinceLastFrame;
+		if(!mOgre.getCamera()->isVisible(item.model->getWorldBoundingBox())){
+		  creaturedataiter++;
+		   continue;
+	   }
 	
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
@@ -603,8 +630,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	
 		creaturedataiter++;
 	}
-	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List npcdata = (current->npcs).list;
-	ESMS::CellRefList<ESM::NPC,MWWorld::RefData>::List::iterator npcdataiter = npcdata.begin();
+
 	
 	
 	for(int i = 0; i < npcdata.size(); i++)
