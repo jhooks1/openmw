@@ -235,9 +235,14 @@ void NIFLoader::createMaterial(const String &name,
     MaterialPtr material;// = MaterialManager::getSingleton().create(name + ":customunique", resourceGroup);
 	//MaterialPtr mat = MaterialManager::getSingleton().getByName("customunique");
 	material = MaterialManager::getSingleton().create(name, resourceGroup);
-	if(!mSkel.isNull()){
-		//mat->copyDetailsTo(material);
-	}
+	/*if(!mSkel.isNull()){
+		Ogre::Technique* tech = material->createTechnique();
+		tech->setSchemeName("blahblah");
+		Pass* pass = tech->createPass();
+        pass->setVertexProgram("hardwareSkinningFourWeights");
+
+
+	}*/
 	
 
     // This assigns the texture to this material. If the texture name is
@@ -1024,6 +1029,8 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             {
 				//std::cout << "Creating a" << name << "\n";
                 bone = mSkel->createBone(name);
+				
+
 
                 if (parentBone)
                   parentBone->addChild(bone);
@@ -1031,6 +1038,8 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
                 bone->setInheritOrientation(true);
                 bone->setPosition(convertVector3(node->trafo->pos));
                 bone->setOrientation(convertRotation(node->trafo->rotation));
+
+				
             }
         }
     }

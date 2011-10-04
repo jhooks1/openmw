@@ -216,6 +216,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
 	//const Ogre::Quaternion e = r;
 	//std::cout << a.time << "-" << r << "\n";
 	//std::cout << a.time << "-" << bone->getOrientation() << "\n";
+	//std::cout << "FIRST" << a.time << "-" << r << "\n";
 	}
 
     //bone->yaw(Ogre::Degree(10));
@@ -231,7 +232,8 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
     ent->getAllAnimationStates()->_notifyDirty();
     ent->_updateAnimation();
 	ent->_notifyMoved();
-
+	
+	//std::cout << "SECOND" << a.time << "-" << bone->getOrientation() << "\n";
 
 		
 				}
@@ -599,10 +601,26 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 		aindex& r = creaturea[i];
 		r.time += evt.timeSinceLastFrame;
+		
 		if(!mOgre.getCamera()->isVisible(item.model->getWorldBoundingBox())){
 		  creaturedataiter++;
 		   continue;
 	   }
+		
+		
+	   Ogre::Bone* b =r.skel->getRootBone();
+	   b->setOrientation(.3,.3,.3,.3);   //This is a trick
+	   r.skel->getManualBonesDirty();
+    r.skel->_updateTransforms();
+	r.skel->_notifyManualBonesDirty();
+	
+	Ogre::Entity* ent = r.base;
+
+    ent->getAllAnimationStates()->_notifyDirty();
+    ent->_updateAnimation();
+	ent->_notifyMoved();
+	
+	//std::cout << "ONLY" << r.time << "-" << b->getOrientation() << "\n";
 	
 		int o = 0;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
@@ -692,20 +710,49 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
        r.time += evt.timeSinceLastFrame;
 	  
-
+	   
 	   if(!mOgre.getCamera()->isVisible(npcmodel->getWorldBoundingBox())){
 		  npcdataiter++;
 		   continue;
 	   }
-       //std::cout << "s\n";
+       //std::cout <<  "s\n";
 	  
        int o = 0;
+	   /*
+	   Ogre::Bone* b =r.skel->getBone(allanim.begin()->getBonename());
+	   b->setOrientation(.5,.5,.5,.5);
+	   r.skel->getManualBonesDirty();
+    r.skel->_updateTransforms();
+	r.skel->_notifyManualBonesDirty();
+	
+	Ogre::Entity* ent = r.base;
+
+    ent->getAllAnimationStates()->_notifyDirty();
+    ent->_updateAnimation();
+	ent->_notifyMoved();
+	
+	std::cout << "ONLY" << r.time << "-" << b->getOrientation() << "\n";*/
+	    Ogre::Bone* b =r.skel->getRootBone();
+	   b->setOrientation(.3,.3,.3,.3);   //This is a trick
+	   r.skel->getManualBonesDirty();
+    r.skel->_updateTransforms();
+	r.skel->_notifyManualBonesDirty();
+	
+	Ogre::Entity* ent = r.base;
+
+    ent->getAllAnimationStates()->_notifyDirty();
+    ent->_updateAnimation();
+	ent->_notifyMoved();
        for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
        {
+
 		//  std::cout << "Num Bones" <<  r.skel->getNumBones() << "\n";
 		    //std::cout << "BEFORE";
         //if(i == 2)
+		   
+		  //std::cout << "Root bone" << r.skel->getRootBone()->getName() << "\n";
              handleAnimationTransform(*allanimiter, r, o);
+			 
 			// std::cout << "AFTER";
 			
             /*
