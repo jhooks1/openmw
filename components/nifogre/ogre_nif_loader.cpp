@@ -235,7 +235,8 @@ void NIFLoader::createMaterial(const String &name,
     MaterialPtr material;// = MaterialManager::getSingleton().create(name + ":customunique", resourceGroup);
 	//MaterialPtr mat = MaterialManager::getSingleton().getByName("customunique");
 	material = MaterialManager::getSingleton().create(name, resourceGroup);
-	/*if(!mSkel.isNull()){
+	/*
+	if(!mSkel.isNull()){
 		Ogre::Technique* tech = material->createTechnique();
 		tech->setSchemeName("blahblah");
 		Pass* pass = tech->createPass();
@@ -1688,6 +1689,7 @@ void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
 						  {
 							  Ogre::Vector3 absVertPos = vecPos + vecRot * shapes[i].vertices[verIndex];
 							  vertices[verIndex] = true;
+							  absVertPos = absVertPos * boneinfo.weights[k].weight;
 							   Ogre::Real* addr = (pReal + 3 * verIndex);
 							  *addr = absVertPos.x;
 							  *(addr+1) = absVertPos.y;
@@ -1697,14 +1699,33 @@ void NIFLoader::insertMeshInsideBase(Ogre::Mesh* input)
 						  }
 						  else 
 						  {
-							  //std::cout << "Vertex" << verIndex << "Weight: " << boneinfo.weights[i].weight << "was seen twice\n";
+							 Ogre::Vector3 absVertPos = vecPos + vecRot * shapes[i].vertices[verIndex];
+							   absVertPos = absVertPos * boneinfo.weights[k].weight;
+							   Ogre::Vector3 old = Ogre::Vector3(pReal + 3 * verIndex);
+							   absVertPos = absVertPos + old;
+							   Ogre::Real* addr = (pReal + 3 * verIndex);
+							  *addr = absVertPos.x;
+							  *(addr+1) = absVertPos.y;
+				              *(addr+2) = absVertPos.z;
 
 						  }
 						  
-						  if(normals.find(verIndex) == normals.end() &&  verIndex < shapes[i].normals.size() )
+						  if(normals.find(verIndex) == normals.end())
 						  {
 							  Ogre::Vector3 absNormalsPos = vecRot * shapes[i].normals[verIndex];
+							  absNormalsPos = absNormalsPos * boneinfo.weights[k].weight;
 							  normals[verIndex] = true;
+							  Ogre::Real* addr = (pRealNormal + 3 * verIndex);
+							  *addr = absNormalsPos.x;
+				              *(addr+1) = absNormalsPos.y;
+				              *(addr+2) = absNormalsPos.z;
+						  }
+						  else{
+							     Ogre::Vector3 absNormalsPos = vecRot * shapes[i].normals[verIndex];
+							  absNormalsPos = absNormalsPos * boneinfo.weights[k].weight;
+							 Ogre::Vector3 old = Ogre::Vector3(pRealNormal + 3 * verIndex);
+							 absNormalsPos = absNormalsPos + old;
+
 							  Ogre::Real* addr = (pRealNormal + 3 * verIndex);
 							  *addr = absNormalsPos.x;
 				              *(addr+1) = absNormalsPos.y;
