@@ -181,6 +181,8 @@ class NIFLoader : Ogre::ManualResourceLoader
 		
 		int test;
 		std::vector<Nif::NiKeyframeData> allanim;
+		std::map<std::string,float> textmappings;
+		std::map<std::string,std::map<std::string,float>> textmappingsall;
 		std::map<std::string,std::vector<Nif::NiKeyframeData>> allanimmap;
 		std::map<std::string,std::vector<Nif::NiTriShapeCopy>> allshapesmap;
 		std::vector<Nif::NiTriShapeCopy> shapes;
@@ -198,6 +200,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 		bool bNiTri;
 		bool baddin;
 		std::string triname;
+		std::string name;
 
         // pointer to the ogre mesh which is currently build
         Ogre::Mesh *mesh;

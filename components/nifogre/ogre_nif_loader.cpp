@@ -994,6 +994,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
     {
         // Get the next extra data in the list
         e = e->extra.getPtr();
+		
         assert(e != NULL);
 
         if (e->recType == RC_NiStringExtraData)
@@ -1011,7 +1012,19 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
                 // the engine, just skip this entire node.
                 return;
         }
+		if (e->recType == RC_NiTextKeyExtraData){
+			Nif::NiTextKeyExtraData* extra =  dynamic_cast<Nif::NiTextKeyExtraData*> (e);
+			
+			std::vector<Nif::NiTextKeyExtraData::TextKey>::iterator textiter = extra->list.begin();
+			for(; textiter != extra->list.end(); textiter++)
+			{
+				//if(textiter->text.toString().find("Torch") < textiter->text.toString().length())
+					//std::cout << "Time: " << textiter->time << " " << textiter->text.toString() << "\n";
+				textmappings[textiter->text.toString()] = textiter->time;
+			}
+		}
     }
+	
 
     Bone *bone = 0;
 
@@ -1135,15 +1148,17 @@ void NIFLoader::setVector(Ogre::Vector3 vec)
 }
 void NIFLoader::loadResource(Resource *resource)
 {
+	
 	center = false;
 	mBoundingBox.setNull();
 	allanim.clear();
 	shapes.clear();
+	textmappings.clear();
 	assignmentn = 0;
-    std::string name = resource->getName();
+    name = resource->getName();
 	std::string lowername = name;
 	std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
-	//std::cout << "Name" << name << "\n";
+	
 	suffix = name.at(name.length() - 2);
 	bool hasAnim = false;
 	
@@ -1366,7 +1381,9 @@ void NIFLoader::loadResource(Resource *resource)
 	
 	if(hasAnim && addAnim){
 		//std::cout << "Lower" << lowername << "\n";
+		//std::cout << "Adding the animations\n";
 		allanimmap[lowername] = allanim;
+		textmappingsall[lowername] = textmappings;
 	}
 	if(!mSkel.isNull() && shapes.size() > 0 && addAnim)
 	{
