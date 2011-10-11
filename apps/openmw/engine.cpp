@@ -385,6 +385,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
         // Play some good 'ol tunes
         mEnvironment.mSoundManager->startRandomTitle();
     }
+	
+	
 
     std::string effect;
 
@@ -507,7 +509,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
        if(npca.size() == i)
        {
             aindex a;
-            a.time = 0.0;
+            a.time = 0.0 + i * 2;
 			a.sinceUpdate = 0.0;
 			a.base = item.model;
 			a.skel = a.base->getSkeleton();

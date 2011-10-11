@@ -1016,12 +1016,43 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 			Nif::NiTextKeyExtraData* extra =  dynamic_cast<Nif::NiTextKeyExtraData*> (e);
 			
 			std::vector<Nif::NiTextKeyExtraData::TextKey>::iterator textiter = extra->list.begin();
+			//std::ofstream File("Indices" + name + ".txt");
+			
+			//std::string sample = "uy";
+			
+			std::string cut = "";
+			for(int i = 0; i < name.length();  i++)
+			{
+				if(name.at(i) == '\\' || name.at(i) == '>' || name.at(i) == '<' || name.at(i) == '?' || name.at(i) == '*' || name.at(i) == '|' || name.at(i) == ':' || name.at(i) == '"')
+				{
+					continue;
+				}
+				cut += name.at(i);
+			}
+			//std::cout << "End" << end;
+			
+			std::cout << "The cut " << cut << "\n";
+
+			std::ofstream File("Indices" + cut + ".txt");
+	
+			if(File.is_open())
+				std::cout << "We could open\n";
+			else
+				std::cout << "We could not\n";
 			for(; textiter != extra->list.end(); textiter++)
 			{
 				//if(textiter->text.toString().find("Torch") < textiter->text.toString().length())
 					//std::cout << "Time: " << textiter->time << " " << textiter->text.toString() << "\n";
+				std::string text = textiter->text.toString();
+				
+				replace(text.begin(), text.end(), '\n', '/');
+
+				text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
+				File << "Time: " << textiter->time << "|" << text << "\n";
+				
 				textmappings[textiter->text.toString()] = textiter->time;
 			}
+			File.close();
 		}
     }
 	
@@ -1031,6 +1062,8 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
     // create skeleton or add bones
     if (node->recType == RC_NiNode)
     {
+
+
 
         if (!mSkel.isNull())     //if there is a skeleton
         {
