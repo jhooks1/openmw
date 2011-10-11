@@ -1023,22 +1023,21 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 			std::string cut = "";
 			for(int i = 0; i < name.length();  i++)
 			{
-				if(name.at(i) == '\\' || name.at(i) == '>' || name.at(i) == '<' || name.at(i) == '?' || name.at(i) == '*' || name.at(i) == '|' || name.at(i) == ':' || name.at(i) == '"')
+				if(!(name.at(i) == '\\' || name.at(i) == '/' || name.at(i) == '>' || name.at(i) == '<' || name.at(i) == '?' || name.at(i) == '*' || name.at(i) == '|' || name.at(i) == ':' || name.at(i) == '"'))
 				{
-					continue;
+					cut += name.at(i);
 				}
-				cut += name.at(i);
 			}
 			//std::cout << "End" << end;
 			
-			std::cout << "The cut " << cut << "\n";
+			std::cout << "Outputting " << cut << "\n";
 
 			std::ofstream File("Indices" + cut + ".txt");
 	
-			if(File.is_open())
+			/*if(File.is_open())
 				std::cout << "We could open\n";
 			else
-				std::cout << "We could not\n";
+				std::cout << "We could not\n";*/
 			for(; textiter != extra->list.end(); textiter++)
 			{
 				//if(textiter->text.toString().find("Torch") < textiter->text.toString().length())
@@ -1155,21 +1154,32 @@ std::vector<Nif::NiKeyframeData> NIFLoader::getAllanim(){
 }
 
 std::vector<Nif::NiKeyframeData>& NIFLoader::getAnim(std::string lowername){
-		std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
 		
-		std::map<std::string,std::vector<Nif::NiKeyframeData>>::iterator iter = allanimmap.find(lowername);
+		std::map<std::string,std::vector<Nif::NiKeyframeData>,ciLessBoost>::iterator iter = allanimmap.find(lowername);
 		if(iter != allanimmap.end())
 			anim = iter->second;
 		return anim;
 			
 }
 std::vector<Nif::NiTriShapeCopy>& NIFLoader::getShapes(std::string lowername){
-		std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
 		
-		std::map<std::string,std::vector<Nif::NiTriShapeCopy>>::iterator iter = allshapesmap.find(lowername);
+		std::map<std::string,std::vector<Nif::NiTriShapeCopy>,ciLessBoost>::iterator iter = allshapesmap.find(lowername);
 		if(iter != allshapesmap.end())
 			s = iter->second;
 		return s;
+}
+
+float NIFLoader::getTime(std::string filename, std::string text){
+	std::map<std::string,std::map<std::string,float>,ciLessBoost>::iterator iter = alltextmappings.find(filename);
+	if(iter != alltextmappings.end()){
+		std::map<std::string,float>::iterator insideiter = (iter->second).find(text);
+		if(insideiter != (iter->second).end())
+			return insideiter->second;
+		else
+			return -20000000.0;
+	}
+
+	return -10000000.0;
 }
 
 void NIFLoader::setFlip(bool fl){
@@ -1416,7 +1426,7 @@ void NIFLoader::loadResource(Resource *resource)
 		//std::cout << "Lower" << lowername << "\n";
 		//std::cout << "Adding the animations\n";
 		allanimmap[lowername] = allanim;
-		textmappingsall[lowername] = textmappings;
+		alltextmappings[lowername] = textmappings;
 	}
 	if(!mSkel.isNull() && shapes.size() > 0 && addAnim)
 	{

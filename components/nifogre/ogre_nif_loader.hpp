@@ -36,6 +36,15 @@
 #include "../nif/extra.hpp"
 //#include <meshmagick\MeshMagick.h>
 #include "MeshMagick.h"
+#include    <boost/algorithm/string.hpp>
+using namespace boost::algorithm;
+struct ciLessBoost : std::binary_function<std::string, std::string, bool>
+{
+    bool operator() (const std::string & s1, const std::string & s2) const {
+                                               //case insensitive version of is_less
+        return lexicographical_compare(s1, s2, is_iless());
+    }
+};
 
 
 //#include "../nif/data.hpp"
@@ -109,6 +118,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 		std::vector<Nif::NiKeyframeData> getAllanim();
 		std::vector<Nif::NiKeyframeData>& getAnim(std::string lowername);
 		std::vector<Nif::NiTriShapeCopy>& getShapes(std::string lowername);
+		float getTime(std::string filename, std::string text);
         
         Ogre::Vector3 convertVector3(const Nif::Vector& vec);
         Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
@@ -156,6 +166,8 @@ class NIFLoader : Ogre::ManualResourceLoader
 
         Ogre::String getUniqueName(const Ogre::String &input);
 
+		
+
         //returns the skeleton name of this mesh
         std::string getSkeletonName()
         {
@@ -182,9 +194,9 @@ class NIFLoader : Ogre::ManualResourceLoader
 		int test;
 		std::vector<Nif::NiKeyframeData> allanim;
 		std::map<std::string,float> textmappings;
-		std::map<std::string,std::map<std::string,float>> textmappingsall;
-		std::map<std::string,std::vector<Nif::NiKeyframeData>> allanimmap;
-		std::map<std::string,std::vector<Nif::NiTriShapeCopy>> allshapesmap;
+		std::map<std::string,std::map<std::string,float>,ciLessBoost> alltextmappings;
+		std::map<std::string,std::vector<Nif::NiKeyframeData>,ciLessBoost> allanimmap;
+		std::map<std::string,std::vector<Nif::NiTriShapeCopy>,ciLessBoost> allshapesmap;
 		std::vector<Nif::NiTriShapeCopy> shapes;
 		bool flip;
 		bool center;

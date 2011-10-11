@@ -493,7 +493,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	{
 		ESMS::LiveCellRef<ESM::NPC,MWWorld::RefData> item = *npcdataiter;
 		Ogre::Entity* npcmodel = item.model;
-		
+		//std::cout << "Timej" << NIFLoader::getSingletonPtr()->getTime(item.smodel, "Idle3: Start") << "\n";
 		
         if(prev != item.smodel)
         {
@@ -509,7 +509,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
        if(npca.size() == i)
        {
             aindex a;
-            a.time = 0.0 + i * 2;
+            a.time = 0.0;
 			a.sinceUpdate = 0.0;
 			a.base = item.model;
 			a.skel = a.base->getSkeleton();
