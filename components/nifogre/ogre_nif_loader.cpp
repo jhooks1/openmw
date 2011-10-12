@@ -1049,7 +1049,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 				text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
 				File << "Time: " << textiter->time << "|" << text << "\n";
 				
-				textmappings[textiter->text.toString()] = textiter->time;
+				textmappings[text] = textiter->time;
 			}
 			File.close();
 		}

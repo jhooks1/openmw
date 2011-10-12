@@ -22,16 +22,19 @@
 #include <components/nif/extra.hpp>
 struct aindex{
 	float time;
-	Ogre::Quaternion rotationl;
-	Ogre::Vector3 absolutepos;
-	Ogre::Quaternion absoluterot;
-	Ogre::Quaternion initialrot;
+	float startTime;
+	float stopTime;
+	bool loop;
+	//Ogre::Quaternion rotationl;
+	//Ogre::Vector3 absolutepos;
+	//Ogre::Quaternion absoluterot;
+	//Ogre::Quaternion initialrot;
 	std::vector<int>rindexI;
 	std::vector<int>tindexI;
 	Ogre::Entity* base;
 	Ogre::SkeletonInstance* skel;
 	bool first;
-	float sinceUpdate;
+	//float sinceUpdate;
 };
 
 namespace Compiler

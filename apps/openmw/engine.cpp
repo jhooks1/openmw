@@ -92,10 +92,13 @@ void OMW::Engine::clearIndices(){
 
 void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a, int slot) {
 	
-	if(a.time < data.getStartTime() || a.time > data.getStopTime())
+	
+	if(a.time < data.getStartTime() || a.time < a.startTime)
 	{
 		return;
 	}
+	if(a.time > a.stopTime)
+		a.time = a.stopTime;
     Ogre::SkeletonInstance *skel = a.skel;
     if(skel->hasBone(data.getBonename())){
         Ogre::Bone* bone = skel->getBone(data.getBonename());
@@ -141,8 +144,16 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
         ent->_updateAnimation();
 	    ent->_notifyMoved();
 	}  
+	if(a.time >= a.stopTime)
+	{
+		if(a.loop){
+		float diff = a.time - a.stopTime;
+		a.time = a.startTime + diff;
+		}
+	}
 }
 
+//timeIndex(a.time, rtime, a.rindexI[slot], rindexJ, x);
 bool OMW::Engine::timeIndex( float time, std::vector<float> times, int & i, int & j, float & x ){
 	int count;
 	if (  (count = times.size()) > 0 )
@@ -433,8 +444,11 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			
 
 			aindex a;
+			a.stopTime = allanim.begin()->getStopTime();
+			a.startTime = allanim.begin()->getStartTime();
 			
-			a.time = 0.0 ;
+			a.time = a.startTime ;
+			a.loop = true;
 			a.first = true;
 			a.base = item.model;
 			a.skel = a.base->getSkeleton();
@@ -508,12 +522,21 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
        if(npca.size() == i)
        {
+		  
             aindex a;
-            a.time = 0.0;
-			a.sinceUpdate = 0.0;
+            
+			//a.sinceUpdate = 0.0;
 			a.base = item.model;
 			a.skel = a.base->getSkeleton();
+			// a.stopTime = NIFLoader::getSingletonPtr()->getTime(item.smodel, "WalkForward: Loop Stop");
+				 a.stopTime = allanim.begin()->getStopTime();
+			//a.startTime = NIFLoader::getSingletonPtr()->getTime(item.smodel, "WalkForward: Loop Start");
+				a.startTime = allanim.begin()->getStartTime();
+			a.time = a.startTime;
+			a.loop = true;
 			
+			//std::cout << "Start:" << a.startTime << "\n";
+			//std::cout << "Stop" << a.stopTime << "\n";
             //a.absoluterot = npcmodel->getParentSceneNode()->getOrientation();
             //a.absolutepos = npcmodel->getParentSceneNode()->getPosition();
             //a.initialrot = npcmodel->getSkeleton()->getBone("Bip01")->getOrientation();
