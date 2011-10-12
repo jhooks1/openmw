@@ -92,7 +92,7 @@ void OMW::Engine::clearIndices(){
 
 void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a, int slot) {
 	
-	if(a.time < data.getStartTime())
+	if(a.time < data.getStartTime() || a.time > data.getStopTime())
 	{
 		return;
 	}

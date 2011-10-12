@@ -1383,10 +1383,12 @@ void NIFLoader::loadResource(Resource *resource)
 			continue;
 		//std::cout <<"Bone" << o->name.toString() << "\n";
 		data->setBonename(o->name.toString());
-		Nif::NiKeyframeData c;
-		c.clone(data.get());
-		c.setStartTime(f->timeStart);
-		allanim.push_back(c);
+		//Nif::NiKeyframeData c;
+		//c.clone(data.get());
+		data->setStartTime(f->timeStart);
+		data->setStopTime(f->timeStop);
+
+		allanim.push_back(data.get());
 		
 		
 	}

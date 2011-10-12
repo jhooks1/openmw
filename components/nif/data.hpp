@@ -454,6 +454,7 @@ class NiKeyframeData : public Record
 	std::vector<Ogre::Vector3> tbc;
 	std::vector<float> rottime;
 	float startTime;
+	float stopTime;
 	int rtype;
 
 	//Translations
@@ -506,6 +507,10 @@ public:
 	void setStartTime(float start)
 	{
 		startTime = start;
+	}
+  	void setStopTime(float end)
+	{
+		stopTime = end;
 	}
   void read(NIFFile *nif)
   {
@@ -703,6 +708,9 @@ public:
 	}
 	float getStartTime(){
 		return startTime;
+	}
+	float getStopTime(){
+		return stopTime;
 	}
 	std::vector<Ogre::Quaternion> getQuat(){
 		return quats;
