@@ -93,18 +93,20 @@ void OMW::Engine::clearIndices(){
 void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a, int slot) {
 	
 	
-	if(a.time < data.getStartTime() || a.time < a.startTime)
+	if(a.time < data.getStartTime() || a.time < a.startTime || a.time > data.getStopTime())
 	{
 		return;
 	}
-	if(a.time > a.stopTime)
-		a.time = a.stopTime;
+	float time = a.time;
+
     Ogre::SkeletonInstance *skel = a.skel;
     if(skel->hasBone(data.getBonename())){
         Ogre::Bone* bone = skel->getBone(data.getBonename());
 	
         float x;
 		float x2;
+		float x3;
+		float x4;
 	    std::vector<Ogre::Quaternion> quats = data.getQuat();
 
         std::vector<float> ttime = data.gettTime();
@@ -117,11 +119,15 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
     
         std::vector<float> rtime = data.getrTime();
         int rindexJ = 0;
-	    timeIndex(a.time, rtime, a.rindexI[slot], rindexJ, x2);
+	    timeIndex(time, rtime, a.rindexI[slot], rindexJ, x2);
 	    int tindexJ = 0;
 
 
-        timeIndex(a.time, ttime, a.tindexI[slot], tindexJ, x);
+
+
+        timeIndex(time, ttime, a.tindexI[slot], tindexJ, x);
+
+		//std::cout << "X: " << x << " X2: " << x2 << "\n";
 
 	
 	    if(translist1.size() > 0){
@@ -446,7 +452,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			a.startTime = allanim.begin()->getStartTime();
 			
 			a.time = a.startTime ;
-			a.loop = true;
+			a.loop = false;
 			a.first = true;
 			a.base = item.model;
 			a.skel = a.base->getSkeleton();
@@ -486,8 +492,13 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ent->_notifyMoved();
 	
 		int o = 0;
-		if(r.time > r.stopTime)
+		if(r.time > r.stopTime){
+		float startBack = r.startTime + (r.time - r.stopTime);
 		r.time = r.stopTime;
+		if(r.loop)
+			r.time = startBack;
+		
+		}
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			handleAnimationTransform(*allanimiter, r, o);
@@ -537,10 +548,10 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			a.skel = a.base->getSkeleton();
 			// a.stopTime = NIFLoader::getSingletonPtr()->getTime(item.smodel, "WalkForward: Loop Stop");
 				 a.stopTime = allanim.begin()->getStopTime();
-			//a.startTime = NIFLoader::getSingletonPtr()->getTime(item.smodel, "WalkForward: Loop Start");
+			//a.startTime = NIFLoader::getSingletonPtr()->getTime(item.smodel, "IdleSneak: Start");
 				a.startTime = allanim.begin()->getStartTime();
 			a.time = a.startTime;
-			a.loop = true;
+			a.loop = false;
 			
 			//std::cout << "Start:" << a.startTime << "\n";
 			//std::cout << "Stop" << a.stopTime << "\n";
@@ -584,21 +595,20 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
     ent->getAllAnimationStates()->_notifyDirty();
     ent->_updateAnimation();
 	ent->_notifyMoved();
-	if(r.time > r.stopTime)
+	
+	if(r.time > r.stopTime){
+		float startBack = r.startTime + (r.time - r.stopTime);
 		r.time = r.stopTime;
+		if(r.loop)
+			r.time = startBack;
+		
+	}
        for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
        {
              handleAnimationTransform(*allanimiter, r, o);
 
             o++;
        }
-	   if(r.time >= r.stopTime)
-		{
-		if(r.loop){
-		float diff = r.time - r.stopTime;
-		r.time = r.startTime + diff;
-		}
-	}
 	   
 	
 	   if(item.lhand != ""){
