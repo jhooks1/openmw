@@ -187,6 +187,7 @@ bool OMW::Engine::timeIndex( float time, std::vector<float> times, int & i, int 
 			x = ( time - tI ) / ( tJ - tI );
 			return true;
 		}
+		//Reverse animation?
 		else if ( time < tI )
 		{
 			j = i - 1;

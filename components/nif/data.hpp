@@ -426,22 +426,50 @@ public:
 
 class NiMorphData : public Record
 {
+	std::vector<Ogre::Vector3> initialVertices;
+	std::vector<std::vector<Ogre::Vector4>> quads;
+	std::vector<std::vector<Ogre::Vector3>> additionalVertices;
+
+
 public:
   void read(NIFFile *nif)
   {
     int morphCount = nif->getInt();
     int vertCount  = nif->getInt();
     nif->getByte();
-
-    for(int i=0; i<morphCount; i++)
-      {
-        int magic = nif->getInt();
-        nif->getInt();
-        if(magic)
-          // Time, data, forward, backward tangents
-          nif->getFloatLen(4*magic);
-
-        nif->getFloatLen(vertCount*3);
+	int magic = nif->getInt();
+	int type = nif->getInt();
+	for(int i = 0; i < vertCount; i++){
+		float x = nif->getFloat();
+		float y = nif->getFloat();
+		float z = nif->getFloat();
+		initialVertices.push_back(Ogre::Vector3(x, y, z));
+	}
+	
+    for(int i=1; i<morphCount; i++)
+    {
+        magic = nif->getInt();
+        type = nif->getInt();
+		std::vector<Ogre::Vector4> current;
+        for(int i = 0; i < magic; i++){
+        // Time, data, forward, backward tangents
+	        float x = nif->getFloat();
+		    float y = nif->getFloat();
+		    float z = nif->getFloat();
+		    float w = nif->getFloat();
+		    current.push_back(Ogre::Vector4(x,y,z,w));
+          //nif->getFloatLen(4*magic);
+		}
+		if(magic)
+			quads.push_back(current);
+		std::vector<Ogre::Vector3> verts;
+        for(int i = 0; i < vertCount; i++){
+		    float x = nif->getFloat();
+		    float y = nif->getFloat();
+		    float z = nif->getFloat();
+		    verts.push_back(Ogre::Vector3(x, y, z));
+		}
+		additionalVertices.push_back(verts);
       }
   }
 };

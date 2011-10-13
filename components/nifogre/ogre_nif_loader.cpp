@@ -621,7 +621,13 @@ static void vectorMul(const Matrix &A, float *C)
 void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Transformation original, std::vector<std::string> boneSequence)
 {
     assert(shape != NULL);
+	if(!shape->controller.empty())
+	{
+		Nif::NiGeomMorpherController* geo = dynamic_cast<Nif::NiGeomMorpherController*> (shape->controller.getPtr());
+		Nif::NiMorphDataPtr data = geo->data;
 
+		std::cout << "We have a controller";
+	}
 
     // Interpret flags
     bool hidden    = (flags & 0x01) != 0; // Not displayed
