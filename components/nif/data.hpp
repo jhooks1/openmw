@@ -440,6 +440,7 @@ public:
 	int magic = nif->getInt();
 	int type = nif->getInt();
 	for(int i = 0; i < vertCount; i++){
+
 		float x = nif->getFloat();
 		float y = nif->getFloat();
 		float z = nif->getFloat();

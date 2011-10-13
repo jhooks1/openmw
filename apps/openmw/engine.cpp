@@ -104,6 +104,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
         Ogre::Bone* bone = skel->getBone(data.getBonename());
 	
         float x;
+		float x2;
 	    std::vector<Ogre::Quaternion> quats = data.getQuat();
 
         std::vector<float> ttime = data.gettTime();
@@ -116,10 +117,12 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
     
         std::vector<float> rtime = data.getrTime();
         int rindexJ = 0;
-	    timeIndex(a.time, rtime, a.rindexI[slot], rindexJ, x);
+	    timeIndex(a.time, rtime, a.rindexI[slot], rindexJ, x2);
 	    int tindexJ = 0;
 
+
         timeIndex(a.time, ttime, a.tindexI[slot], tindexJ, x);
+
 	
 	    if(translist1.size() > 0){
             Ogre::Vector3 v1 = translist1[a.tindexI[slot]];
@@ -129,7 +132,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
 	    }
 	
 	    if(quats.size() > 0){
-		    Ogre::Quaternion r = Ogre::Quaternion::Slerp(x, quats[a.rindexI[slot]], quats[rindexJ], true);
+		    Ogre::Quaternion r = Ogre::Quaternion::Slerp(x2, quats[a.rindexI[slot]], quats[rindexJ], true);
 		    bone->setOrientation(r);
 	    }
 
@@ -144,13 +147,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
         ent->_updateAnimation();
 	    ent->_notifyMoved();
 	}  
-	if(a.time >= a.stopTime)
-	{
-		if(a.loop){
-		float diff = a.time - a.stopTime;
-		a.time = a.startTime + diff;
-		}
-	}
+	
 }
 
 //timeIndex(a.time, rtime, a.rindexI[slot], rindexJ, x);
@@ -489,6 +486,8 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	ent->_notifyMoved();
 	
 		int o = 0;
+		if(r.time > r.stopTime)
+		r.time = r.stopTime;
 		for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
 		{
 			handleAnimationTransform(*allanimiter, r, o);
@@ -497,6 +496,13 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 			o++;
 		}
+		 if(r.time >= r.stopTime)
+		{
+		if(r.loop){
+		float diff = r.time - r.stopTime;
+		r.time = r.startTime + diff;
+		}
+		 }
 		handleShapes(allshapes, r.base, r.skel);
 		
 		creaturedataiter++;
@@ -578,12 +584,21 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
     ent->getAllAnimationStates()->_notifyDirty();
     ent->_updateAnimation();
 	ent->_notifyMoved();
+	if(r.time > r.stopTime)
+		r.time = r.stopTime;
        for (allanimiter = allanim.begin(); allanimiter != allanim.end(); allanimiter++)
        {
              handleAnimationTransform(*allanimiter, r, o);
 
             o++;
        }
+	   if(r.time >= r.stopTime)
+		{
+		if(r.loop){
+		float diff = r.time - r.stopTime;
+		r.time = r.startTime + diff;
+		}
+	}
 	   
 	
 	   if(item.lhand != ""){
