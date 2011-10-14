@@ -42,6 +42,8 @@ public:
   }
 };
 
+
+
 /// Has name, extra-data and controller
 class Named : public Controlled
 {

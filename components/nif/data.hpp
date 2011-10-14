@@ -424,15 +424,41 @@ public:
   }
 };
 
+
 class NiMorphData : public Record
 {
+	float startTime;
+	float stopTime;
 	std::vector<Ogre::Vector3> initialVertices;
 	std::vector<std::vector<Ogre::Vector4>> quads;
 	std::vector<std::vector<Ogre::Vector3>> additionalVertices;
 
 
 public:
-  void read(NIFFile *nif)
+	  float getStartTime(){
+	     return startTime;
+	  }
+	  float getStopTime(){
+	      return stopTime;
+	  }
+	  void setStartTime(float time){
+			startTime = time;
+	  }
+
+	  void setStopTime(float time){
+			stopTime = time;
+	  }
+	  std::vector<Ogre::Vector3> getInitialVertices(){
+			return initialVertices;
+	  }
+	  std::vector<std::vector<Ogre::Vector4>> getQuads(){
+			return quads;
+	  }
+	   std::vector<std::vector<Ogre::Vector3>> getAdditionalVertices(){
+			return additionalVertices;
+	  }
+	  
+void read(NIFFile *nif)
   {
     int morphCount = nif->getInt();
     int vertCount  = nif->getInt();
@@ -474,6 +500,8 @@ public:
       }
   }
 };
+
+
 
 class NiKeyframeData : public Record
 {

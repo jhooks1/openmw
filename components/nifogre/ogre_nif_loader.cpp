@@ -770,6 +770,22 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
 	
 	Nif::NiTriShapeCopy copy = shape->clone();
+	if(!shape->controller.empty())
+	{
+		//Nif::NiGeomMorpherController* cont = dynamic_cast<Nif::NiGeomMorpherController*> (shape->controller.getPtr());
+		Nif::Controller* cont = shape->controller.getPtr();
+		if(cont->recType == RC_NiGeomMorpherController)
+		{
+			Nif::NiGeomMorpherController* morph = dynamic_cast<Nif::NiGeomMorpherController*> (cont);
+			copy.morph = morph->data.get();
+			copy.morph.setStartTime(morph->timeStart);
+			copy.morph.setStopTime(morph->timeStop);
+			//std::cout << "Size" << morph->data->getInitialVertices().size() << "\n";
+
+		}
+
+				//std::cout << "We have a controller";
+	}
     //use niskindata for the position of vertices.
     if (!shape->skin.empty())
     {
@@ -967,14 +983,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
     if (!hidden)
     {
 		
-		if(!shape->controller.empty())
-		{
-			Nif::NiGeomMorpherController* geo = dynamic_cast<Nif::NiGeomMorpherController*> (shape->controller.getPtr());
-			Nif::NiMorphDataPtr data = geo->data;
-			copy.morph = data.get();
-
-				//std::cout << "We have a controller";
-		}
+		
 	
 
 		shapes.push_back(copy);
@@ -1209,6 +1218,7 @@ void NIFLoader::loadResource(Resource *resource)
     name = resource->getName();
 	std::string lowername = name;
 	std::transform(lowername.begin(), lowername.end(), lowername.begin(), std::tolower);
+	//std::cout << "NAme" << name << "\n";
 	
 	suffix = name.at(name.length() - 2);
 	bool hasAnim = false;
