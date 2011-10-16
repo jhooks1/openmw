@@ -105,8 +105,7 @@ void OMW::Engine::handleAnimationTransform(Nif::NiKeyframeData& data, aindex &a,
 	
         float x;
 		float x2;
-		float x3;
-		float x4;
+	
 	    std::vector<Ogre::Quaternion> quats = data.getQuat();
 
         std::vector<float> ttime = data.gettTime();
@@ -237,8 +236,9 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 
 				std::vector<Ogre::Vector3> initialVertices = copy.morph.getInitialVertices();
 				//Each shape has multiple indices
-				if(initialVertices.size())
+				if(initialVertices.size() && a.time >= copy.morph.getStartTime() && a.time <= copy.morph.getStopTime()  )
 				{
+
 					if(copy.vertices.size() == initialVertices.size())
 					{
 						//Create if it doesn't already exist
