@@ -214,24 +214,88 @@ bool OMW::Engine::timeIndex( float time, std::vector<float> times, int & i, int 
 		return false;
 
 }
-void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre::Entity* creaturemodel, Ogre::SkeletonInstance *skel)
+void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre::Entity* creaturemodel, Ogre::SkeletonInstance *skel, aindex& a)
 {
 	std::vector<Nif::NiTriShapeCopy>::iterator allshapesiter;
 	for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{
 			Nif::NiTriShapeCopy copy = *allshapesiter;
+			std::vector<Ogre::Vector3> allvertices = copy.vertices;
+			std::vector<Ogre::Vector3> allnormals = copy.normals;
+
+
+
 			std::map<unsigned int, bool> vertices;
 			std::map<unsigned int, bool> normals;
 			std::vector<Nif::NiSkinData::BoneInfoCopy> boneinfovector =  copy.boneinfo;
 	
 			//std::cout << "Name " << copy.sname << "\n";
-
-			    if(boneinfovector.size() > 0){
-
-				Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
+			Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
 		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_NORMAL));
 			       Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
 		            Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_NORMAL));
+
+				std::vector<Ogre::Vector3> initialVertices = copy.morph.getInitialVertices();
+				//Each shape has multiple indices
+				if(initialVertices.size())
+				{
+					if(copy.vertices.size() == initialVertices.size())
+					{
+						//Create if it doesn't already exist
+						if(a.shapeIndexI.size() == a.shapeNumber)
+						{
+							std::vector<int> vec;
+							a.shapeIndexI.push_back(vec);
+						}
+
+						float x;
+						for (int i = 0; i < copy.morph.getAdditionalVertices().size(); i++){
+							int j = 0;
+							if(a.shapeIndexI[a.shapeNumber].size() <= i)
+								a.shapeIndexI[a.shapeNumber].push_back(0);
+
+
+							if(timeIndex(a.time,copy.morph.getRelevantTimes()[i],(a.shapeIndexI[a.shapeNumber])[i], j, x)){
+							int indexI = (a.shapeIndexI[a.shapeNumber])[i];
+							std::vector<Ogre::Vector3> relevantData = (copy.morph.getRelevantData()[i]);
+							float v1 = relevantData[indexI].x;
+							float v2 = relevantData[j].x;
+							float t = v1 + (v2 - v1) * x;
+							if ( t < 0 ) t = 0;
+							if ( t > 1 ) t = 1;
+						    if( t != 0 && initialVertices.size() == copy.morph.getAdditionalVertices()[i].size())
+							{
+								for (int v = 0; v < initialVertices.size(); v++){
+									initialVertices[v] += ((copy.morph.getAdditionalVertices()[i])[v]) * t;
+								}
+							}
+
+							}
+
+							
+
+						}
+						//After everything, write everything out
+						
+						/*
+						for(int i = 0; i < initialVertices.size(); i++){
+						Ogre::Vector3 current = initialVertices[i];
+						Ogre::Real* addr = pReal + i * 3;
+					    *addr = current.x;
+						*(addr+1) = current.y;
+						*(addr + 2) = current.z;
+
+					}*/
+						allvertices = initialVertices;
+
+						a.shapeNumber++;
+					}
+				}
+
+
+			    if(boneinfovector.size() > 0){
+
+				
 				for (int i = 0; i < boneinfovector.size(); i++)
 				{
 					Nif::NiSkinData::BoneInfoCopy boneinfo = boneinfovector[i];
@@ -245,7 +309,7 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						  unsigned int verIndex = boneinfo.weights[j].vertex;
 						  if(vertices.find(verIndex) == vertices.end())
 						  {
-							  Ogre::Vector3 absVertPos = vecPos + vecRot * copy.vertices[verIndex];
+							  Ogre::Vector3 absVertPos = vecPos + vecRot * allvertices[verIndex];
 							  absVertPos = absVertPos * boneinfo.weights[j].weight;
 							  vertices[verIndex] = true;
 							   Ogre::Real* addr = (pReal + 3 * verIndex);
@@ -258,7 +322,7 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						  else 
 						  {
 							
-							   Ogre::Vector3 absVertPos = vecPos + vecRot * copy.vertices[verIndex];
+							   Ogre::Vector3 absVertPos = vecPos + vecRot * allvertices[verIndex];
 							   absVertPos = absVertPos * boneinfo.weights[j].weight;
 							   Ogre::Vector3 old = Ogre::Vector3(pReal + 3 * verIndex);
 							   absVertPos = absVertPos + old;
@@ -272,7 +336,7 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						  
 						  if(normals.find(verIndex) == normals.end())
 						  {
-							  Ogre::Vector3 absNormalsPos = vecRot * copy.normals[verIndex];
+							  Ogre::Vector3 absNormalsPos = vecRot * allnormals[verIndex];
 							  absNormalsPos = absNormalsPos * boneinfo.weights[j].weight;
 							  normals[verIndex] = true;
 							  Ogre::Real* addr = (pRealNormal + 3 * verIndex);
@@ -282,7 +346,7 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						  }
 						  else
 						  {
-							   Ogre::Vector3 absNormalsPos = vecRot * copy.normals[verIndex];
+							   Ogre::Vector3 absNormalsPos = vecRot * allnormals[verIndex];
 							  absNormalsPos = absNormalsPos * boneinfo.weights[j].weight;
 							 Ogre::Vector3 old = Ogre::Vector3(pRealNormal + 3 * verIndex);
 							 absNormalsPos = absNormalsPos + old;
@@ -347,12 +411,8 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 						scale = shapescale;
 					}
 		
-					Ogre::HardwareVertexBufferSharedPtr vbuf = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(0);
-		            Ogre::Real* pReal = static_cast<Ogre::Real*>(vbuf->lock(Ogre::HardwareBuffer::HBL_DISCARD));
-			        Ogre::HardwareVertexBufferSharedPtr vbufNormal = creaturemodel->getMesh()->getSubMesh(copy.sname)->vertexData->vertexBufferBinding->getBuffer(1);
-		            Ogre::Real* pRealNormal = static_cast<Ogre::Real*>(vbufNormal->lock(Ogre::HardwareBuffer::HBL_DISCARD));
-					std::vector<Ogre::Vector3> allvertices = copy.vertices;
-					std::vector<Ogre::Vector3> allnormals = copy.normals;
+					
+					
 
 					// Computes C = B + AxC*scale
 					 // final_vector = old_vector + old_rotation*new_vector*old_scale/
@@ -375,7 +435,9 @@ void OMW::Engine::handleShapes(std::vector<Nif::NiTriShapeCopy> allshapes, Ogre:
 					}
 
 				}
+				
 		}
+		
 
 		for(allshapesiter = allshapes.begin(); allshapesiter != allshapes.end(); allshapesiter++)
 		{
@@ -452,7 +514,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 			a.startTime = allanim.begin()->getStartTime();
 			
 			a.time = a.startTime ;
-			a.loop = false;
+			a.loop = true;
 			a.first = true;
 			a.base = item.model;
 			a.skel = a.base->getSkeleton();
@@ -472,6 +534,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 		aindex& r = creaturea[i];
 		r.time += evt.timeSinceLastFrame;
+		r.shapeNumber = 0;
 		
 		if(!mOgre.getCamera()->isVisible(item.model->getWorldBoundingBox())){
 		  creaturedataiter++;
@@ -514,7 +577,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 		r.time = r.startTime + diff;
 		}
 		 }
-		handleShapes(allshapes, r.base, r.skel);
+		handleShapes(allshapes, r.base, r.skel, r);
 		
 		creaturedataiter++;
 	}
@@ -571,6 +634,7 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 
 
        aindex& r = npca[i];
+	   r.shapeNumber = 0;
 
 	   
 
@@ -613,31 +677,31 @@ bool OMW::Engine::frameStarted(const Ogre::FrameEvent& evt)
 	
 	   if(item.lhand != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lhand);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
 	   if(item.rhand != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.rhand);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
 	   if(item.chest != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.chest);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
 	   if(item.tail != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.tail);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
 	   if(item.rfoot != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.rfoot);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
 	   if(item.lfoot != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.lfoot);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
 	   if(item.groin != ""){
 	   std::vector<Nif::NiTriShapeCopy> allshapes = NIFLoader::getSingletonPtr()->getShapes(item.groin);
-       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton());
+       handleShapes(allshapes, npcmodel, npcmodel->getSkeleton(), r);
 	   }
        npcdataiter++;
 }
