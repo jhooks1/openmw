@@ -37,6 +37,11 @@ using namespace Mangle::VFS;
 using namespace Misc;
 using namespace NifOgre;
 
+const Matrix44 Matrix44::IDENTITY( 1.0f, 0.0f, 0.0f, 0.0f,
+								   0.0f, 1.0f, 0.0f, 0.0f,
+								   0.0f, 0.0f, 1.0f, 0.0f,
+								   0.0f, 0.0f, 0.0f, 1.0f );
+
 NIFLoader& NIFLoader::getSingleton()
 {
     static NIFLoader instance;
@@ -71,10 +76,24 @@ Quaternion NIFLoader::convertRotation(const Nif::Matrix& rot)
     for (int i=0; i<3; i++)
         for (int j=0; j<3; j++)
             matrix[i][j] = rot.v[i].array[j];
+    Matrix3 mat = Matrix3(matrix);
+   
 
         return Quaternion(Matrix3(matrix));
 }
 
+Matrix3 NIFLoader::convertRotationToMatrix(const Nif::Matrix& rot)
+{
+    Real matrix[3][3];
+
+    for (int i=0; i<3; i++)
+        for (int j=0; j<3; j++)
+            matrix[i][j] = rot.v[i].array[j];
+    Matrix3 mat = Matrix3(matrix);
+   
+
+        return mat;
+}
 // Helper class that computes the bounding box and of a mesh
 class BoundsFinder
 {
@@ -836,6 +855,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         for (std::vector<NiSkinData::BoneInfo>::iterator it = boneList.begin();
                 it != boneList.end(); it++)
         {
+            Matrix44 mat = Matrix44(convertVector3(it->trafo->trans), convertRotationToMatrix(it->trafo->rotation), it->trafo->scale);
             if(mSkel.isNull())
             {
                 std::cout << "No skeleton for :" << shape->skin->bones[boneIndex].name.toString() << std::endl;
@@ -850,6 +870,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
 
 			Nif::NiSkinData::BoneInfoCopy boneinfocopy;
+            
 			boneinfocopy.trafo.rotation = convertRotation(it->trafo->rotation);
 			boneinfocopy.trafo.trans = convertVector3(it->trafo->trans);
 			boneinfocopy.bonename = shape->skin->bones[boneIndex].name.toString();
@@ -857,10 +878,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             copy.boneinfo.push_back(boneinfocopy);
             for (unsigned int i=0; i<it->weights.length; i++)
             {
-				 vecPos = bonePtr->_getDerivedPosition() +
-                bonePtr->_getDerivedOrientation() * convertVector3(it->trafo->trans);
-
-            vecRot = bonePtr->_getDerivedOrientation() * convertRotation(it->trafo->rotation);
+                
+				
                 unsigned int verIndex = (it->weights.ptr + i)->vertex;
 				//boneinfo.weights.push_back(*(it->weights.ptr + i));
                 Nif::NiSkinData::IndividualWeight ind;
@@ -881,52 +900,54 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 if (vertexPosAbsolut[verIndex] == false)
                 {
                     //apply transformation to the vertices
-                    Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
-					absVertPos = absVertPos * (it->weights.ptr + i)->weight;
+                    //Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
+					//absVertPos = absVertPos * (it->weights.ptr + i)->weight;
 					vertexPosOriginal[verIndex] = Vector3(ptr + verIndex *3);
-
-					mBoundingBox.merge(absVertPos);
+                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
+					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
                     for (int j=0; j<3; j++)
-                        (ptr + verIndex*3)[j] = absVertPos[j];
+                        (ptr + verIndex*3)[j] = c[j];
 
                     //apply rotation to the normals (not every vertex has a normal)
                     //FIXME: I guessed that vertex[i] = normal[i], is that true?
                     if (verIndex < data->normals.length)
                     {
-                        Vector3 absNormalsPos = vecRot * Vector3(ptrNormals + verIndex *3);
-						absNormalsPos = absNormalsPos * (it->weights.ptr + i)->weight;
-						vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
+                        vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
+                       for(size_t j = 0;j < 3;j++)
+                       {
 
-                        for (int j=0; j<3; j++)
-                            (ptrNormals + verIndex*3)[j] = absNormalsPos[j];
+                            (ptrNormals + verIndex*3)[j] = mat[j][0]*vertexNormalOriginal[verIndex][0] * ind.weight;
+                            (ptrNormals + verIndex*3)[j] += mat[j][1]*vertexNormalOriginal[verIndex][1] * ind.weight;
+                            (ptrNormals + verIndex*3)[j] += mat[j][2]*vertexNormalOriginal[verIndex][2] * ind.weight;
+                        }
+
                     }
 
                     vertexPosAbsolut[verIndex] = true;
                 }
 				else
 				{
-					Vector3 absVertPos = vecPos + vecRot * vertexPosOriginal[verIndex];
-					absVertPos = absVertPos * (it->weights.ptr + i)->weight;
-					Vector3 old = Vector3(ptr + verIndex *3);
-					absVertPos = absVertPos + old;
-
-					mBoundingBox.merge(absVertPos);
+					
+					//mBoundingBox.merge(absVertPos);
+                    //convert it back to float *
+                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
+					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
                     for (int j=0; j<3; j++)
-                        (ptr + verIndex*3)[j] = absVertPos[j];
+                        (ptr + verIndex*3)[j] += c[j];
 
-                    //apply rotation to the normals (not every vertex has a normal)
-                    //FIXME: I guessed that vertex[i] = normal[i], is that true?
-                    if (verIndex < data->normals.length)
+                     if (verIndex < data->normals.length)
                     {
-                        Vector3 absNormalsPos = vecRot * vertexNormalOriginal[verIndex];
-						absNormalsPos = absNormalsPos * (it->weights.ptr + i)->weight;
-						Vector3 oldNormal = Vector3(ptrNormals + verIndex *3);
-						absNormalsPos = absNormalsPos + oldNormal;
+                        vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
+                       for(size_t j = 0;j < 3;j++)
+                       {
 
-                        for (int j=0; j<3; j++)
-                            (ptrNormals + verIndex*3)[j] = absNormalsPos[j];
+                            (ptrNormals + verIndex*3)[j] += mat[j][0]*vertexNormalOriginal[verIndex][0] * ind.weight;
+                            (ptrNormals + verIndex*3)[j] += mat[j][1]*vertexNormalOriginal[verIndex][1] * ind.weight;
+                            (ptrNormals + verIndex*3)[j] += mat[j][2]*vertexNormalOriginal[verIndex][2] * ind.weight;
+                        }
+
                     }
 				}
 
@@ -1450,7 +1471,235 @@ std::map<std::string, float>* NIFLoader::getTextIndices(std::string lowername){
 		return pass;
 }
 
+Matrix44::Matrix44() {
+	*this = Matrix44::IDENTITY;
+}
 
+Matrix44::Matrix44( const Ogre::Matrix3 & r ) {
+	//Set this matrix with rotate and translate information
+	Matrix44 & m = *this;
+	m[0][0] = r[0][0];  m[0][1] = r[0][1];  m[0][2] = r[0][2];  m[0][3] = 0.0f;
+	m[1][0] = r[1][0];  m[1][1] = r[1][1];  m[1][2] = r[1][2];  m[1][3] = 0.0f;
+	m[2][0] = r[2][0];  m[2][1] = r[2][1];  m[2][2] = r[2][2];  m[2][3] = 0.0f;
+	m[3][0] = 0.0f;     m[3][1] = 0.0f;     m[3][2] = 0.0f;     m[3][3] = 1.0f;
+}
+
+Matrix44::Matrix44( const Ogre::Vector3 & t, const Ogre::Matrix3 & r, float scale ) {
+	//Set up a matrix with rotate and translate information
+	Matrix44 rt;
+	rt[0][0] = r[0][0];	rt[0][1] = r[0][1];	rt[0][2] = r[0][2];	rt[0][3] = 0.0f;
+	rt[1][0] = r[1][0];	rt[1][1] = r[1][1];	rt[1][2] = r[1][2];	rt[1][3] = 0.0f;
+	rt[2][0] = r[2][0];	rt[2][1] = r[2][1];	rt[2][2] = r[2][2];	rt[2][3] = 0.0f;
+	rt[3][0] = t.x;     rt[3][1] = t.y;     rt[3][2] = t.z;     rt[3][3] = 1.0f;
+
+	//Set up another matrix with the scale information
+	Matrix44 s;
+	s[0][0] = scale;	s[0][1] = 0.0f;		s[0][2] = 0.0f;		s[0][3] = 0.0f;
+	s[1][0] = 0.0f;		s[1][1] = scale;	s[1][2] = 0.0f;		s[1][3] = 0.0f;
+	s[2][0] = 0.0f;		s[2][1] = 0.0f;		s[2][2] = scale;	s[2][3] = 0.0f;
+	s[3][0] = 0.0f;		s[3][1] = 0.0f;		s[3][2] = 0.0f;		s[3][3] = 1.0f;
+
+	//Multiply the two for the combined transform
+	*this = s * rt;
+}
+
+Ogre::Matrix3 Matrix44::GetRotation() const {
+	const Matrix44 & t = *this;
+
+	Ogre::Matrix3 m( t[0][0], t[0][1], t[0][2],
+	            t[1][0], t[1][1], t[1][2],
+				t[2][0], t[2][1], t[2][2]
+			   );
+
+   	//--Extract Scale from first 3 rows--//
+	float scale[3];
+	for (int r = 0; r < 3; ++r) {
+		//Get scale for this row
+		scale[r] = Ogre::Vector3( m[r][0], m[r][1], m[r][2] ).length();
+
+		//Normalize the row by dividing each factor by scale
+		m[r][0] /= scale[r];
+		m[r][1] /= scale[r];
+		m[r][2] /= scale[r];
+	}
+
+	//Return result
+	return m;
+}
+
+float Matrix44::GetScale() const {
+	const Matrix44 & m = *this;
+	float scale[3];
+	for (int r = 0; r < 3; ++r) {
+		//Get scale for this row
+		scale[r] = Ogre::Vector3( m[r][0], m[r][1], m[r][2] ).length();
+	}
+	 
+	//averate the scale since NIF doesn't support discreet scaling
+	return (scale[0] + scale[1] + scale[2]) / 3.0f;
+}
+
+
+Ogre::Vector3 Matrix44::GetTranslation() const {
+	const Matrix44 & m = *this;
+	return Ogre::Vector3( m[3][0], m[3][1], m[3][2] );
+}
+
+Matrix44 Matrix44::operator*( const Matrix44 & rh ) const {
+	return Matrix44(*this) *= rh;
+}
+Matrix44 & Matrix44::operator*=( const Matrix44 & rh ) {
+	Matrix44 r;
+	Matrix44 & lh = *this;
+	float t;
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			t = 0.0f;
+			for (int k = 0; k < 4; k++) {
+				t += lh[i][k] * rh[k][j];
+			}
+			r[i][j] = t;
+		}
+	}
+
+	*this = r;
+	return *this;
+}
+
+Matrix44 Matrix44::operator*( float rh ) const {
+	return Matrix44(*this) *= rh;
+}
+
+Matrix44 & Matrix44::operator*=( float rh ) {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			(*this)[i][j] *= rh;
+		}
+	}
+	return *this;
+}
+
+Vector3 Matrix44::operator*( const Vector3 & rh ) const {
+	const Matrix44 & t = *this;
+	Vector3 v;
+	//Multiply, ignoring w
+	v.x = rh.x * t[0][0] + rh.y * t[1][0] + rh.z * t[2][0] + t[3][0];
+	v.y = rh.x * t[0][1] + rh.y * t[1][1] + rh.z * t[2][1] + t[3][1];
+	v.z = rh.x * t[0][2] + rh.y * t[1][2] + rh.z * t[2][2] + t[3][2];
+	//answer[3] = rh[0] * t(0,3) + rh[1] * t(1,3) + rh[2] * t(2,3) + t(3,3);
+
+	return v;
+}
+
+Matrix44 Matrix44::operator+( const Matrix44 & rh ) const {
+	return Matrix44(*this) += rh;
+} 
+
+Matrix44 & Matrix44::operator+=( const Matrix44 & rh ) {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			(*this)[i][j] += rh[i][j];
+		}
+	}
+	return *this;
+}
+
+Matrix44 Matrix44::operator-( const Matrix44 & rh ) const {
+	return Matrix44(*this) -= rh;
+} 
+
+Matrix44 & Matrix44::operator-=( const Matrix44 & rh ) {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			(*this)[i][j] -= rh[i][j];
+		}
+	}
+	return *this;
+}
+
+Matrix44 & Matrix44::operator=( const Matrix44 & rh ) {
+	memcpy(rows, rh.rows, sizeof(Float4) * 4);
+	return *this;
+}
+
+bool Matrix44::operator==( const Matrix44 & rh ) const {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			if ( (*this)[i][j] != rh[i][j] )
+				return false;
+		}
+	}
+	return true;
+}
+
+bool Matrix44::operator!=( const Matrix44 & rh ) const {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			if ( (*this)[i][j] != rh[i][j] )
+				return true;
+		}
+	}
+	return false;
+}
+
+Matrix44 Matrix44::Transpose() const {
+	const Matrix44 & t = *this;
+	return Matrix44( t[0][0], t[1][0], t[2][0], t[3][0],
+					 t[0][1], t[1][1], t[2][1], t[3][1],
+					 t[0][2], t[1][2], t[2][2], t[3][2],
+					 t[0][3], t[1][3], t[2][3], t[3][3] );
+}
+
+Ogre::Matrix3 Matrix44::Submatrix( int skip_r, int skip_c ) const {
+	Ogre::Matrix3 sub;
+	int i = 0, j = 0;
+	for (int r = 0; r < 4; r++) {
+		if (r == skip_r)
+			continue;
+		for (int c = 0; c < 4; c++) {
+			if (c == skip_c)
+				continue;
+			sub[i][j] = (*this)[r][c];
+			j++;
+		}
+		i++;
+		j = 0;
+	}
+	return sub;
+}
+
+
+
+
+float Matrix44::Determinant() const {
+	const Matrix44 & t = *this;
+	return  t[0][0] * Submatrix(0, 0).Determinant()
+	      - t[0][1] * Submatrix(0, 1).Determinant()
+	      + t[0][2] * Submatrix(0, 2).Determinant()
+	      - t[0][3] * Submatrix(0, 3).Determinant();
+}
+
+/*
+void Matrix44::Decompose( Vector3 & translate, Matrix & rotation, float & scale ) const {
+   translate = Vector3( (*this)[3][0], (*this)[3][1], (*this)[3][2] );
+   Matrix rotT;
+   for ( int i = 0; i < 3; i++ ){
+      for ( int j = 0; j < 3; j++ ){
+         rotation[i][j] = (*this)[i][j];
+         rotT[j][i] = (*this)[i][j];
+      }
+   }
+   Matrix mtx = rotation * rotT;
+   Float3 scale3( sqrt(mtx[0][0]), sqrt(mtx[1][1]), sqrt(mtx[2][2]) );
+   for ( int i = 0; i < 3; i++ ){
+      for ( int j = 0; j < 3; j++ ){
+         rotation[i][j] /= scale3[i];
+      }
+   }
+
+   //averate the scale since NIF doesn't support discreet scaling
+   scale = (scale3[0] + scale3[1] + scale3[2]) / 3.0f;
+}*/
 
 
 /* More code currently not in use, from the old D source. This was
