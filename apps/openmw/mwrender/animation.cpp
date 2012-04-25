@@ -491,8 +491,13 @@ namespace MWRender{
 
     slot++;
     }
-	skel->_updateTransforms();
-        base->getAllAnimationStates()->_notifyDirty();
+	skel->getManualBonesDirty();
+        skel->_updateTransforms();
+    skel->_notifyManualBonesDirty();
+     base->getAllAnimationStates()->_notifyDirty();
+        base->_updateAnimation();
+    base->_notifyMoved();
+
 }
 }
 

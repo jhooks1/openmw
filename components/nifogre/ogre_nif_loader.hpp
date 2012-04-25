@@ -97,6 +97,20 @@ namespace NifOgre
     very resource intensive, and can safely be done for a large number
     of meshes at load time.
  */
+
+class SkeletonNIFLoader: public Ogre::ManualResourceLoader{
+public:
+    static SkeletonNIFLoader& getSingleton();
+    static SkeletonNIFLoader* getSingletonPtr();
+    SkeletonNIFLoader() : resourceName(""), resourceGroup("General")  {}
+    virtual void loadResource(Ogre::Resource *resource);
+private:
+    Ogre::Skeleton* mSkel;
+    Mangle::VFS::OgreVFS *vfs;
+    std::string resourceGroup;
+    std::string resourceName;
+    
+};
 class NIFLoader : Ogre::ManualResourceLoader
 {
     public:

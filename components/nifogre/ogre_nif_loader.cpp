@@ -53,6 +53,18 @@ NIFLoader* NIFLoader::getSingletonPtr()
     return &getSingleton();
 }
 
+SkeletonNIFLoader& SkeletonNIFLoader::getSingleton()
+{
+    static SkeletonNIFLoader instance;
+    return instance;
+}
+
+SkeletonNIFLoader* SkeletonNIFLoader::getSingletonPtr()
+{
+    return &getSingleton();
+}
+
+
 void NIFLoader::warn(string msg)
 {
     std::cerr << "NIFLoader: Warn:" << msg << "\n";
@@ -408,6 +420,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     //  cout << "s:" << shape << "\n";
     NiTriShapeData *data = shape->data.getPtr();
     SubMesh *sub = mesh->createSubMesh(shape->name.toString());
+     
 
     int nextBuf = 0;
 
@@ -419,6 +432,12 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     sub->vertexData = new VertexData();
     sub->vertexData->vertexCount = numVerts;
     sub->useSharedVertices = false;
+     for (std::list<VertexBoneAssignment>::iterator it = vertexBoneAssignments.begin();
+        it != vertexBoneAssignments.end(); it++)
+    {
+            sub->addBoneAssignment(*it);
+    }
+     
 
     VertexDeclaration *decl = sub->vertexData->vertexDeclaration;
     decl->addElement(nextBuf, 0, VET_FLOAT3, VES_POSITION);
@@ -595,11 +614,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 
     //add vertex bone assignments
 
-    for (std::list<VertexBoneAssignment>::iterator it = vertexBoneAssignments.begin();
-        it != vertexBoneAssignments.end(); it++)
-    {
-            sub->addBoneAssignment(*it);
-    }
+  
     if(mSkel.isNull())
        needBoneAssignments.push_back(sub);
 }
@@ -855,7 +870,10 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         for (std::vector<NiSkinData::BoneInfo>::iterator it = boneList.begin();
                 it != boneList.end(); it++)
         {
-            Matrix44 mat = Matrix44(convertVector3(it->trafo->trans), convertRotationToMatrix(it->trafo->rotation), it->trafo->scale);
+            Matrix4 mat = Matrix4(convertRotationToMatrix(it->trafo->rotation));
+            std::cout << "Shape:" << shape->name.toString() << "Trans:" << convertVector3(it->trafo->trans) << "\n";
+
+            mat.makeTransform(convertVector3(it->trafo->trans), Ogre::Vector3(it->trafo->scale,it->trafo->scale,it->trafo->scale), convertRotation(it->trafo->rotation));
             if(mSkel.isNull())
             {
                 std::cout << "No skeleton for :" << shape->skin->bones[boneIndex].name.toString() << std::endl;
@@ -911,6 +929,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
                     //apply rotation to the normals (not every vertex has a normal)
                     //FIXME: I guessed that vertex[i] = normal[i], is that true?
+                    
                     if (verIndex < data->normals.length)
                     {
                         vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
@@ -934,9 +953,9 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
 					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
-                    for (int j=0; j<3; j++)
-                        (ptr + verIndex*3)[j] += c[j];
-
+                   for (int j=0; j<3; j++)
+                     (ptr + verIndex*3)[j] += c[j];
+                   
                      if (verIndex < data->normals.length)
                     {
                         vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
@@ -1216,6 +1235,23 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 			}
     }
 }
+void SkeletonNIFLoader::loadResource(Resource *resource){
+    std::cout << "In skeleton loader\n";
+    mSkel = dynamic_cast<Skeleton*>(resource);
+    assert(mSkel);
+    vfs = new OgreVFS(resourceGroup);
+    resourceName = mSkel->getName();
+    //std::cout << resourceName << "\n";
+    
+    if (!vfs->isFile(resourceName))
+    {
+        std::cout << "File "+resourceName+" not found.\n";
+        return;
+    }
+    NIFFile nif(vfs->open(resourceName), resourceName);
+
+
+}
 
 void NIFLoader::loadResource(Resource *resource)
 {
@@ -1352,14 +1388,17 @@ void NIFLoader::loadResource(Resource *resource)
 	std::vector<std::string> boneSequence;
 
 
-
+    short handle = 0;
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
+    Ogre::Animation* animcore = 0;
+    Ogre::Animation* animcore2 = 0;
+    
     if(addAnim)
     {
         for(int i = 0; i < nif.numRecords(); i++)
         {
             Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(i));
-
+            
             if(f != NULL)
             {
                 hasAnim = true;
@@ -1373,6 +1412,75 @@ void NIFLoader::loadResource(Resource *resource)
                 data->setStopTime(f->timeStop);
 
                 allanim.push_back(data.get());
+                /*
+          std::cout << "Controller's Rtype:" << data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
+
+                if(animcore == 0){
+                std::cout <<"Creating WholeThing\n";
+                animcore = mSkel->createAnimation("WholeThing", f->timeStop);
+                animcore2 = mSkel->createAnimation("WholeThing2", f->timeStop);
+                }
+
+                Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+                std::cout << "The target rec: " << node->name.toString() << "\n";
+                Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle, mSkel->getBone(node->name.toString()));
+                Ogre::NodeAnimationTrack* mTrack2 = animcore2->createNodeTrack(handle++, mSkel->getBone(node->name.toString()));
+
+                std::vector<Ogre::Quaternion> quats = data->getQuat();
+                std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
+                std::vector<float> rtime = data->getrTime();
+                std::vector<float>::iterator rtimeiter = rtime.begin();
+
+                std::vector<float> ttime = data->gettTime();
+                std::vector<float>::iterator ttimeiter = ttime.begin();
+                std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
+                std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+                std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
+                std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+                std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
+                std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+
+
+                float tleft = 0;
+                float rleft = 0.0;
+                float ttotal = 0.0;
+                float rtotal = 0;
+                Ogre::TransformKeyFrame* mKey;
+                Ogre::TransformKeyFrame* mKey2;
+                float tused = 0.0;
+                float rused = 0.0;
+                Ogre::Quaternion lastquat;
+                Ogre::Vector3 lasttrans;
+                bool rend = false;
+                bool tend = false;
+                for (int j = 0 ; j < ttime.size(); j++)
+                {
+                if(data->getTtype() >= 1 && data->getTtype() <= 5)
+                {
+                Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
+                Ogre::Vector3 standard = *transiter;
+                if(data->getTtype() == 2)
+                standard = *transiter * *transiter2 * *transiter3;
+
+                mKey->setTranslate(standard);
+                transiter++;
+                transiter2++;
+                transiter3++;
+                ttimeiter++;
+                }
+                }
+                for (int j = 0 ; j < rtime.size(); j++)
+                {
+                if(data->getRtype() >= 1 && data->getRtype() <= 5)
+                {
+                Ogre::TransformKeyFrame* mKey2 = mTrack2->createNodeKeyFrame(*rtimeiter);
+                Ogre::Quaternion standard = *quatIter;
+
+                mKey2->setRotation(standard);
+                quatIter++;
+                rtimeiter++;
+                }
+                }*/
             }
         }
     }
@@ -1412,8 +1520,11 @@ void NIFLoader::loadResource(Resource *resource)
         }
 		//Don't link on npc parts to eliminate redundant skeletons
 		//Will have to be changed later slightly for robes/skirts
-		if(linkSkeleton)
+		if(linkSkeleton){
+            mSkel->setBindingPose();
 			mesh->_notifySkeleton(mSkel);
+            
+        }
     }
 }
 
@@ -1426,9 +1537,20 @@ MeshPtr NIFLoader::load(const std::string &name,
 {
 
     MeshManager *m = MeshManager::getSingletonPtr();
+    SkeletonManager *s = SkeletonManager::getSingletonPtr();
     // Check if the resource already exists
     ResourcePtr ptr = m->getByName(name, group);
+    ResourcePtr ptrSkel = s->getByName(name, group);
     MeshPtr themesh;
+    SkeletonPtr theskel;
+    if (!ptrSkel.isNull()){
+            theskel = SkeletonPtr(ptrSkel);
+    }
+    else // Nope, create a new one.
+    {
+        
+        theskel = SkeletonManager::getSingleton().create(name, group, true, SkeletonNIFLoader::getSingletonPtr());
+    }
     if (!ptr.isNull()){
             themesh = MeshPtr(ptr);
     }
@@ -1436,6 +1558,9 @@ MeshPtr NIFLoader::load(const std::string &name,
     {
         themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
     }
+    if(!SkeletonManager::getSingleton().getByName(theskel->getName()).isNull())
+        std::cout << "Not null";
+
     return themesh;
 }
 
