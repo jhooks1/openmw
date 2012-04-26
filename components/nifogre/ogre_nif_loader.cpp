@@ -1235,6 +1235,9 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 			}
     }
 }
+void buildBones(Nif::Node *node, Ogre::Bone *parentBone){
+    ;
+}
 void SkeletonNIFLoader::loadResource(Resource *resource){
     std::cout << "In skeleton loader\n";
     mSkel = dynamic_cast<Skeleton*>(resource);
@@ -1548,18 +1551,29 @@ MeshPtr NIFLoader::load(const std::string &name,
     }
     else // Nope, create a new one.
     {
-        
-        theskel = SkeletonManager::getSingleton().create(name, group, true, SkeletonNIFLoader::getSingletonPtr());
+
+        //Ogre::ResourceGroupManager *resMgr = Ogre::ResourceGroupManager::getSingletonPtr();
+        OgreVFS* vfs = new OgreVFS(group);
+        NIFFile nif(vfs->open(name), name);
+        for(int i = 0; i < nif.numRecords(); i++){
+            Nif::Node *node = dynamic_cast<Nif::Node*>(nif.getRecord(i));
+            if(node != NULL && node->recType == RC_NiNode && (node->name == "Bip01" || node->name == "Root Bone")){  //root node, create a skeleton
+                theskel = SkeletonManager::getSingleton().create(name, group, true, SkeletonNIFLoader::getSingletonPtr());
+                break;
+            }
+        }
     }
     if (!ptr.isNull()){
             themesh = MeshPtr(ptr);
     }
     else // Nope, create a new one.
     {
-        themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+            themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+            if(!theskel.isNull())
+                themesh->setSkeletonName(name);
     }
-    if(!SkeletonManager::getSingleton().getByName(theskel->getName()).isNull())
-        std::cout << "Not null";
+   // if(!SkeletonManager::getSingleton().getByName(theskel->getName()).isNull())
+     //   std::cout << "Not null";
 
     return themesh;
 }

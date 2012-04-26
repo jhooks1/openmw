@@ -109,6 +109,8 @@ private:
     Mangle::VFS::OgreVFS *vfs;
     std::string resourceGroup;
     std::string resourceName;
+    bool inSkeletonTree;
+    void buildBones(Nif::Node *node, Ogre::Bone *parentBone);
     
 };
 class NIFLoader : Ogre::ManualResourceLoader
