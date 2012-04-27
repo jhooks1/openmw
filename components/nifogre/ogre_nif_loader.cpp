@@ -76,6 +76,23 @@ void NIFLoader::fail(string msg)
     assert(1);
 }
 
+Vector3 SkeletonNIFLoader::convertVector3(const Nif::Vector& vec)
+{
+    return Ogre::Vector3(vec.array);
+}
+
+Quaternion SkeletonNIFLoader::convertRotation(const Nif::Matrix& rot)
+{
+    Real matrix[3][3];
+
+    for (int i=0; i<3; i++)
+        for (int j=0; j<3; j++)
+            matrix[i][j] = rot.v[i].array[j];
+    Matrix3 mat = Matrix3(matrix);
+   
+
+        return Quaternion(Matrix3(matrix));
+}
 Vector3 NIFLoader::convertVector3(const Nif::Vector& vec)
 {
     return Ogre::Vector3(vec.array);
@@ -1171,9 +1188,10 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
+            boneSequence.push_back(name);
             if(!mSkel->hasBone(name))
             {
-                boneSequence.push_back(name);
+                
                 bone = mSkel->createBone(name);
 
                 if (parentBone)
@@ -1235,11 +1253,52 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 			}
     }
 }
-void buildBones(Nif::Node *node, Ogre::Bone *parentBone){
-    ;
+void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
+    Bone *bone = 0;
+     if (node->recType == RC_NiNode)
+    {
+        //FIXME: "Bip01" isn't every time the root bone
+        if (node->name == "Bip01" || node->name == "Root Bone")  //root node, create a skeleton
+        {
+            inTheSkeletonTree = true;
+        }
+        else if (!parentBone)
+            inTheSkeletonTree = false;
+         
+        if (inTheSkeletonTree)     //if there is a skeleton
+        {
+            std::string name = node->name.toString();
+
+            // Quick-n-dirty workaround for the fact that several
+            // bones may have the same name.
+            if(!mSkel->hasBone(name))
+            {
+                bone = mSkel->createBone(name);
+
+                if (parentBone)
+                  parentBone->addChild(bone);
+
+                bone->setInheritOrientation(true);
+                bone->setPosition(convertVector3(node->trafo->pos));
+                bone->setOrientation(convertRotation(node->trafo->rotation));
+            }
+        }
+    }
+      if (node->recType == RC_NiNode)
+    {
+        NodeList &list = ((NiNode*)node)->children;
+        int n = list.length();
+        for (int i = 0; i<n; i++)
+        {
+
+            if (list.has(i))
+                buildBones(&list[i],bone);
+        }
+    }
 }
 void SkeletonNIFLoader::loadResource(Resource *resource){
     std::cout << "In skeleton loader\n";
+    
     mSkel = dynamic_cast<Skeleton*>(resource);
     assert(mSkel);
     vfs = new OgreVFS(resourceGroup);
@@ -1252,6 +1311,17 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
         return;
     }
     NIFFile nif(vfs->open(resourceName), resourceName);
+     if (nif.numRecords() < 1)
+    {
+        std::cout << "Found no records in NIF.\n";
+        return;
+    }
+
+    // The first record is assumed to be the root node
+    Record *r = nif.getRecord(0);
+    assert(r != NULL);
+    Nif::Node *node = dynamic_cast<Nif::Node*>(r);
+    buildBones(node, 0);
 
 
 }

@@ -104,12 +104,15 @@ public:
     static SkeletonNIFLoader* getSingletonPtr();
     SkeletonNIFLoader() : resourceName(""), resourceGroup("General")  {}
     virtual void loadResource(Ogre::Resource *resource);
+    Ogre::Vector3 convertVector3(const Nif::Vector& vec);
+        Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
 private:
     Ogre::Skeleton* mSkel;
     Mangle::VFS::OgreVFS *vfs;
     std::string resourceGroup;
     std::string resourceName;
-    bool inSkeletonTree;
+    
+    bool inTheSkeletonTree;
     void buildBones(Nif::Node *node, Ogre::Bone *parentBone);
     
 };
