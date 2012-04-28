@@ -1177,7 +1177,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         {
             inTheSkeletonTree = true;
 
-            mSkel = SkeletonManager::getSingleton().create(getSkeletonName(), resourceGroup, true);
+            
         }
         else if (!mSkel.isNull() && !parentBone)
             inTheSkeletonTree = false;
@@ -1189,17 +1189,11 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
             boneSequence.push_back(name);
-            if(!mSkel->hasBone(name))
+            if(mSkel->hasBone(name))
             {
                 
-                bone = mSkel->createBone(name);
+                bone = mSkel->getBone(name);
 
-                if (parentBone)
-                  parentBone->addChild(bone);
-
-                bone->setInheritOrientation(true);
-                bone->setPosition(convertVector3(node->trafo->pos));
-                bone->setOrientation(convertRotation(node->trafo->rotation));
             }
         }
     }
@@ -1282,6 +1276,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 bone->setPosition(convertVector3(node->trafo->pos));
                 bone->setOrientation(convertRotation(node->trafo->rotation));
             }
+            else
+                bone = mSkel->getBone(name);
         }
     }
       if (node->recType == RC_NiNode)
@@ -1328,6 +1324,7 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
 
 void NIFLoader::loadResource(Resource *resource)
 {
+    std::cout << "In load resource" << resource->getName() << "\n";
     inTheSkeletonTree = false;
     	allanim.clear();
 	shapes.clear();
@@ -1417,6 +1414,14 @@ void NIFLoader::loadResource(Resource *resource)
 
     // Get the mesh
     mesh = dynamic_cast<Mesh*>(resource);
+    std::cout << "Before request\n";
+    Ogre::SkeletonManager *skelMgr = Ogre::SkeletonManager::getSingletonPtr();
+        mSkel = skelMgr->getByName(mesh->getSkeletonName());
+
+        if(mSkel.isNull())
+            std::cout << "Skel is null\n";
+        else
+            std::cout << "Skel is Not null" << mSkel->getNumBones() << "\n";
     assert(mesh);
 
     // Look it up
@@ -1594,8 +1599,6 @@ void NIFLoader::loadResource(Resource *resource)
 		//Don't link on npc parts to eliminate redundant skeletons
 		//Will have to be changed later slightly for robes/skirts
 		if(linkSkeleton){
-            mSkel->setBindingPose();
-			mesh->_notifySkeleton(mSkel);
             
         }
     }
