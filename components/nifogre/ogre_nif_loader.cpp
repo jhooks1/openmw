@@ -1490,8 +1490,8 @@ void NIFLoader::loadResource(Resource *resource)
                 data->setStopTime(f->timeStop);
 
                 allanim.push_back(data.get());
-                /*
-          std::cout << "Controller's Rtype:" << data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
+               
+          //std::cout << "Controller's Rtype:" << data->getRtype() << "Stype: " << data->getStype() << "Ttype:" << data->getTtype() << "\n";
 
                 if(animcore == 0){
                 std::cout <<"Creating WholeThing\n";
@@ -1501,8 +1501,8 @@ void NIFLoader::loadResource(Resource *resource)
 
                 Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
                 std::cout << "The target rec: " << node->name.toString() << "\n";
-                Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle, mSkel->getBone(node->name.toString()));
-                Ogre::NodeAnimationTrack* mTrack2 = animcore2->createNodeTrack(handle++, mSkel->getBone(node->name.toString()));
+                Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle++, mSkel->getBone(node->name.toString()));
+            
 
                 std::vector<Ogre::Quaternion> quats = data->getQuat();
                 std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
@@ -1523,42 +1523,58 @@ void NIFLoader::loadResource(Resource *resource)
                 float rleft = 0.0;
                 float ttotal = 0.0;
                 float rtotal = 0;
-                Ogre::TransformKeyFrame* mKey;
-                Ogre::TransformKeyFrame* mKey2;
+                
+                
                 float tused = 0.0;
                 float rused = 0.0;
                 Ogre::Quaternion lastquat;
                 Ogre::Vector3 lasttrans;
                 bool rend = false;
                 bool tend = false;
-                for (int j = 0 ; j < ttime.size(); j++)
+                
+                if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
                 {
-                if(data->getTtype() >= 1 && data->getTtype() <= 5)
+                    Ogre::Quaternion curquat(Ogre::Quaternion::IDENTITY);
+                    Ogre::Vector3 curtrans(0.0f, 0.0f, 0.0f);
+                    float curscale = 1.0f;
+                while(quatIter != quats.end() || transiter != translist1.end())
                 {
-                Ogre::TransformKeyFrame* mKey = mTrack->createNodeKeyFrame(*ttimeiter);
-                Ogre::Vector3 standard = *transiter;
-                if(data->getTtype() == 2)
-                standard = *transiter * *transiter2 * *transiter3;
+                    float curtime = f->timeStop;
+                    if(quatIter != quats.end())
+                        curtime = std::min(curtime, *rtimeiter);
+                    if(transiter != translist1.end())
+                        curtime = std::min(curtime, *ttimeiter);
+                   
 
-                mKey->setTranslate(standard);
-                transiter++;
-                transiter2++;
-                transiter3++;
-                ttimeiter++;
-                }
-                }
-                for (int j = 0 ; j < rtime.size(); j++)
-                {
-                if(data->getRtype() >= 1 && data->getRtype() <= 5)
-                {
-                Ogre::TransformKeyFrame* mKey2 = mTrack2->createNodeKeyFrame(*rtimeiter);
-                Ogre::Quaternion standard = *quatIter;
+                    if(curtime >= f->timeStop)
+                        break;
 
-                mKey2->setRotation(standard);
-                quatIter++;
-                rtimeiter++;
+                    // Get the latest quaternion, translation, and scale for the
+                    // current time
+                    while(quatIter != quats.end() && curtime >= *rtimeiter)
+                    {
+                        curquat = *quatIter;
+                        quatIter++; rtimeiter++;
+                    }
+                    while(transiter != translist1.end() && curtime >= *ttimeiter)
+                    {
+                        curtrans = *transiter;
+                        transiter++; ttimeiter++;
+                    }
+                    
+
+                    if(curtime < f->timeStart)
+                        continue;
+
+                    Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
+                    kframe->setRotation(curquat);
+                    kframe->setTranslate(curtrans);
+                    kframe->setScale(Ogre::Vector3(curscale));
                 }
-                }*/
+                }
+                
+                
+             
             }
         }
     }
@@ -1598,9 +1614,7 @@ void NIFLoader::loadResource(Resource *resource)
         }
 		//Don't link on npc parts to eliminate redundant skeletons
 		//Will have to be changed later slightly for robes/skirts
-		if(linkSkeleton){
-            
-        }
+		
     }
 }
 

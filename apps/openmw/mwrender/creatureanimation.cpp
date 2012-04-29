@@ -79,11 +79,9 @@ void CreatureAnimation::runAnimation(float timepassed){
         }
 
         Ogre::AnimationState *mAnimationState = base->getAnimationState("WholeThing");
-        mAnimationState->setWeight(.5);
-        mAnimationState->setLoop(true);
 
         mAnimationState->setEnabled(true); 
-        mAnimationState->addTime(timepassed);
+      mAnimationState->addTime(timepassed);
         //handleAnimationTransforms();
         //handleShapes(shapes, base, base->getSkeleton());
 
