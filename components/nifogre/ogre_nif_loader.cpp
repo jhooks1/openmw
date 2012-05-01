@@ -887,7 +887,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         for (std::vector<NiSkinData::BoneInfo>::iterator it = boneList.begin();
                 it != boneList.end(); it++)
         {
-            Matrix4 mat = Matrix4(convertRotationToMatrix(it->trafo->rotation));
+            Matrix4 mat = Matrix4();
             std::cout << "Shape:" << shape->name.toString() << "Trans:" << convertVector3(it->trafo->trans) << "\n";
 
             mat.makeTransform(convertVector3(it->trafo->trans), Ogre::Vector3(it->trafo->scale,it->trafo->scale,it->trafo->scale), convertRotation(it->trafo->rotation));
@@ -1273,8 +1273,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                   parentBone->addChild(bone);
 
                 bone->setInheritOrientation(true);
-                bone->setPosition(convertVector3(node->trafo->pos));
-                bone->setOrientation(convertRotation(node->trafo->rotation));
+                //bone->setPosition(Ogre::Vector3(0,0,0));
+                //bone->setOrientation(Ogre::Quaternion::ZERO);
             }
             else
                 bone = mSkel->getBone(name);
@@ -1497,11 +1497,14 @@ void NIFLoader::loadResource(Resource *resource)
                 std::cout <<"Creating WholeThing\n";
                 animcore = mSkel->createAnimation("WholeThing", f->timeStop);
                 animcore2 = mSkel->createAnimation("WholeThing2", f->timeStop);
+                for (int i = 0; i < mSkel->getNumBones(); i++)
+                    animcore->createNodeTrack(i, mSkel->getBone(i));
                 }
 
                 Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
                 std::cout << "The target rec: " << node->name.toString() << "\n";
-                Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(handle++, mSkel->getBone(node->name.toString()));
+                Ogre::Bone* bone = mSkel->getBone(node->name.toString());
+                Ogre::NodeAnimationTrack* mTrack = animcore->getNodeTrack(bone->getHandle());
             
 
                 std::vector<Ogre::Quaternion> quats = data->getQuat();
@@ -1577,6 +1580,7 @@ void NIFLoader::loadResource(Resource *resource)
              
             }
         }
+        std::cout << "Handle" << handle << "\n";
     }
     // set the bounding value.
     if (bounds.isValid())
