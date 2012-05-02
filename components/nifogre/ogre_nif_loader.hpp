@@ -147,6 +147,7 @@ class NIFLoader : Ogre::ManualResourceLoader
         NIFLoader(NIFLoader& n) {}
 
         void calculateTransform();
+        bool timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x );
 
 
         void warn(std::string msg);
@@ -214,6 +215,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 		std::vector<Nif::NiTriShapeCopy> mS;
         std::vector<Ogre::SubMesh*> needBoneAssignments;
         bool inTheSkeletonTree;
+       
         
 
 };

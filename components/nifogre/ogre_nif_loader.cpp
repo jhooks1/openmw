@@ -1321,9 +1321,66 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
 
 }
 
+bool NIFLoader::timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x ){
+	int count;
+	if (  (count = times.size()) > 0 )
+	{
+		if ( time <= times[0] )
+		{
+			i = j = 0;
+			x = 0.0;
+			return true;
+		}
+		if ( time >= times[count - 1] )
+		{
+			i = j = count - 1;
+			x = 0.0;
+			return true;
+		}
+
+		if ( i < 0 || i >= count )
+			i = 0;
+
+		float tI = times[i];
+		if ( time > tI )
+		{
+			j = i + 1;
+			float tJ;
+			while ( time >= ( tJ = times[j]) )
+			{
+				i = j++;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else if ( time < tI )
+		{
+			j = i - 1;
+			float tJ;
+			while ( time <= ( tJ = times[j] ) )
+			{
+				i = j--;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else
+		{
+			j = i;
+			x = 0.0;
+			return true;
+		}
+	}
+	else
+		return false;
+
+}
+
 void NIFLoader::loadResource(Resource *resource)
 {
-    std::cout << "In load resource" << resource->getName() << "\n";
+   
     inTheSkeletonTree = false;
     	allanim.clear();
 	shapes.clear();
@@ -1413,14 +1470,11 @@ void NIFLoader::loadResource(Resource *resource)
 
     // Get the mesh
     mesh = dynamic_cast<Mesh*>(resource);
-    std::cout << "Before request\n";
+    
     Ogre::SkeletonManager *skelMgr = Ogre::SkeletonManager::getSingletonPtr();
         mSkel = skelMgr->getByName(mesh->getSkeletonName());
 
-        if(mSkel.isNull())
-            std::cout << "Skel is null\n";
-        else
-            std::cout << "Skel is Not null" << mSkel->getNumBones() << "\n";
+        
     assert(mesh);
 
     // Look it up
@@ -1470,6 +1524,7 @@ void NIFLoader::loadResource(Resource *resource)
     Ogre::Animation* animcore = 0;
     Ogre::Animation* animcore2 = 0;
     
+   
     if(addAnim)
     {
         for(int i = 0; i < nif.numRecords(); i++)
@@ -1496,8 +1551,10 @@ void NIFLoader::loadResource(Resource *resource)
                 std::cout <<"Creating WholeThing\n";
                 animcore = mSkel->createAnimation("WholeThing", f->timeStop);
                 animcore2 = mSkel->createAnimation("WholeThing2", f->timeStop);
+                
                 for (int i = 0; i < mSkel->getNumBones(); i++)
                     animcore->createNodeTrack(i, mSkel->getBone(i));
+                    
                 }
 
                 Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
@@ -1539,13 +1596,21 @@ void NIFLoader::loadResource(Resource *resource)
                     Ogre::Quaternion curquat(Ogre::Quaternion::IDENTITY);
                     Ogre::Vector3 curtrans(0.0f, 0.0f, 0.0f);
                     float curscale = 1.0f;
+                    int rindexI = 0;
+                        int rindexJ = 0;
+                        int tindexI = 0;
+                        int tindexJ = 0;
                 while(quatIter != quats.end() || transiter != translist1.end())
                 {
+                    
                     float curtime = f->timeStop;
                     if(quatIter != quats.end())
                         curtime = std::min(curtime, *rtimeiter);
                     if(transiter != translist1.end())
                         curtime = std::min(curtime, *ttimeiter);
+                    bool rinterpolate = curtime != *rtimeiter;
+                    bool tinterpolate = curtime != *ttimeiter;
+                    
                    
 
                     if(curtime >= f->timeStop)
@@ -1563,23 +1628,51 @@ void NIFLoader::loadResource(Resource *resource)
                         curtrans = *transiter;
                         transiter++; ttimeiter++;
                     }
-                    
+                   
 
                     if(curtime < f->timeStart)
                         continue;
 
                     Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
-                    kframe->setRotation(curquat);
-                    kframe->setTranslate(curtrans);
+                    if(rinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, rtime, rindexI, rindexJ, x);
+                        kframe->setRotation(Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true));
+                    }
+                    else
+                        kframe->setRotation(curquat);
+                    
+                    if(tinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, ttime,tindexI, tindexJ, x);
+
+                        Ogre::Vector3 v1 = translist1[tindexI];
+                        Ogre::Vector3 v2 = translist1[tindexJ];
+                        Ogre::Vector3 t = (v1 + (v2 - v1) * x);
+                        kframe->setTranslate(t);
+                        
+                    }
+                    else
+                        kframe->setTranslate(curtrans);
+
                     kframe->setScale(Ogre::Vector3(curscale));
                 }
+                
                 }
                 
                 
              
             }
         }
-        std::cout << "Handle" << handle << "\n";
+        
     }
     // set the bounding value.
     if (bounds.isValid())
@@ -1604,17 +1697,7 @@ void NIFLoader::loadResource(Resource *resource)
 
      if (!mSkel.isNull() )
     {
-        for(std::vector<Ogre::SubMesh*>::iterator iter = needBoneAssignments.begin(); iter != needBoneAssignments.end(); iter++)
-        {
-            int boneIndex = mSkel->getNumBones() - 1;
-		        VertexBoneAssignment vba;
-                vba.boneIndex = boneIndex;
-                vba.vertexIndex = 0;
-                vba.weight = 1;
-				 
-
-            (*iter)->addBoneAssignment(vba);
-        }
+       ;
 		//Don't link on npc parts to eliminate redundant skeletons
 		//Will have to be changed later slightly for robes/skirts
 		
