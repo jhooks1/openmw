@@ -474,10 +474,7 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
 			const float *pos = data->vertices.ptr + index;
 		    Ogre::Vector3 original = Ogre::Vector3(*pos  ,*(pos+1), *(pos+2));
 			original = mTransform * original;
-			mBoundingBox.merge(original);
-			datamod[index] = original.x;
-			datamod[index+1] = original.y;
-			datamod[index+2] = original.z;
+			
 		}
         vbuf->writeData(0, vbuf->getSizeInBytes(), datamod, false);
         delete [] datamod;
@@ -839,6 +836,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
     float *ptr = (float*)data->vertices.ptr;
     float *optr = ptr;
+    // Add this vertex set to the bounding box
+        bounds.add(optr, numVerts);
 
     std::list<VertexBoneAssignment> vertexBoneAssignments;
 
@@ -860,7 +859,6 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
     //use niskindata for the position of vertices.
     if (!shape->skin.empty())
     {
-
 
 
         // vector that stores if the position of a vertex is absolute
@@ -934,10 +932,12 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
                 if (vertexPosAbsolut[verIndex] == false)
                 {
+                    
                     //apply transformation to the vertices
                     //Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
 					//absVertPos = absVertPos * (it->weights.ptr + i)->weight;
 					vertexPosOriginal[verIndex] = Vector3(ptr + verIndex *3);
+                    mBoundingBox.merge(vertexPosOriginal[verIndex]);
                     Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
 					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
@@ -1052,8 +1052,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
     if (!hidden)
     {
-        // Add this vertex set to the bounding box
-        bounds.add(optr, numVerts);
+        
         if(saveTheShape)
             shapes.push_back(copy);
 
@@ -1599,9 +1598,9 @@ void NIFLoader::loadResource(Resource *resource)
 
     }
 
-    if(flip){
+    /*if(true){
         mesh->_setBounds(mBoundingBox, false);
-    }
+    }*/
 
      if (!mSkel.isNull() )
     {
