@@ -581,8 +581,17 @@ void NIFLoader::createOgreSubMesh(NiTriShape *shape, const String &material, std
     {
             sub->addBoneAssignment(*it);
     }
-    if(mSkel.isNull())
-       needBoneAssignments.push_back(sub);
+    
+}
+SkeletonNIFLoader& SkeletonNIFLoader::getSingleton()
+{
+    static SkeletonNIFLoader instance;
+    return instance;
+}
+
+SkeletonNIFLoader* SkeletonNIFLoader::getSingletonPtr()
+{
+    return &getSingleton();
 }
 
 // Helper math functions. Reinventing linear algebra for the win!
@@ -1120,7 +1129,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         {
             inTheSkeletonTree = true;
 
-            mSkel = SkeletonManager::getSingleton().create(getSkeletonName(), resourceGroup, true);
+         
         }
         else if (!mSkel.isNull() && !parentBone)
             inTheSkeletonTree = false;
@@ -1198,6 +1207,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
 void NIFLoader::loadResource(Resource *resource)
 {
+    std::cout << "Loader " << resource->getName() << "\n";
     inTheSkeletonTree = false;
     	allanim.clear();
 	shapes.clear();
@@ -1287,6 +1297,8 @@ void NIFLoader::loadResource(Resource *resource)
 
     // Get the mesh
     mesh = dynamic_cast<Mesh*>(resource);
+    Ogre::SkeletonManager *skelMgr = Ogre::SkeletonManager::getSingletonPtr();
+        mSkel = skelMgr->getByName(mesh->getSkeletonName());
     assert(mesh);
 
     // Look it up
@@ -1331,7 +1343,7 @@ void NIFLoader::loadResource(Resource *resource)
 	std::vector<std::string> boneSequence;
 
 
-
+    std::cout << "Before handle Node\n";
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
     if(addAnim)
     {
@@ -1376,25 +1388,7 @@ void NIFLoader::loadResource(Resource *resource)
         mesh->_setBounds(mBoundingBox, false);
     }
 
-     if (!mSkel.isNull() )
-    {
-        for(std::vector<Ogre::SubMesh*>::iterator iter = needBoneAssignments.begin(); iter != needBoneAssignments.end(); iter++)
-        {
-            int boneIndex = mSkel->getNumBones() - 1;
-		        VertexBoneAssignment vba;
-                vba.boneIndex = boneIndex;
-                vba.vertexIndex = 0;
-                vba.weight = 1;
-				 
-
-            (*iter)->addBoneAssignment(vba);
-        }
-		//Don't link on npc parts to eliminate redundant skeletons
-		//Will have to be changed later slightly for robes/skirts
-		if(linkSkeleton)
-			mesh->_notifySkeleton(mSkel);
-    }
-}
+std::cout << "At the end\n";}
 
 
 
@@ -1405,16 +1399,46 @@ MeshPtr NIFLoader::load(const std::string &name,
 {
 
     MeshManager *m = MeshManager::getSingletonPtr();
+    SkeletonManager *s = SkeletonManager::getSingletonPtr();
     // Check if the resource already exists
+    ResourcePtr ptrSkel = s->getByName(name, group);
     ResourcePtr ptr = m->getByName(name, group);
+    
     MeshPtr themesh;
+    SkeletonPtr theskel;
+    
+    if (!ptrSkel.isNull()){
+            theskel = SkeletonPtr(ptrSkel);
+    }
+    else // Nope, create a new one.
+    {
+
+        //Ogre::ResourceGroupManager *resMgr = Ogre::ResourceGroupManager::getSingletonPtr();
+        OgreVFS* vfs = new OgreVFS(group);
+        NIFFile nif(vfs->open(name), name);
+        for(int i = 0; i < nif.numRecords(); i++){
+            Nif::Node *node = dynamic_cast<Nif::Node*>(nif.getRecord(i));
+            if(node != NULL && node->recType == RC_NiNode && (node->name == "Bip01" || node->name == "Root Bone")){  //root node, create a skeleton
+                theskel = SkeletonManager::getSingleton().create(name, group, true, SkeletonNIFLoader::getSingletonPtr());
+                theskel->load();
+                break;          
+
+
+            }
+        }
+    }
     if (!ptr.isNull()){
             themesh = MeshPtr(ptr);
     }
     else // Nope, create a new one.
     {
-        themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+            themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+            if(!theskel.isNull())
+                themesh->setSkeletonName(name);
     }
+   // if(!SkeletonManager::getSingleton().getByName(theskel->getName()).isNull())
+     //   std::cout << "Not null";
+
     return themesh;
 }
 
@@ -1450,6 +1474,137 @@ std::map<std::string, float>* NIFLoader::getTextIndices(std::string lowername){
 		return pass;
 }
 
+void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
+    Bone *bone = 0;
+     if (node->recType == RC_NiNode)
+    {
+        //FIXME: "Bip01" isn't every time the root bone
+        if (node->name == "Bip01" || node->name == "Root Bone")  //root node, create a skeleton
+        {
+            inTheSkeletonTree = true;
+        }
+        else if (!parentBone)
+            inTheSkeletonTree = false;
+         
+        if (inTheSkeletonTree)     //if there is a skeleton
+        {
+            std::string name = node->name.toString();
+
+            // Quick-n-dirty workaround for the fact that several
+            // bones may have the same name.
+            if(!mSkel->hasBone(name))
+            {
+                bone = mSkel->createBone(name);
+
+                if (parentBone)
+                  parentBone->addChild(bone);
+
+                bone->setInheritOrientation(true);
+                //bone->setPosition(Ogre::Vector3(0,0,0));
+                //bone->setOrientation(Ogre::Quaternion::ZERO);
+            }
+            else
+                bone = mSkel->getBone(name);
+        }
+    }
+      if (node->recType == RC_NiNode)
+    {
+        NodeList &list = ((NiNode*)node)->children;
+        int n = list.length();
+        for (int i = 0; i<n; i++)
+        {
+
+            if (list.has(i))
+                buildBones(&list[i],bone);
+        }
+    }
+}
+void SkeletonNIFLoader::loadResource(Resource *resource){
+    std::cout << "SkelLoader " << resource->getName() << "\n";
+    
+    mSkel = dynamic_cast<Skeleton*>(resource);
+    assert(mSkel);
+    vfs = new OgreVFS(resourceGroup);
+    resourceName = mSkel->getName();
+    //std::cout << resourceName << "\n";
+    
+    if (!vfs->isFile(resourceName))
+    {
+        std::cout << "File "+resourceName+" not found.\n";
+        return;
+    }
+    NIFFile nif(vfs->open(resourceName), resourceName);
+     if (nif.numRecords() < 1)
+    {
+        std::cout << "Found no records in NIF.\n";
+        return;
+    }
+
+    // The first record is assumed to be the root node
+    Record *r = nif.getRecord(0);
+    assert(r != NULL);
+    Nif::Node *node = dynamic_cast<Nif::Node*>(r);
+    buildBones(node, 0);
+
+
+}
+
+bool NIFLoader::timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x ){
+	int count;
+	if (  (count = times.size()) > 0 )
+	{
+		if ( time <= times[0] )
+		{
+			i = j = 0;
+			x = 0.0;
+			return true;
+		}
+		if ( time >= times[count - 1] )
+		{
+			i = j = count - 1;
+			x = 0.0;
+			return true;
+		}
+
+		if ( i < 0 || i >= count )
+			i = 0;
+
+		float tI = times[i];
+		if ( time > tI )
+		{
+			j = i + 1;
+			float tJ;
+			while ( time >= ( tJ = times[j]) )
+			{
+				i = j++;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else if ( time < tI )
+		{
+			j = i - 1;
+			float tJ;
+			while ( time <= ( tJ = times[j] ) )
+			{
+				i = j--;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else
+		{
+			j = i;
+			x = 0.0;
+			return true;
+		}
+	}
+	else
+		return false;
+
+}
 
 
 

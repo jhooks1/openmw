@@ -5,6 +5,7 @@
 #include <components/nifogre/ogre_nif_loader.hpp>
 #include <components/settings/settings.hpp>
 #include "renderconst.hpp"
+#define M_PI 3.14159265
 
 using namespace MWRender;
 
