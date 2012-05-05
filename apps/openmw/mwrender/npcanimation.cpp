@@ -577,12 +577,13 @@ void NpcAnimation::runAnimation(float timepassed){
                 time = startTime + (time - stopTime);
         }
 
-       handleAnimationTransforms();
+      // handleAnimationTransforms();
 
 
             vecRotPos.clear();
 
 
+            /*
 			if(lFreeFoot.first)
 				handleShapes(lFreeFoot.second, lFreeFoot.first, base->getSkeleton());
 			if(rFreeFoot.first)
@@ -599,7 +600,7 @@ void NpcAnimation::runAnimation(float timepassed){
 				handleShapes(lhand.second, lhand.first, base->getSkeleton());
 			if(rhand.first)
 				handleShapes(rhand.second, rhand.first, base->getSkeleton());
-
+                */
 }
 }
 

@@ -847,7 +847,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 it != boneList.end(); it++)
         {
             Matrix4 mat = Matrix4();
-            std::cout << "Shape:" << shape->name.toString() << "Trans:" << convertVector3(it->trafo->trans) << "\n";
+            
 
             mat.makeTransform(convertVector3(it->trafo->trans), Ogre::Vector3(it->trafo->scale,it->trafo->scale,it->trafo->scale), convertRotation(it->trafo->rotation));
             if(mSkel.isNull())
@@ -1146,20 +1146,13 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if (!mSkel.isNull())     //if there is a skeleton
         {
             std::string name = node->name.toString();
-
+            
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
-            if(!mSkel->hasBone(name))
+            if(mSkel->hasBone(name))
             {
                 boneSequence.push_back(name);
-                bone = mSkel->createBone(name);
-
-                if (parentBone)
-                  parentBone->addChild(bone);
-
-                bone->setInheritOrientation(true);
-                bone->setPosition(convertVector3(node->trafo->pos));
-                bone->setOrientation(convertRotation(node->trafo->rotation));
+                bone = mSkel->getBone(name);
             }
         }
     }
@@ -1216,7 +1209,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
 void NIFLoader::loadResource(Resource *resource)
 {
-    std::cout << "Loader " << resource->getName() << "\n";
+
     inTheSkeletonTree = false;
     	allanim.clear();
 	shapes.clear();
@@ -1352,8 +1345,8 @@ void NIFLoader::loadResource(Resource *resource)
 	std::vector<std::string> boneSequence;
 
 
-    std::cout << "Before handle Node\n";
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
+    Ogre::Animation* animcore = 0;
     if(addAnim)
     {
         for(int i = 0; i < nif.numRecords(); i++)
@@ -1366,15 +1359,137 @@ void NIFLoader::loadResource(Resource *resource)
                 Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
                 Nif::NiKeyframeDataPtr data = f->data;
 
-                if (f->timeStart >= 10000000000000000.0f)
+                if (f->timeStart >= 10000000000000000.0f || f->timeStart == f->timeStop)
                     continue;
                 data->setBonename(o->name.toString());
                 data->setStartTime(f->timeStart);
                 data->setStopTime(f->timeStop);
-
+                
                 allanim.push_back(data.get());
+                 if(animcore == 0){
+                
+                animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
+                
+                for (int i = 0; i < mSkel->getNumBones(); i++)
+                    animcore->createNodeTrack(i, mSkel->getBone(i));
+                    
+                }
+
+                Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+                
+                Ogre::Bone* bone = mSkel->getBone(node->name.toString());
+                Ogre::NodeAnimationTrack* mTrack = animcore->getNodeTrack(bone->getHandle());
+                
+            
+
+                std::vector<Ogre::Quaternion> quats = data->getQuat();
+                std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
+                std::vector<float> rtime = data->getrTime();
+                std::vector<float>::iterator rtimeiter = rtime.begin();
+
+                std::vector<float> ttime = data->gettTime();
+                std::vector<float>::iterator ttimeiter = ttime.begin();
+                std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
+                std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+                std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
+                std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+                std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
+                std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+
+
+                float tleft = 0;
+                float rleft = 0.0;
+                float ttotal = 0.0;
+                float rtotal = 0;
+                
+                
+                float tused = 0.0;
+                float rused = 0.0;
+                Ogre::Quaternion lastquat;
+                Ogre::Vector3 lasttrans;
+                bool rend = false;
+                bool tend = false;
+                
+                if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
+                {
+                    Ogre::Quaternion curquat(Ogre::Quaternion::IDENTITY);
+                    Ogre::Vector3 curtrans(0.0f, 0.0f, 0.0f);
+                    float curscale = 1.0f;
+                    int rindexI = 0;
+                        int rindexJ = 0;
+                        int tindexI = 0;
+                        int tindexJ = 0;
+                        
+                while(quatIter != quats.end() || transiter != translist1.end())
+                {
+                    
+                    float curtime = f->timeStop;
+                    if(quatIter != quats.end())
+                        curtime = std::min(curtime, *rtimeiter);
+                    if(transiter != translist1.end())
+                        curtime = std::min(curtime, *ttimeiter);
+                    bool rinterpolate = false;
+                    bool tinterpolate = false;
+                    
+                    if(ttimeiter != ttime.end())
+                        tinterpolate = curtime != *ttimeiter;
+                    if(rtimeiter != rtime.end())
+                        rinterpolate = curtime != *rtimeiter;
+                   
+                    if(curtime >= f->timeStop)
+                        break;
+
+                    // Get the latest quaternion, translation, and scale for the
+                    // current time
+                    while(quatIter != quats.end() && curtime >= *rtimeiter)
+                    {
+                        curquat = *quatIter;
+                        quatIter++; rtimeiter++;
+                    }
+                    while(transiter != translist1.end() && curtime >= *ttimeiter)
+                    {
+                        curtrans = *transiter;
+                        transiter++; ttimeiter++;
+                    }
+
+                    if(curtime < f->timeStart)
+                        continue;
+
+                    Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
+                    if(rinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, rtime, rindexI, rindexJ, x);
+                        kframe->setRotation(Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true));
+                    }
+                    else
+                        kframe->setRotation(curquat);
+                    
+                    if(tinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, ttime,tindexI, tindexJ, x);
+
+                        Ogre::Vector3 v1 = translist1[tindexI];
+                        Ogre::Vector3 v2 = translist1[tindexJ];
+                        Ogre::Vector3 t = (v1 + (v2 - v1) * x);
+                        kframe->setTranslate(t);
+                        
+                    }
+                    else
+                        kframe->setTranslate(curtrans);
+
+                    kframe->setScale(Ogre::Vector3(curscale));
+                }
             }
         }
+    }
     }
     // set the bounding value.
     if (bounds.isValid())
@@ -1397,7 +1512,7 @@ void NIFLoader::loadResource(Resource *resource)
         mesh->_setBounds(mBoundingBox, false);
     }
 
-std::cout << "At the end\n";}
+}
 
 
 
@@ -1529,7 +1644,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
     }
 }
 void SkeletonNIFLoader::loadResource(Resource *resource){
-    std::cout << "SkelLoader " << resource->getName() << "\n";
+   
     
     mSkel = dynamic_cast<Skeleton*>(resource);
     assert(mSkel);
