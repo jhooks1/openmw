@@ -122,7 +122,8 @@ namespace MWRender{
 
    void Animation::handleShapes(std::vector<Nif::NiTriShapeCopy>* allshapes, Ogre::Entity* creaturemodel, Ogre::SkeletonInstance *skel){
         shapeNumber = 0;
-
+        skel->_updateTransforms();
+        base->getAllAnimationStates()->_notifyDirty();
         if (allshapes == NULL || creaturemodel == NULL || skel == NULL)
         {
             return;
@@ -198,85 +199,8 @@ namespace MWRender{
 				}
 
 
-			    if(verticesToChange->size() > 0){
-
-                for(std::map<int, std::vector<Nif::NiSkinData::IndividualWeight> >::iterator iter = verticesToChange->begin();
-                    iter != verticesToChange->end(); iter++)
-                {
-                    std::vector<Nif::NiSkinData::IndividualWeight> inds = iter->second;
-                    int verIndex = iter->first;
-                    Ogre::Vector3 currentVertex = (*allvertices)[verIndex];
-                    Nif::NiSkinData::BoneInfoCopy* boneinfocopy = &(allshapesiter->boneinfo[inds[0].boneinfocopyindex]);
-                    Ogre::Bone *bonePtr = 0;
-
-
-
-                    Ogre::Vector3 vecPos;
-                    Ogre::Quaternion vecRot;
-					std::map<Nif::NiSkinData::BoneInfoCopy*, PosAndRot>::iterator result = vecRotPos.find(boneinfocopy);
-
-                    if(result == vecRotPos.end()){
-                        bonePtr = skel->getBone(boneinfocopy->bonename);
-
-                        vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfocopy->trafo.trans;
-                        vecRot = bonePtr->_getDerivedOrientation() * boneinfocopy->trafo.rotation;
-
-
-                             PosAndRot both;
-                            both.vecPos = vecPos;
-                            both.vecRot = vecRot;
-                            vecRotPos[boneinfocopy] = both;
-
-                    }
-                    else{
-                        PosAndRot both = result->second;
-                        vecPos = both.vecPos;
-                        vecRot = both.vecRot;
-                    }
-
-                    Ogre::Vector3 absVertPos = (vecPos + vecRot * currentVertex) * inds[0].weight;
-
-
-
-                    for(std::size_t i = 1; i < inds.size(); i++){
-                        boneinfocopy = &(allshapesiter->boneinfo[inds[i].boneinfocopyindex]);
-                        result = vecRotPos.find(boneinfocopy);
-
-
-                        if(result == vecRotPos.end()){
-                            bonePtr = skel->getBone(boneinfocopy->bonename);
-                            vecPos = bonePtr->_getDerivedPosition() + bonePtr->_getDerivedOrientation() * boneinfocopy->trafo.trans;
-                            vecRot = bonePtr->_getDerivedOrientation() * boneinfocopy->trafo.rotation;
-
-                                PosAndRot both;
-                                both.vecPos = vecPos;
-                                both.vecRot = vecRot;
-                                vecRotPos[boneinfocopy] = both;
-
-                        }
-                         else{
-                                PosAndRot both = result->second;
-                                vecPos = both.vecPos;
-                                vecRot = both.vecRot;
-                        }
-
-
-                        absVertPos += (vecPos + vecRot * currentVertex) * inds[i].weight;
-
-
-                    }
-                     Ogre::Real* addr = (pReal + 3 * verIndex);
-							  *addr = absVertPos.x;
-							  *(addr+1) = absVertPos.y;
-				              *(addr+2) = absVertPos.z;
-
-                }
-
-
-
-
-				}
-				else
+			   
+				if(verticesToChange->size() == 0)
 				{
 					//Ogre::Bone *bonePtr = creaturemodel->getSkeleton()->getBone(copy.bonename);
 					Ogre::Quaternion shaperot = copy.trafo.rotation;
@@ -421,11 +345,11 @@ namespace MWRender{
 	    b->setOrientation(Ogre::Real(.3),Ogre::Real(.3),Ogre::Real(.3), Ogre::Real(.3));   //This is a trick
 
         skel->_updateTransforms();
-	    //skel->_notifyManualBonesDirty();
+	    skel->_notifyManualBonesDirty();
 
          base->getAllAnimationStates()->_notifyDirty();
-     //base->_updateAnimation();
-   //base->_notifyMoved();
+     base->_updateAnimation();
+   base->_notifyMoved();
 
 
 
@@ -492,6 +416,10 @@ namespace MWRender{
     }
 	skel->_updateTransforms();
         base->getAllAnimationStates()->_notifyDirty();
+        
+         
+     base->_updateAnimation();
+   base->_notifyMoved();
 }
 }
 

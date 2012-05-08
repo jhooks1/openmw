@@ -79,10 +79,13 @@ void CreatureAnimation::runAnimation(float timepassed){
         }
         Ogre::AnimationState *mAnimationState = base->getAnimationState("WholeThing");
 
+        handleShapes(shapes, base, base->getSkeleton());
         mAnimationState->setEnabled(true); 
         mAnimationState->addTime(timepassed);
+        std::cout << "Time:" << time << "\n";
+        std::cout << "Bone Root:" << base->getSkeleton()->getRootBone()->getPosition() << "\n";
         //handleAnimationTransforms();
-        //handleShapes(shapes, base, base->getSkeleton());
+       
 
 	}
 }

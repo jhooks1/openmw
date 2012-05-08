@@ -136,7 +136,7 @@ NpcAnimation::NpcAnimation(const MWWorld::Ptr& ptr, OEngine::Render::OgreRendere
     base->setRenderQueueGroup(transparent ? RQG_Alpha : RQG_Main);
 
 
-    base->setSkipAnimationStateUpdate(true);   //Magical line of code, this makes the bones
+    //base->setSkipAnimationStateUpdate(true);   //Magical line of code, this makes the bones
                                                //stay in the same place when we skipanim, or open a gui window
 
 
@@ -577,8 +577,10 @@ void NpcAnimation::runAnimation(float timepassed){
                 time = startTime + (time - stopTime);
         }
 
-      // handleAnimationTransforms();
-
+     //handleAnimationTransforms();
+       Ogre::AnimationState *mAnimationState = base->getAnimationState("WholeThing");
+      mAnimationState->setEnabled(true); 
+      mAnimationState->addTime(timepassed);
 
             vecRotPos.clear();
 

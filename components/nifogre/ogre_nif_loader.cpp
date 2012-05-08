@@ -58,6 +58,21 @@ void NIFLoader::fail(string msg)
     std::cerr << "NIFLoader: Fail: "<< msg << std::endl;
     assert(1);
 }
+Vector3 SkeletonNIFLoader::convertVector3(const Nif::Vector& vec)
+{
+    return Ogre::Vector3(vec.array);
+}
+
+Quaternion SkeletonNIFLoader::convertRotation(const Nif::Matrix& rot)
+{
+    Real matrix[3][3];
+
+    for (int i=0; i<3; i++)
+        for (int j=0; j<3; j++)
+            matrix[i][j] = rot.v[i].array[j];
+
+        return Quaternion(Matrix3(matrix));
+}
 
 Vector3 NIFLoader::convertVector3(const Nif::Vector& vec)
 {
@@ -1001,13 +1016,13 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 			int boneIndex;
 			
 				boneIndex = mSkel->getNumBones() - 1;
-			for(int i = 0; i < numVerts; i++){
+			
 		 VertexBoneAssignment vba;
                 vba.boneIndex = boneIndex;
-                vba.vertexIndex = i;
-                vba.weight = 1;
+                vba.vertexIndex = 0;
+                vba.weight = 0;
 				 vertexBoneAssignments.push_back(vba);
-			}
+			
 		}
     }
 
@@ -1145,8 +1160,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
         if (!mSkel.isNull())     //if there is a skeleton
         {
-            std::string name = node->name.toString();
-            
+            std::string bonename = node->name.toString();
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
             if(mSkel->hasBone(name))
@@ -1366,7 +1380,7 @@ void NIFLoader::loadResource(Resource *resource)
                 data->setStopTime(f->timeStop);
                 
                 allanim.push_back(data.get());
-                 if(animcore == 0){
+                if(animcore == 0){
                 
                 animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
                 
@@ -1378,6 +1392,7 @@ void NIFLoader::loadResource(Resource *resource)
                 Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
                 
                 Ogre::Bone* bone = mSkel->getBone(node->name.toString());
+                
                 Ogre::NodeAnimationTrack* mTrack = animcore->getNodeTrack(bone->getHandle());
                 
             
@@ -1488,6 +1503,7 @@ void NIFLoader::loadResource(Resource *resource)
                     kframe->setScale(Ogre::Vector3(curscale));
                 }
             }
+                
         }
     }
     }
@@ -1624,6 +1640,11 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                   parentBone->addChild(bone);
 
                 bone->setInheritOrientation(true);
+                if(node->controller.empty()){
+                    //std::cout << "Name:" << name << " has a controller\n";
+                    bone->setPosition(convertVector3(node->trafo->pos));
+                    bone->setOrientation(convertRotation(node->trafo->rotation));
+                }
                 //bone->setPosition(Ogre::Vector3(0,0,0));
                 //bone->setOrientation(Ogre::Quaternion::ZERO);
             }
@@ -1650,7 +1671,8 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
     assert(mSkel);
     vfs = new OgreVFS(resourceGroup);
     resourceName = mSkel->getName();
-    //std::cout << resourceName << "\n";
+    
+    std::cout << "A resource:" << resourceName << "\n";
     
     if (!vfs->isFile(resourceName))
     {
@@ -1668,6 +1690,7 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
     Record *r = nif.getRecord(0);
     assert(r != NULL);
     Nif::Node *node = dynamic_cast<Nif::Node*>(r);
+    inTheSkeletonTree = false;
     buildBones(node, 0);
 
 
