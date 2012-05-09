@@ -90,6 +90,7 @@ public:
 private:
     Ogre::Skeleton* mSkel;
     Mangle::VFS::OgreVFS *vfs;
+    Ogre::Animation* animcore;
     std::string resourceGroup;
     std::string resourceName;
      bool timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x );

@@ -998,14 +998,21 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		// Computes C = B + AxC*scale
         for (int i=0; i<numVerts; i++)
         {
-            //vectorMulAdd(rot, pos, ptr, scale);
-			Ogre::Vector3 absVertPos = Ogre::Vector3(*(ptr + 3 * i), *(ptr + 3 * i + 1), *(ptr + 3 * i + 2));
-            absVertPos = mat * absVertPos;
-			mBoundingBox.merge(absVertPos);
-             
-                        (ptr + i*3)[0] = absVertPos.x;
-                         (ptr + i*3)[1] = absVertPos.y;
-                          (ptr + i*3)[2] = absVertPos.z;
+            vectorMulAdd(rot, pos, ptr, scale);
+            Ogre::Vector3 absVertPos = Ogre::Vector3(*(ptr + 3 * i), *(ptr + 3 * i + 1), *(ptr + 3 * i + 2));
+            mBoundingBox.merge(absVertPos);
+            ptr += 3;
+        }
+
+        // Remember to rotate all the vertex normals as well
+        if (data->normals.length)
+        {
+            ptr = (float*)data->normals.ptr;
+            for (int i=0; i<numVerts; i++)
+            {
+                vectorMul(rot, ptr);
+                ptr += 3;
+            }
         }
 
         // Remember to rotate all the vertex normals as well
@@ -1546,64 +1553,17 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
             }
             else
                 bone = mSkel->getBone(name);
-        }
-    }
-      if (node->recType == RC_NiNode)
-    {
-        NodeList &list = ((NiNode*)node)->children;
-        int n = list.length();
-        for (int i = 0; i<n; i++)
-        {
-
-            if (list.has(i))
-                buildBones(&list[i],bone);
-        }
-    }
-}
-void SkeletonNIFLoader::loadResource(Resource *resource){
-   
-    
-    mSkel = dynamic_cast<Skeleton*>(resource);
-    assert(mSkel);
-    vfs = new OgreVFS(resourceGroup);
-    resourceName = mSkel->getName();
-    
-    std::cout << "A resource:" << resourceName << "\n";
-    
-    if (!vfs->isFile(resourceName))
-    {
-        std::cout << "File "+resourceName+" not found.\n";
-        return;
-    }
-    NIFFile nif(vfs->open(resourceName), resourceName);
-     if (nif.numRecords() < 1)
-    {
-        std::cout << "Found no records in NIF.\n";
-        return;
-    }
-
-    // The first record is assumed to be the root node
-    Record *r = nif.getRecord(0);
-    assert(r != NULL);
-    Nif::Node *node = dynamic_cast<Nif::Node*>(r);
-    inTheSkeletonTree = false;
-    buildBones(node, 0);
-    Ogre::Animation* animcore = 0;
-    bool hasAnim = false;
-    if(true)
-    {
-        for(int i = 0; i < nif.numRecords(); i++)
-        {
-            Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(i));
+            std::cout << "Handle " << bone->getHandle() << "\n";
+            Nif::NiKeyframeController *f = 0;
+            if(!node->controller.empty())
+                f = dynamic_cast<Nif::NiKeyframeController*>(node->controller.getPtr());
 
             if(f != NULL)
             {
-                hasAnim = true;
                 Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
                 Nif::NiKeyframeDataPtr data = f->data;
 
-                if (f->timeStart >= 10000000000000000.0f || f->timeStart == f->timeStop)
-                    continue;
+                if (!(f->timeStart >= 10000000000000000.0f || f->timeStart == f->timeStop)){
                 data->setBonename(o->name.toString());
                 data->setStartTime(f->timeStart);
                 data->setStopTime(f->timeStop);
@@ -1613,16 +1573,17 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
                 
                 animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
                 
-                for (int i = 0; i < mSkel->getNumBones(); i++)
-                    animcore->createNodeTrack(i, mSkel->getBone(i));
+                
+                    
                     
                 }
-
+                
+                Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
                 Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
                 
-                Ogre::Bone* bone = mSkel->getBone(node->name.toString());
+                //Ogre::Bone* bone = mSkel->getBone(node->name.toString());
                 
-                Ogre::NodeAnimationTrack* mTrack = animcore->getNodeTrack(bone->getHandle());
+               
                 
             
 
@@ -1732,12 +1693,62 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
                     kframe->setScale(Ogre::Vector3(curscale));
                 }
             }
-                
+            }
+        }
+        else if (animcore != 0){
+            Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
+             Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(0);
+             kframe->setRotation(convertRotation(node->trafo->rotation));
+             kframe->setTranslate(convertVector3(node->trafo->pos));
+             kframe->setScale(Ogre::Vector3(node->trafo->scale, node->trafo->scale, node->trafo->scale));
+        }
         }
     }
+      if (node->recType == RC_NiNode)
+    {
+        NodeList &list = ((NiNode*)node)->children;
+        int n = list.length();
+        for (int i = 0; i<n; i++)
+        {
 
+            if (list.has(i))
+                buildBones(&list[i],bone);
+        }
     }
 }
+void SkeletonNIFLoader::loadResource(Resource *resource){
+   
+    animcore = 0;
+    mSkel = dynamic_cast<Skeleton*>(resource);
+    assert(mSkel);
+    vfs = new OgreVFS(resourceGroup);
+    resourceName = mSkel->getName();
+    
+    std::cout << "A resource:" << resourceName << "\n";
+    
+    if (!vfs->isFile(resourceName))
+    {
+        std::cout << "File "+resourceName+" not found.\n";
+        return;
+    }
+    NIFFile nif(vfs->open(resourceName), resourceName);
+     if (nif.numRecords() < 1)
+    {
+        std::cout << "Found no records in NIF.\n";
+        return;
+    }
+
+    // The first record is assumed to be the root node
+    Record *r = nif.getRecord(0);
+    assert(r != NULL);
+    Nif::Node *node = dynamic_cast<Nif::Node*>(r);
+    inTheSkeletonTree = false;
+    buildBones(node, 0);
+
+    bool hasAnim = false;
+   
+}
+  
 
 bool SkeletonNIFLoader::timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x ){
 	int count;
