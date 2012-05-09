@@ -991,18 +991,25 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		copy.trafo.trans = convertVector3(original.pos);
 		copy.trafo.rotation = convertRotation(original.rotation);
 		copy.trafo.scale = original.scale;
+        Matrix4 mat = Matrix4();
+        mat.makeTransform(copy.trafo.trans, Ogre::Vector3(copy.trafo.scale, copy.trafo.scale, copy.trafo.scale), copy.trafo.rotation);
 		//We don't use velocity for anything yet, so it does not need to be saved
 
 		// Computes C = B + AxC*scale
         for (int i=0; i<numVerts; i++)
         {
-            vectorMulAdd(rot, pos, ptr, scale);
+            //vectorMulAdd(rot, pos, ptr, scale);
 			Ogre::Vector3 absVertPos = Ogre::Vector3(*(ptr + 3 * i), *(ptr + 3 * i + 1), *(ptr + 3 * i + 2));
+            absVertPos = mat * absVertPos;
 			mBoundingBox.merge(absVertPos);
-            ptr += 3;
+             
+                        (ptr + i*3)[0] = absVertPos.x;
+                         (ptr + i*3)[1] = absVertPos.y;
+                          (ptr + i*3)[2] = absVertPos.z;
         }
 
         // Remember to rotate all the vertex normals as well
+        /*
         if (data->normals.length)
         {
             ptr = (float*)data->normals.ptr;
@@ -1011,17 +1018,30 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 vectorMul(rot, ptr);
                 ptr += 3;
             }
-        }
+        }*/
 		if(!mSkel.isNull() ){
-			int boneIndex;
+			if(boneSequence.size() > 0)
+            {
+                 Bone* b = mSkel->getBone(boneSequence.size() - 1);
+                for (int i = 0; i < numVerts; i++){
+                   VertexBoneAssignment vba;
+                vba.boneIndex = b->getHandle();
+                vba.vertexIndex = i;
+                vba.weight = 1;
+				 vertexBoneAssignments.push_back(vba);
 			
-				boneIndex = mSkel->getNumBones() - 1;
+                }
+            }
+            else{
+			
+				int boneIndex = 0;
 			
 		 VertexBoneAssignment vba;
                 vba.boneIndex = boneIndex;
                 vba.vertexIndex = 0;
-                vba.weight = 0;
+                vba.weight = 1;
 				 vertexBoneAssignments.push_back(vba);
+            }
 			
 		}
     }
@@ -1380,132 +1400,8 @@ void NIFLoader::loadResource(Resource *resource)
                 data->setStopTime(f->timeStop);
                 
                 allanim.push_back(data.get());
-                if(animcore == 0){
-                
-                animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
-                
-                for (int i = 0; i < mSkel->getNumBones(); i++)
-                    animcore->createNodeTrack(i, mSkel->getBone(i));
-                    
-                }
-
-                Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
-                
-                Ogre::Bone* bone = mSkel->getBone(node->name.toString());
-                
-                Ogre::NodeAnimationTrack* mTrack = animcore->getNodeTrack(bone->getHandle());
-                
-            
-
-                std::vector<Ogre::Quaternion> quats = data->getQuat();
-                std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
-                std::vector<float> rtime = data->getrTime();
-                std::vector<float>::iterator rtimeiter = rtime.begin();
-
-                std::vector<float> ttime = data->gettTime();
-                std::vector<float>::iterator ttimeiter = ttime.begin();
-                std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
-                std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
-                std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
-                std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
-                std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
-                std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
-
-
-                float tleft = 0;
-                float rleft = 0.0;
-                float ttotal = 0.0;
-                float rtotal = 0;
-                
-                
-                float tused = 0.0;
-                float rused = 0.0;
-                Ogre::Quaternion lastquat;
-                Ogre::Vector3 lasttrans;
-                bool rend = false;
-                bool tend = false;
-                
-                if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
-                {
-                    Ogre::Quaternion curquat(Ogre::Quaternion::IDENTITY);
-                    Ogre::Vector3 curtrans(0.0f, 0.0f, 0.0f);
-                    float curscale = 1.0f;
-                    int rindexI = 0;
-                        int rindexJ = 0;
-                        int tindexI = 0;
-                        int tindexJ = 0;
-                        
-                while(quatIter != quats.end() || transiter != translist1.end())
-                {
-                    
-                    float curtime = f->timeStop;
-                    if(quatIter != quats.end())
-                        curtime = std::min(curtime, *rtimeiter);
-                    if(transiter != translist1.end())
-                        curtime = std::min(curtime, *ttimeiter);
-                    bool rinterpolate = false;
-                    bool tinterpolate = false;
-                    
-                    if(ttimeiter != ttime.end())
-                        tinterpolate = curtime != *ttimeiter;
-                    if(rtimeiter != rtime.end())
-                        rinterpolate = curtime != *rtimeiter;
-                   
-                    if(curtime >= f->timeStop)
-                        break;
-
-                    // Get the latest quaternion, translation, and scale for the
-                    // current time
-                    while(quatIter != quats.end() && curtime >= *rtimeiter)
-                    {
-                        curquat = *quatIter;
-                        quatIter++; rtimeiter++;
-                    }
-                    while(transiter != translist1.end() && curtime >= *ttimeiter)
-                    {
-                        curtrans = *transiter;
-                        transiter++; ttimeiter++;
-                    }
-
-                    if(curtime < f->timeStart)
-                        continue;
-
-                    Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
-                    if(rinterpolate)
-                    {
-                        
-                        int slot = bone->getHandle();
-                        
-                        float x = 0;
-                        timeIndex(curtime, rtime, rindexI, rindexJ, x);
-                        kframe->setRotation(Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true));
-                    }
-                    else
-                        kframe->setRotation(curquat);
-                    
-                    if(tinterpolate)
-                    {
-                        
-                        int slot = bone->getHandle();
-                        
-                        float x = 0;
-                        timeIndex(curtime, ttime,tindexI, tindexJ, x);
-
-                        Ogre::Vector3 v1 = translist1[tindexI];
-                        Ogre::Vector3 v2 = translist1[tindexJ];
-                        Ogre::Vector3 t = (v1 + (v2 - v1) * x);
-                        kframe->setTranslate(t);
-                        
-                    }
-                    else
-                        kframe->setTranslate(curtrans);
-
-                    kframe->setScale(Ogre::Vector3(curscale));
-                }
             }
-                
-        }
-    }
+        }       
     }
     // set the bounding value.
     if (bounds.isValid())
@@ -1642,8 +1538,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 bone->setInheritOrientation(true);
                 if(node->controller.empty()){
                     //std::cout << "Name:" << name << " has a controller\n";
-                    bone->setPosition(convertVector3(node->trafo->pos));
-                    bone->setOrientation(convertRotation(node->trafo->rotation));
+                   ;// bone->setPosition(convertVector3(node->trafo->pos));
+                   // bone->setOrientation(convertRotation(node->trafo->rotation));
                 }
                 //bone->setPosition(Ogre::Vector3(0,0,0));
                 //bone->setOrientation(Ogre::Quaternion::ZERO);
@@ -1692,7 +1588,211 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
     Nif::Node *node = dynamic_cast<Nif::Node*>(r);
     inTheSkeletonTree = false;
     buildBones(node, 0);
+    Ogre::Animation* animcore = 0;
+    bool hasAnim = false;
+    if(true)
+    {
+        for(int i = 0; i < nif.numRecords(); i++)
+        {
+            Nif::NiKeyframeController *f = dynamic_cast<Nif::NiKeyframeController*>(nif.getRecord(i));
 
+            if(f != NULL)
+            {
+                hasAnim = true;
+                Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
+                Nif::NiKeyframeDataPtr data = f->data;
+
+                if (f->timeStart >= 10000000000000000.0f || f->timeStart == f->timeStop)
+                    continue;
+                data->setBonename(o->name.toString());
+                data->setStartTime(f->timeStart);
+                data->setStopTime(f->timeStop);
+                
+               
+                if(animcore == 0){
+                
+                animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
+                
+                for (int i = 0; i < mSkel->getNumBones(); i++)
+                    animcore->createNodeTrack(i, mSkel->getBone(i));
+                    
+                }
+
+                Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+                
+                Ogre::Bone* bone = mSkel->getBone(node->name.toString());
+                
+                Ogre::NodeAnimationTrack* mTrack = animcore->getNodeTrack(bone->getHandle());
+                
+            
+
+                std::vector<Ogre::Quaternion> quats = data->getQuat();
+                std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
+                std::vector<float> rtime = data->getrTime();
+                std::vector<float>::iterator rtimeiter = rtime.begin();
+
+                std::vector<float> ttime = data->gettTime();
+                std::vector<float>::iterator ttimeiter = ttime.begin();
+                std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
+                std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+                std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
+                std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+                std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
+                std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+
+
+                float tleft = 0;
+                float rleft = 0.0;
+                float ttotal = 0.0;
+                float rtotal = 0;
+                
+                
+                float tused = 0.0;
+                float rused = 0.0;
+                Ogre::Quaternion lastquat;
+                Ogre::Vector3 lasttrans;
+                bool rend = false;
+                bool tend = false;
+                
+                if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
+                {
+                    Ogre::Quaternion curquat(Ogre::Quaternion::IDENTITY);
+                    Ogre::Vector3 curtrans(0.0f, 0.0f, 0.0f);
+                    float curscale = 1.0f;
+                    int rindexI = 0;
+                        int rindexJ = 0;
+                        int tindexI = 0;
+                        int tindexJ = 0;
+                        
+                while(quatIter != quats.end() || transiter != translist1.end())
+                {
+                    
+                    float curtime = f->timeStop;
+                    if(quatIter != quats.end())
+                        curtime = std::min(curtime, *rtimeiter);
+                    if(transiter != translist1.end())
+                        curtime = std::min(curtime, *ttimeiter);
+                    bool rinterpolate = false;
+                    bool tinterpolate = false;
+                    
+                    if(ttimeiter != ttime.end())
+                        tinterpolate = curtime != *ttimeiter;
+                    if(rtimeiter != rtime.end())
+                        rinterpolate = curtime != *rtimeiter;
+                   
+                    if(curtime >= f->timeStop)
+                        break;
+
+                    // Get the latest quaternion, translation, and scale for the
+                    // current time
+                    while(quatIter != quats.end() && curtime >= *rtimeiter)
+                    {
+                        curquat = *quatIter;
+                        quatIter++; rtimeiter++;
+                    }
+                    while(transiter != translist1.end() && curtime >= *ttimeiter)
+                    {
+                        curtrans = *transiter;
+                        transiter++; ttimeiter++;
+                    }
+
+                    if(curtime < f->timeStart)
+                        continue;
+
+                    Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
+                    if(rinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, rtime, rindexI, rindexJ, x);
+                        kframe->setRotation(Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true));
+                    }
+                    else
+                        kframe->setRotation(curquat);
+                    
+                    if(tinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, ttime,tindexI, tindexJ, x);
+
+                        Ogre::Vector3 v1 = translist1[tindexI];
+                        Ogre::Vector3 v2 = translist1[tindexJ];
+                        Ogre::Vector3 t = (v1 + (v2 - v1) * x);
+                        kframe->setTranslate(t);
+                        
+                    }
+                    else
+                        kframe->setTranslate(curtrans);
+
+                    kframe->setScale(Ogre::Vector3(curscale));
+                }
+            }
+                
+        }
+    }
+
+    }
+}
+
+bool SkeletonNIFLoader::timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x ){
+	int count;
+	if (  (count = times.size()) > 0 )
+	{
+		if ( time <= times[0] )
+		{
+			i = j = 0;
+			x = 0.0;
+			return true;
+		}
+		if ( time >= times[count - 1] )
+		{
+			i = j = count - 1;
+			x = 0.0;
+			return true;
+		}
+
+		if ( i < 0 || i >= count )
+			i = 0;
+
+		float tI = times[i];
+		if ( time > tI )
+		{
+			j = i + 1;
+			float tJ;
+			while ( time >= ( tJ = times[j]) )
+			{
+				i = j++;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else if ( time < tI )
+		{
+			j = i - 1;
+			float tJ;
+			while ( time <= ( tJ = times[j] ) )
+			{
+				i = j--;
+				tI = tJ;
+			}
+			x = ( time - tI ) / ( tJ - tI );
+			return true;
+		}
+		else
+		{
+			j = i;
+			x = 0.0;
+			return true;
+		}
+	}
+	else
+		return false;
 
 }
 

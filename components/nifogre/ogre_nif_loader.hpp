@@ -92,6 +92,7 @@ private:
     Mangle::VFS::OgreVFS *vfs;
     std::string resourceGroup;
     std::string resourceName;
+     bool timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x );
     
     bool inTheSkeletonTree;
     void buildBones(Nif::Node *node, Ogre::Bone *parentBone);
