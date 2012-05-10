@@ -994,17 +994,30 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         Matrix4 mat = Matrix4();
         mat.makeTransform(copy.trafo.trans, Ogre::Vector3(copy.trafo.scale, copy.trafo.scale, copy.trafo.scale), copy.trafo.rotation);
 		//We don't use velocity for anything yet, so it does not need to be saved
-        if(!containsSkel){
+        
 		// Computes C = B + AxC*scale
         for (int i=0; i<numVerts; i++)
         {
-            vectorMulAdd(rot, pos, ptr, scale);
-            Ogre::Vector3 absVertPos = Ogre::Vector3(*(ptr + 3 * i), *(ptr + 3 * i + 1), *(ptr + 3 * i + 2));
+            
+            Ogre::Vector3 absVertPos = mat * Ogre::Vector3(*(ptr + 3 * i), *(ptr + 3 * i + 1), *(ptr + 3 * i + 2));
+            (ptr + i *3)[0] = absVertPos.x;
+            (ptr + i *3)[1] = absVertPos.y;
+            (ptr + i *3)[2] = absVertPos.z;
             mBoundingBox.merge(absVertPos);
-            ptr += 3;
+            if(boneSequence.size() > 0){
+			
+		 VertexBoneAssignment vba;
+                vba.boneIndex = mSkel->getBone(boneSequence[boneSequence.size() - 1])->getHandle();
+                vba.vertexIndex = i;
+                vba.weight = 1;
+				 vertexBoneAssignments.push_back(vba);
+            }
+
+            //ptr += 3;
         }
 
         // Remember to rotate all the vertex normals as well
+        /*
         if (data->normals.length)
         {
             ptr = (float*)data->normals.ptr;
@@ -1013,10 +1026,10 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 vectorMul(rot, ptr);
                 ptr += 3;
             }
-        }
-        }
+        }*/
         
-		if(!mSkel.isNull() ){
+        
+		if(!mSkel.isNull() && vertexBoneAssignments.size() == 0){
 			
            
 			
@@ -1041,7 +1054,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             shapes.push_back(copy);
 
         // Create the submesh
-        if(!shape->skin.empty() || mSkel.isNull())
+        //if(!shape->skin.empty() || mSkel.isNull())
             createOgreSubMesh(shape, material, vertexBoneAssignments);
     }
 }
