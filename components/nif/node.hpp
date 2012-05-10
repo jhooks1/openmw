@@ -96,6 +96,7 @@ public:
 struct NiTriShapeCopy
 {
  std::string sname;
+int shapeNumber;
  std::vector<std::string> boneSequence;
  Nif::NiSkinData::BoneTrafoCopy trafo;
  //Ogre::Quaternion initialBoneRotation;

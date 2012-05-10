@@ -181,14 +181,17 @@ class NIFLoader : Ogre::ManualResourceLoader
         // tell Ogre to look (eg. in zip or rar files.) It's also used to
         // check for the existence of texture files, so we can exchange the
         // extension from .tga to .dds if the texture is missing.
+        
         Mangle::VFS::OgreVFS *vfs;
-
+        int nTriShapes;
+        bool containsSkel;
         std::string verbosePath;
         std::string resourceName;
         std::string resourceGroup;
         Ogre::Matrix4 mTransform;
         Ogre::AxisAlignedBox mBoundingBox;
         bool flip;
+        bool overRide;
         bool mNormaliseNormals;
         bool mFlipVertexWinding;
         bool bNiTri;

@@ -54,6 +54,9 @@ CreatureAnimation::CreatureAnimation(const MWWorld::Ptr& ptr, OEngine::Render::O
         stopTime = transformations->begin()->getStopTime();
 		startTime = transformations->begin()->getStartTime();
 		shapes = (NIFLoader::getSingletonPtr())->getShapes(meshZero);
+        if(shapes){
+            std::cout << "Shapes: " << shapes->size() << "\n";
+        }
         }
         textmappings = NIFLoader::getSingletonPtr()->getTextIndices(meshZero);
         insert->attachObject(base);
