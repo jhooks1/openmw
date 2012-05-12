@@ -47,7 +47,7 @@ class Animation{
 	//Ogre::SkeletonInstance* skel;
      std::vector<Nif::NiTriShapeCopy>* shapes;          //All the NiTriShapeData for a creature
 
-
+     Ogre::AnimationState *mAnimationState;
 
     std::vector<Nif::NiKeyframeData>* transformations;
     std::map<std::string,float>* textmappings;

@@ -54,10 +54,14 @@ CreatureAnimation::CreatureAnimation(const MWWorld::Ptr& ptr, OEngine::Render::O
         stopTime = transformations->begin()->getStopTime();
 		startTime = transformations->begin()->getStartTime();
 		shapes = (NIFLoader::getSingletonPtr())->getShapes(meshZero);
-        if(shapes){
-            std::cout << "Shapes: " << shapes->size() << "\n";
+       
         }
-        }
+        mAnimationState = base->getAnimationState("WholeThing");
+
+        mAnimationState->setEnabled(true);
+        mAnimationState->setLoop(false);
+       
+
         textmappings = NIFLoader::getSingletonPtr()->getTextIndices(meshZero);
         insert->attachObject(base);
     }
@@ -80,14 +84,14 @@ void CreatureAnimation::runAnimation(float timepassed){
             else
                 time = startTime + (time - stopTime);
         }
-        Ogre::AnimationState *mAnimationState = base->getAnimationState("WholeThing");
+       
 
-        mAnimationState->setEnabled(true); 
-        mAnimationState->addTime(timepassed);
-        
+            mAnimationState->setTimePosition(time);
         //handleAnimationTransforms();
        
 
 	}
+    
+
 }
 }

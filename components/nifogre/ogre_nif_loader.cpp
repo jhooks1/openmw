@@ -832,6 +832,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
 	}
     //use niskindata for the position of vertices.
+    float *ptrNormals = (float*)data->normals.ptr;
     if (!shape->skin.empty())
     {
 
@@ -842,7 +843,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 		std::vector<Ogre::Vector3> vertexPosOriginal(numVerts, Ogre::Vector3::ZERO);
 		std::vector<Ogre::Vector3> vertexNormalOriginal(numVerts, Ogre::Vector3::ZERO);
 
-        float *ptrNormals = (float*)data->normals.ptr;
+        
         //the bone from skin->bones[boneIndex] is linked to skin->data->bones[boneIndex]
         //the first one contains a link to the bone, the second vertex transformation
         //relative to the bone
@@ -1003,6 +1004,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
             (ptr + i *3)[0] = absVertPos.x;
             (ptr + i *3)[1] = absVertPos.y;
             (ptr + i *3)[2] = absVertPos.z;
+            mBoundingBox.merge(absVertPos);
+            
             mBoundingBox.merge(absVertPos);
             if(boneSequence.size() > 0){
 			
@@ -1246,7 +1249,6 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
 void NIFLoader::loadResource(Resource *resource)
 {
-    std::cout << "A resource:" << resource->getName() << "\n";
     inTheSkeletonTree = false;
     	allanim.clear();
 	shapes.clear();
@@ -1388,7 +1390,7 @@ void NIFLoader::loadResource(Resource *resource)
 
 
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
-    std::cout << "This many" << shapes.size();
+
     Ogre::Animation* animcore = 0;
     if(addAnim)
     {
@@ -1439,14 +1441,16 @@ void NIFLoader::loadResource(Resource *resource)
 
 
 
-MeshPtr NIFLoader::load(const std::string &name,
+MeshPtr NIFLoader::load(const std::string &name, const std::string &skelName,
                          const std::string &group)
 {
-
+    std::string nSkel = skelName;
+    if(nSkel == "")
+        nSkel = name;
     MeshManager *m = MeshManager::getSingletonPtr();
     SkeletonManager *s = SkeletonManager::getSingletonPtr();
     // Check if the resource already exists
-    ResourcePtr ptrSkel = s->getByName(name, group);
+    ResourcePtr ptrSkel = s->getByName(nSkel, group);
     ResourcePtr ptr = m->getByName(name, group);
     
     MeshPtr themesh;
@@ -1482,7 +1486,7 @@ MeshPtr NIFLoader::load(const std::string &name,
     {
             themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
             if(!theskel.isNull())
-                themesh->setSkeletonName(name);
+                themesh->setSkeletonName(nSkel);
     }
    // if(!SkeletonManager::getSingleton().getByName(theskel->getName()).isNull())
      //   std::cout << "Not null";
@@ -1537,7 +1541,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
         if (inTheSkeletonTree)     //if there is a skeleton
         {
             std::string name = node->name.toString();
-
+            
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
             if(!mSkel->hasBone(name))
@@ -1556,8 +1560,10 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 //bone->setPosition(Ogre::Vector3(0,0,0));
                 //bone->setOrientation(Ogre::Quaternion::ZERO);
             }
-            else
+            else{
+                std::cout << "We've seen this bone before\n";
                 bone = mSkel->getBone(name);
+            }
           
             Nif::NiKeyframeController *f = 0;
             if(!node->controller.empty())
@@ -1572,7 +1578,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 data->setBonename(o->name.toString());
                 data->setStartTime(f->timeStart);
                 data->setStopTime(f->timeStop);
-                
+                //std::cout << "Quat" << data->getQuat().size() << "\n";
+                std::cout << "Trans" << data->getTranslist1().size() << "\n";
                
                 if(animcore == 0){
                 
@@ -1584,7 +1591,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 }
                 
                 Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
-                Nif::Named *node = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+                Nif::Named *node2 = dynamic_cast<Nif::Named*> ( f->target.getPtr());
                 
                 //Ogre::Bone* bone = mSkel->getBone(node->name.toString());
                 
@@ -1622,8 +1629,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 
                 if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
                 {
-                    Ogre::Quaternion curquat(Ogre::Quaternion::IDENTITY);
-                    Ogre::Vector3 curtrans(0.0f, 0.0f, 0.0f);
+                    Ogre::Quaternion curquat(convertRotation(node->trafo->rotation));
+                    Ogre::Vector3 curtrans(convertVector3(node->trafo->pos));
                     float curscale = 1.0f;
                     int rindexI = 0;
                         int rindexJ = 0;
@@ -1728,6 +1735,7 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
     assert(mSkel);
     vfs = new OgreVFS(resourceGroup);
     resourceName = mSkel->getName();
+    std::cout << "Resource" << resourceName << "\n";
     
     
     
@@ -1751,7 +1759,6 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
     buildBones(node, 0);
 
     bool hasAnim = false;
-    mSkel->setBindingPose();
    
 }
   

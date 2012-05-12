@@ -159,6 +159,11 @@ NpcAnimation::NpcAnimation(const MWWorld::Ptr& ptr, OEngine::Render::OgreRendere
             insert->scale(race->data.height.female, race->data.height.female, race->data.height.female);
         else
             insert->scale(race->data.height.male, race->data.height.male, race->data.height.male);
+        mAnimationState = base->getAnimationState("WholeThing");
+
+        mAnimationState->setEnabled(true);
+        mAnimationState->setLoop(false);
+        
         updateParts();
 
 }
@@ -531,17 +536,19 @@ void NpcAnimation::insertFootPart(int type, const std::string &mesh){
 std::pair<Ogre::Entity*, std::vector<Nif::NiTriShapeCopy>*> NpcAnimation::insertFreePart(const std::string &mesh, const std::string suffix){
 
     std::string meshNumbered = mesh + getUniqueID(mesh + suffix) + suffix;
-    NIFLoader::load(meshNumbered);
+     std::string smodel = "meshes\\base_anim.nif";
+		if(isBeast)
+			smodel = "meshes\\base_animkna.nif";
+    NIFLoader::load(meshNumbered, smodel);
 
     Ogre::Entity* part = mRend.getScene()->createEntity(meshNumbered);
+    part->shareSkeletonInstanceWith(base);
     part->setVisibilityFlags(RV_Actors);
-
+    
     insert->attachObject(part);
 
     std::vector<Nif::NiTriShapeCopy>* shape = ((NIFLoader::getSingletonPtr())->getShapes(mesh + "0000" + suffix));
-    if(shape){
-        handleShapes(shape, part, base->getSkeleton());
-    }
+    
 	 std::pair<Ogre::Entity*, std::vector<Nif::NiTriShapeCopy>*> pair = std::make_pair(part, shape);
 	 return pair;
 }
@@ -576,11 +583,10 @@ void NpcAnimation::runAnimation(float timepassed){
             else
                 time = startTime + (time - stopTime);
         }
+         mAnimationState->setTimePosition(time);
 
-     //handleAnimationTransforms();
-       Ogre::AnimationState *mAnimationState = base->getAnimationState("WholeThing");
-      mAnimationState->setEnabled(true); 
-      mAnimationState->addTime(timepassed);
+     
+     
 
             vecRotPos.clear();
 
