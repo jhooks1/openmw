@@ -1053,7 +1053,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         // Add this vertex set to the bounding box
         bounds.add(optr, numVerts);
         copy.shapeNumber = nTriShapes;
-        if(shape->skin.empty() && saveTheShape)
+        if(saveTheShape)
             shapes.push_back(copy);
 
         // Create the submesh
@@ -1287,8 +1287,8 @@ void NIFLoader::loadResource(Resource *resource)
 			bNiTri = true;
 			std::string sub = name.substr(name.length() - 6, 4);
 
-			//if(sub.compare("0000") != 0)
-			 //   addAnim = false;
+			if(sub.compare("0000") != 0)
+			   addAnim = false;
             containsSkel = true;
 
 		}
@@ -1300,7 +1300,8 @@ void NIFLoader::loadResource(Resource *resource)
 			std::string sub = name.substr(name.length() - 6, 4);
 
 			//if(sub.compare("0000") != 0)
-			    addAnim = false;
+			if(sub.compare("0000") != 0)
+			   addAnim = false;
             containsSkel = true;
 		}
 
