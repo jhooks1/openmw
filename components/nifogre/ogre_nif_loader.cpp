@@ -840,8 +840,10 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
         // vector that stores if the position of a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
-		std::vector<Ogre::Vector3> vertexPosOriginal(numVerts, Ogre::Vector3::ZERO);
-		std::vector<Ogre::Vector3> vertexNormalOriginal(numVerts, Ogre::Vector3::ZERO);
+		std::vector<Ogre::Vector3> vertexPosOriginal = copy.vertices;
+		std::vector<Ogre::Vector3> vertexNormalOriginal = copy.normals;
+        std::vector<Vector3> newVerts(vertexPosOriginal.size(), Vector3(0,0,0));
+        std::vector<Vector3> newNorms(vertexNormalOriginal.size(), Vector3(0,0,0));
 
         
         //the bone from skin->bones[boneIndex] is linked to skin->data->bones[boneIndex]
@@ -907,62 +909,36 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 }
 
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
-                if (vertexPosAbsolut[verIndex] == false)
+                if (true)
                 {
                     
                     //apply transformation to the vertices
                     //Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
 					//absVertPos = absVertPos * (it->weights.ptr + i)->weight;
-					vertexPosOriginal[verIndex] = Vector3(ptr + verIndex *3);
+					
                     mBoundingBox.merge(vertexPosOriginal[verIndex]);
                     Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
 					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
-                    for (int j=0; j<3; j++)
-                        (ptr + verIndex*3)[j] = c[j];
+                    newVerts[verIndex] += c;
 
                     //apply rotation to the normals (not every vertex has a normal)
                     //FIXME: I guessed that vertex[i] = normal[i], is that true?
                     
                     if (verIndex < data->normals.length)
                     {
-                        vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
-                       for(size_t j = 0;j < 3;j++)
-                       {
-
-                            (ptrNormals + verIndex*3)[j] = mat[j][0]*vertexNormalOriginal[verIndex][0] * ind.weight;
-                            (ptrNormals + verIndex*3)[j] += mat[j][1]*vertexNormalOriginal[verIndex][1] * ind.weight;
-                            (ptrNormals + verIndex*3)[j] += mat[j][2]*vertexNormalOriginal[verIndex][2] * ind.weight;
+                        for(size_t j = 0;j < 3;j++)
+                        {
+                       newNorms[verIndex][j] += mat[j][0]*vertexPosOriginal[verIndex][0] * ind.weight;
+                       newNorms[verIndex][j] += mat[j][1]*vertexPosOriginal[verIndex][1] * ind.weight;
+                       newNorms[verIndex][j] += mat[j][2]*vertexPosOriginal[verIndex][2] * ind.weight;
                         }
 
                     }
 
-                    vertexPosAbsolut[verIndex] = true;
+                    
                 }
-				else
-				{
-					
-					//mBoundingBox.merge(absVertPos);
-                    //convert it back to float *
-                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
-					//mBoundingBox.merge(absVertPos);
-                    //convert it back to float *
-                   for (int j=0; j<3; j++)
-                     (ptr + verIndex*3)[j] += c[j];
-                   
-                     if (verIndex < data->normals.length)
-                    {
-                        vertexNormalOriginal[verIndex] = Vector3(ptrNormals + verIndex *3);
-                       for(size_t j = 0;j < 3;j++)
-                       {
-
-                            (ptrNormals + verIndex*3)[j] += mat[j][0]*vertexNormalOriginal[verIndex][0] * ind.weight;
-                            (ptrNormals + verIndex*3)[j] += mat[j][1]*vertexNormalOriginal[verIndex][1] * ind.weight;
-                            (ptrNormals + verIndex*3)[j] += mat[j][2]*vertexNormalOriginal[verIndex][2] * ind.weight;
-                        }
-
-                    }
-				}
+				
 
 
                 VertexBoneAssignment vba;
@@ -977,7 +953,17 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
             boneIndex++;
         }
-
+        //Write out all vertices
+        for(int i = 0; i < newVerts.size(); i++){
+            (ptr + i *3)[0] = newVerts[i].x;
+            (ptr + i *3)[1] = newVerts[i].y;
+            (ptr + i *3)[2] = newVerts[i].z;
+        }
+        for(int i = 0; i < newNorms.size(); i++){
+            (ptrNormals + i *3)[0] = newNorms[i].x;
+            (ptrNormals + i *3)[1] = newNorms[i].y;
+            (ptrNormals + i *3)[2] = newNorms[i].z;
+        }
 
     }
     else
