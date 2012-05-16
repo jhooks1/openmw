@@ -1245,6 +1245,7 @@ void NIFLoader::loadResource(Resource *resource)
     mSkel.setNull();
     flip = false;
     name = resource->getName();
+    std::cout << "Namemesh:" << name << "\n";
     char suffix = name.at(name.length() - 2);
     bool addAnim = true;
     bool hasAnim = false;
@@ -1553,32 +1554,63 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
             }
           
             Nif::NiKeyframeController *f = 0;
-            if(!node->controller.empty())
-                f = dynamic_cast<Nif::NiKeyframeController*>(node->controller.getPtr());
-
-            if(f != NULL)
+            Nif::NiKeyframeData data;
+            bool enter = false;
+            if(vec != 0)
             {
-                Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
-                Nif::NiKeyframeDataPtr data = f->data;
+                std::cout << "Name" << name << "\n";
+                for (int i = 0; i < vec->size(); i++){
+                    Nif::NiKeyframeData temp;
+                    //= vec[i];
+                    temp = (*vec)[i];
+                    std::cout << temp.getBonename() << "\n";
+                    if(temp.getBonename() == name){
+                        
+                        std::cout << "It is" << i << "\n";
+                        data = temp;
+                        enter = true;
+                        break;
+                    }
+                }
+            }
+            if(enter == false && !node->controller.empty()){
+                std::cout << "controller encountered\n";
+                f = dynamic_cast<Nif::NiKeyframeController*>(node->controller.getPtr());
+                if(f != NULL){
+                    std::cout << "Went through\n";
+                    data = f->data.get();
+                    Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
+                    data.setBonename(o->name.toString());
+                    data.setStartTime(f->timeStart);
+                    data.setStopTime(f->timeStop);
+                    enter = true;
+                }
+                
+            }
+            
+            std::cout << "About to enter\n";
 
-                if (!(f->timeStart >= 10000000000000000.0f || f->timeStart == f->timeStop)){
-                data->setBonename(o->name.toString());
-                data->setStartTime(f->timeStart);
-                data->setStopTime(f->timeStop);
+            if(enter)
+            {
+                
+                
+                
+                if (!(data.getStartTime() >= 10000000000000000.0f || data.getStartTime() == data.getStopTime())){
+                
                 //std::cout << "Quat" << data->getQuat().size() << "\n";
-                std::cout << "Trans" << data->getTranslist1().size() << "\n";
+                std::cout << "Trans" << data.getTranslist1().size() << "\n";
                
                 if(animcore == 0){
                 
-                animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
-                
+                animcore = mSkel->createAnimation("WholeThing", data.getStopTime());
+                std::cout << "Creating an anim\n";
                 
                     
                     
                 }
-                
+                std::cout << "1\n";
                 Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
-                Nif::Named *node2 = dynamic_cast<Nif::Named*> ( f->target.getPtr());
+                
                 
                 //Ogre::Bone* bone = mSkel->getBone(node->name.toString());
                 
@@ -1586,18 +1618,18 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 
             
 
-                std::vector<Ogre::Quaternion> quats = data->getQuat();
+                std::vector<Ogre::Quaternion> quats = data.getQuat();
                 std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
-                std::vector<float> rtime = data->getrTime();
+                std::vector<float> rtime = data.getrTime();
                 std::vector<float>::iterator rtimeiter = rtime.begin();
 
-                std::vector<float> ttime = data->gettTime();
+                std::vector<float> ttime = data.gettTime();
                 std::vector<float>::iterator ttimeiter = ttime.begin();
-                std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
+                std::vector<Ogre::Vector3> translist1 = data.getTranslist1();
                 std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
-                std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
+                std::vector<Ogre::Vector3> translist2 = data.getTranslist2();
                 std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
-                std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
+                std::vector<Ogre::Vector3> translist3 = data.getTranslist3();
                 std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
 
 
@@ -1613,9 +1645,10 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 Ogre::Vector3 lasttrans;
                 bool rend = false;
                 bool tend = false;
-                
-                if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
+                std::cout << "2\n";
+                if(data.getTtype() >= 1 && data.getTtype() <= 5 && data.getRtype() >= 1 && data.getRtype() <= 5)
                 {
+                    std::cout << "2.5\n";
                     Ogre::Quaternion curquat(convertRotation(node->trafo->rotation));
                     Ogre::Vector3 curtrans(convertVector3(node->trafo->pos));
                     float curscale = 1.0f;
@@ -1627,7 +1660,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 while(quatIter != quats.end() || transiter != translist1.end())
                 {
                     
-                    float curtime = f->timeStop;
+                    float curtime =data.getStopTime();
                     if(quatIter != quats.end())
                         curtime = std::min(curtime, *rtimeiter);
                     if(transiter != translist1.end())
@@ -1640,7 +1673,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                     if(rtimeiter != rtime.end())
                         rinterpolate = curtime != *rtimeiter;
                    
-                    if(curtime >= f->timeStop)
+                    if(curtime >= data.getStopTime())
                         break;
 
                     // Get the latest quaternion, translation, and scale for the
@@ -1656,7 +1689,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                         transiter++; ttimeiter++;
                     }
 
-                    if(curtime < f->timeStart)
+                    if(curtime < data.getStartTime())
                         continue;
 
                     Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
@@ -1692,6 +1725,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                     kframe->setScale(Ogre::Vector3(curscale));
                 }
             }
+                std::cout << "3\n";
             }
         }
         else if (animcore != 0){
@@ -1716,7 +1750,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
     }
 }
 void SkeletonNIFLoader::loadResource(Resource *resource){
-   
+   vec = 0;
     animcore = 0;
     mSkel = dynamic_cast<Skeleton*>(resource);
     assert(mSkel);
@@ -1724,8 +1758,17 @@ void SkeletonNIFLoader::loadResource(Resource *resource){
     resourceName = mSkel->getName();
     std::cout << "Resource" << resourceName << "\n";
     
+     char suffix = resourceName.at(resourceName.length() - 2);
     
-    
+
+		if(suffix == ':')
+		{
+            vec = NIFLoader::getSingletonPtr()->getAnim("meshes\\base_anim.nif");
+		}
+        if(vec != 0)
+            std::cout << "Sizeof" << vec->size() << "\n";
+   
+
     if (!vfs->isFile(resourceName))
     {
         std::cout << "File "+resourceName+" not found.\n";

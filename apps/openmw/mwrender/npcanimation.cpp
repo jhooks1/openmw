@@ -365,6 +365,7 @@ void NpcAnimation::updateParts(){
                 std::vector<ESM::PartReference> parts = clothes->parts.parts;
                 addPartGroup(MWWorld::InventoryStore::Slot_Pants, 2, parts);
             }
+              
         }
 
                 if(partpriorities[ESM::PRT_Head] < 1){
@@ -539,10 +540,10 @@ std::pair<Ogre::Entity*, std::vector<Nif::NiTriShapeCopy>*> NpcAnimation::insert
      std::string smodel = "meshes\\base_anim.nif";
 		if(isBeast)
 			smodel = "meshes\\base_animkna.nif";
-    NIFLoader::load(meshNumbered, smodel);
+    NIFLoader::load(meshNumbered);
 
     Ogre::Entity* part = mRend.getScene()->createEntity(meshNumbered);
-    part->shareSkeletonInstanceWith(base);
+    //part->shareSkeletonInstanceWith(base);
     part->setVisibilityFlags(RV_Actors);
     
     insert->attachObject(part);
@@ -550,7 +551,10 @@ std::pair<Ogre::Entity*, std::vector<Nif::NiTriShapeCopy>*> NpcAnimation::insert
     std::vector<Nif::NiTriShapeCopy>* shape = ((NIFLoader::getSingletonPtr())->getShapes(mesh + "0000" + suffix));
     
 	 std::pair<Ogre::Entity*, std::vector<Nif::NiTriShapeCopy>*> pair = std::make_pair(part, shape);
+      
+       
 	 return pair;
+
 }
 
 
@@ -564,6 +568,12 @@ void NpcAnimation::runAnimation(float timepassed){
 
 		updateParts();
 	}
+    if(skirt.first){
+    Ogre::AnimationState* state = skirt.first->getAnimationState("WholeThing");
+           state->setEnabled(true);
+              state->setLoop(false);
+             //state->addTime(timepassed);
+    }
 
 	timeToChange += timepassed;
 

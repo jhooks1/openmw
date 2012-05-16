@@ -93,6 +93,7 @@ private:
     Ogre::Animation* animcore;
     std::string resourceGroup;
     std::string resourceName;
+    std::vector<Nif::NiKeyframeData>* vec;
      bool timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x );
     
     bool inTheSkeletonTree;
