@@ -842,6 +842,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         std::vector<bool> vertexPosAbsolut(numVerts,false);
 		std::vector<Ogre::Vector3> vertexPosOriginal = copy.vertices;
 		std::vector<Ogre::Vector3> vertexNormalOriginal = copy.normals;
+        std::vector<bool> seenYet(numVerts, false);
         std::vector<Vector3> newVerts(vertexPosOriginal.size(), Vector3(0,0,0));
         std::vector<Vector3> newNorms(vertexNormalOriginal.size(), Vector3(0,0,0));
 
@@ -909,18 +910,19 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 }
 
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
-                if (true)
+                if (!seenYet[verIndex])
                 {
                     
                     //apply transformation to the vertices
                     //Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
 					//absVertPos = absVertPos * (it->weights.ptr + i)->weight;
-					
+					seenYet[verIndex] = true;
                     mBoundingBox.merge(vertexPosOriginal[verIndex]);
-                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]) * ind.weight;
+                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]);
+                    newVerts[verIndex] += c;
 					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
-                    newVerts[verIndex] += c;
+                    
 
                     //apply rotation to the normals (not every vertex has a normal)
                     //FIXME: I guessed that vertex[i] = normal[i], is that true?
@@ -936,18 +938,18 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 
                     }
 
-                    
+                    VertexBoneAssignment vba;
+                    vba.boneIndex = bonePtr->getHandle();
+                    vba.vertexIndex = verIndex;
+                    vba.weight = 1;
+
+
+                    vertexBoneAssignments.push_back(vba);
                 }
 				
 
 
-                VertexBoneAssignment vba;
-                vba.boneIndex = bonePtr->getHandle();
-                vba.vertexIndex = verIndex;
-                vba.weight = (it->weights.ptr + i)->weight;
-
-
-                vertexBoneAssignments.push_back(vba);
+                
             }
 
 
@@ -1538,11 +1540,11 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 if (parentBone)
                   parentBone->addChild(bone);
 
-                bone->setInheritOrientation(true);
+                bone->setInheritOrientation(false);
                 if(node->controller.empty()){
                     //std::cout << "Name:" << name << " has a controller\n";
-                   ;// bone->setPosition(convertVector3(node->trafo->pos));
-                   // bone->setOrientation(convertRotation(node->trafo->rotation));
+                  // bone->setPosition(convertVector3(node->trafo->pos));
+                   //bone->setOrientation(convertRotation(node->trafo->rotation));
                 }
                 //bone->setPosition(Ogre::Vector3(0,0,0));
                 //bone->setOrientation(Ogre::Quaternion::ZERO);
@@ -1566,11 +1568,11 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 data->setStartTime(f->timeStart);
                 data->setStopTime(f->timeStop);
                 //std::cout << "Quat" << data->getQuat().size() << "\n";
-                std::cout << "Trans" << data->getTranslist1().size() << "\n";
+               
                
                 if(animcore == 0){
                 
-                animcore = mSkel->createAnimation("WholeThing", f->timeStop - f->timeStart);
+                animcore = mSkel->createAnimation("WholeThing", f->timeStop);
                 
                 
                     

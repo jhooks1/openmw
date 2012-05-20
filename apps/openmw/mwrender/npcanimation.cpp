@@ -540,7 +540,7 @@ std::pair<Ogre::Entity*, std::vector<Nif::NiTriShapeCopy>*> NpcAnimation::insert
 		if(isBeast)
 			smodel = "meshes\\base_animkna.nif";
     NIFLoader::load(meshNumbered, smodel);
-
+    std::cout << "Insert part" << meshNumbered << "\n";
     Ogre::Entity* part = mRend.getScene()->createEntity(meshNumbered);
     part->shareSkeletonInstanceWith(base);
     part->setVisibilityFlags(RV_Actors);
