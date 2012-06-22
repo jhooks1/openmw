@@ -80,6 +80,28 @@ namespace Mangle
 namespace NifOgre
 {
 
+    class SkeletonNIFLoader: public Ogre::ManualResourceLoader{
+    public:
+    static SkeletonNIFLoader& getSingleton();
+    static SkeletonNIFLoader* getSingletonPtr();
+    SkeletonNIFLoader() : resourceName(""), resourceGroup("General") {}
+    
+    virtual void loadResource(Ogre::Resource *resource);
+    Ogre::Vector3 convertVector3(const Nif::Vector& vec);
+        Ogre::Quaternion convertRotation(const Nif::Matrix& rot);
+private:
+    Ogre::Skeleton* mSkel;
+    Mangle::VFS::OgreVFS *vfs;
+    Ogre::Animation* animcore;
+    std::string resourceGroup;
+    std::string resourceName;
+     bool timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x );
+    
+    bool inTheSkeletonTree;
+    void buildBones(Nif::Node *node, Ogre::Bone *parentBone);
+    
+};
+
 
 /** Manual resource loader for NIF meshes. This is the main class
     responsible for translating the internal NIF mesh structure into
@@ -105,7 +127,7 @@ class NIFLoader : Ogre::ManualResourceLoader
 
         virtual void loadResource(Ogre::Resource *resource);
 
-        static Ogre::MeshPtr load(const std::string &name,
+        static Ogre::MeshPtr load(const std::string &name, const std::string &skelName = "",
                                     const std::string &group="General");
         //void insertMeshInsideBase(Ogre::Mesh* mesh);
         std::vector<Nif::NiKeyframeData>* getAnim(std::string name);

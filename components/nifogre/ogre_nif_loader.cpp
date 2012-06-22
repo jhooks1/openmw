@@ -1123,7 +1123,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         {
             inTheSkeletonTree = true;
 
-            mSkel = SkeletonManager::getSingleton().create(getSkeletonName(), resourceGroup, true);
+            //mSkel = SkeletonManager::getSingleton().create(getSkeletonName(), resourceGroup, true);
         }
         else if (!mSkel.isNull() && !parentBone)
             inTheSkeletonTree = false;
@@ -1131,20 +1131,12 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
         if (!mSkel.isNull())     //if there is a skeleton
         {
             std::string name = node->name.toString();
-
             // Quick-n-dirty workaround for the fact that several
             // bones may have the same name.
-            if(!mSkel->hasBone(name))
+            if(mSkel->hasBone(name))
             {
                 boneSequence.push_back(name);
-                bone = mSkel->createBone(name);
-
-                if (parentBone)
-                  parentBone->addChild(bone);
-
-                bone->setInheritOrientation(true);
-                bone->setPosition(convertVector3(node->trafo->pos));
-                bone->setOrientation(convertRotation(node->trafo->rotation));
+                bone = mSkel->getBone(name);
             }
         }
     }
@@ -1201,6 +1193,7 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
 void NIFLoader::loadResource(Resource *resource)
 {
+    std::cout << "Start loader\n";
     inTheSkeletonTree = false;
     	allanim.clear();
 	shapes.clear();
@@ -1288,8 +1281,12 @@ void NIFLoader::loadResource(Resource *resource)
     // Set up the VFS if it hasn't been done already
     if (!vfs) vfs = new OgreVFS(resourceGroup);
 
+
     // Get the mesh
     mesh = dynamic_cast<Mesh*>(resource);
+    Ogre::SkeletonManager *skelMgr = Ogre::SkeletonManager::getSingletonPtr();
+        mSkel = skelMgr->getByName(mesh->getSkeletonName());
+      
     assert(mesh);
 
     // Look it up
@@ -1381,7 +1378,7 @@ void NIFLoader::loadResource(Resource *resource)
 
      if (!mSkel.isNull() )
     {
-        for(std::vector<Ogre::SubMesh*>::iterator iter = needBoneAssignments.begin(); iter != needBoneAssignments.end(); iter++)
+        /*for(std::vector<Ogre::SubMesh*>::iterator iter = needBoneAssignments.begin(); iter != needBoneAssignments.end(); iter++)
         {
             int boneIndex = mSkel->getNumBones() - 1;
 		        VertexBoneAssignment vba;
@@ -1391,35 +1388,72 @@ void NIFLoader::loadResource(Resource *resource)
 				 
 
             (*iter)->addBoneAssignment(vba);
-        }
+        }*/
 		//Don't link on npc parts to eliminate redundant skeletons
 		//Will have to be changed later slightly for robes/skirts
-		if(linkSkeleton)
-			mesh->_notifySkeleton(mSkel);
+		//if(linkSkeleton)
+		//	mesh->_notifySkeleton(mSkel);
     }
+     std::cout << "End mesh\n";
 }
 
 
-
-
-
-MeshPtr NIFLoader::load(const std::string &name,
+MeshPtr NIFLoader::load(const std::string &name, const std::string &skelName,
                          const std::string &group)
 {
-
+    std::string nSkel = skelName;
+    if(nSkel == "")
+        nSkel = name;
     MeshManager *m = MeshManager::getSingletonPtr();
+    SkeletonManager *s = SkeletonManager::getSingletonPtr();
     // Check if the resource already exists
+    ResourcePtr ptrSkel = s->getByName(nSkel, group);
     ResourcePtr ptr = m->getByName(name, group);
+    
     MeshPtr themesh;
+    SkeletonPtr theskel;
+    
+    if (!ptrSkel.isNull()){
+            theskel = SkeletonPtr(ptrSkel);
+           
+            theskel->load();
+
+    }
+    else // Nope, create a new one.
+    {
+
+        //Ogre::ResourceGroupManager *resMgr = Ogre::ResourceGroupManager::getSingletonPtr();
+        OgreVFS* vfs = new OgreVFS(group);
+        NIFFile nif(vfs->open(name), name);
+        for(int i = 0; i < nif.numRecords(); i++){
+            Nif::Node *node = dynamic_cast<Nif::Node*>(nif.getRecord(i));
+            if(node != NULL && node->recType == RC_NiNode && (node->name == "Bip01" || node->name == "Root Bone")){ //root node, create a skeleton
+                theskel = SkeletonManager::getSingleton().create(name, group, true, SkeletonNIFLoader::getSingletonPtr());
+                
+                break;
+
+
+            }
+        }
+    }
     if (!ptr.isNull()){
             themesh = MeshPtr(ptr);
     }
     else // Nope, create a new one.
     {
-        themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+            themesh = MeshManager::getSingleton().createManual(name, group, NIFLoader::getSingletonPtr());
+            if(!theskel.isNull())
+                themesh->setSkeletonName(nSkel);
     }
+   // if(!SkeletonManager::getSingleton().getByName(theskel->getName()).isNull())
+     // std::cout << "Not null";
+
     return themesh;
 }
+
+
+
+
 
 
 std::vector<Nif::NiKeyframeData>* NIFLoader::getAnim(std::string lowername){
@@ -1449,7 +1483,326 @@ std::map<std::string, float>* NIFLoader::getTextIndices(std::string lowername){
 }
 
 
+SkeletonNIFLoader& SkeletonNIFLoader::getSingleton()
+{
+    static SkeletonNIFLoader instance;
+    return instance;
+}
 
+SkeletonNIFLoader* SkeletonNIFLoader::getSingletonPtr()
+{
+    return &getSingleton();
+}
+
+void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
+    Bone *bone = 0;
+     if (node->recType == RC_NiNode)
+    {
+        //FIXME: "Bip01" isn't every time the root bone
+        if (node->name == "Bip01" || node->name == "Root Bone") //root node, create a skeleton
+        {
+            inTheSkeletonTree = true;
+        }
+        else if (!parentBone)
+            inTheSkeletonTree = false;
+         
+        if (inTheSkeletonTree) //if there is a skeleton
+        {
+            std::string name = node->name.toString();
+            
+            // Quick-n-dirty workaround for the fact that several
+            // bones may have the same name.
+            if(!mSkel->hasBone(name))
+            {
+                bone = mSkel->createBone(name);
+
+                if (parentBone)
+                  parentBone->addChild(bone);
+
+                bone->setInheritOrientation(false);
+                if(node->controller.empty()){
+                    //std::cout << "Name:" << name << " has a controller\n";
+                   bone->setPosition(convertVector3(node->trafo->pos));
+                   bone->setOrientation(convertRotation(node->trafo->rotation));
+                }
+                bone->setPosition(convertVector3(node->trafo->pos));
+                   bone->setOrientation(convertRotation(node->trafo->rotation));
+                //bone->setPosition(Ogre::Vector3(0,0,0));
+                //bone->setOrientation(Ogre::Quaternion::ZERO);
+            }
+            else{
+                std::cout << "We've seen this bone before\n";
+                bone = mSkel->getBone(name);
+            }
+          
+            Nif::NiKeyframeController *f = 0;
+            if(!node->controller.empty())
+                f = dynamic_cast<Nif::NiKeyframeController*>(node->controller.getPtr());
+
+            if(f != NULL)
+            {
+                Nif::Node *o = dynamic_cast<Nif::Node*>(f->target.getPtr());
+                Nif::NiKeyframeDataPtr data = f->data;
+
+                if (!(f->timeStart >= 10000000000000000.0f || f->timeStart == f->timeStop)){
+                data->setBonename(o->name.toString());
+                data->setStartTime(f->timeStart);
+                data->setStopTime(f->timeStop);
+                //std::cout << "Quat" << data->getQuat().size() << "\n";
+               
+               
+                if(animcore == 0){
+                
+                animcore = mSkel->createAnimation("WholeThing", f->timeStop);
+                
+                
+                    
+                    
+                }
+                
+                Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
+                
+                
+               
+                
+            
+
+                std::vector<Ogre::Quaternion> quats = data->getQuat();
+                std::vector<Ogre::Quaternion>::iterator quatIter = quats.begin();
+                std::vector<float> rtime = data->getrTime();
+                std::vector<float>::iterator rtimeiter = rtime.begin();
+
+                std::vector<float> ttime = data->gettTime();
+                std::vector<float>::iterator ttimeiter = ttime.begin();
+                std::vector<Ogre::Vector3> translist1 = data->getTranslist1();
+                std::vector<Ogre::Vector3>::iterator transiter = translist1.begin();
+                std::vector<Ogre::Vector3> translist2 = data->getTranslist2();
+                std::vector<Ogre::Vector3>::iterator transiter2 = translist2.begin();
+                std::vector<Ogre::Vector3> translist3 = data->getTranslist3();
+                std::vector<Ogre::Vector3>::iterator transiter3 = translist3.begin();
+
+
+                float tleft = 0;
+                float rleft = 0.0;
+                float ttotal = 0.0;
+                float rtotal = 0;
+                
+                
+                float tused = 0.0;
+                float rused = 0.0;
+                Ogre::Quaternion lastquat;
+                Ogre::Vector3 lasttrans;
+                bool rend = false;
+                bool tend = false;
+                
+                if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
+                {
+                    Ogre::Quaternion curquat(convertRotation(node->trafo->rotation));
+                    Ogre::Vector3 curtrans(convertVector3(node->trafo->pos));
+                    float curscale = 1.0f;
+                    int rindexI = 0;
+                        int rindexJ = 0;
+                        int tindexI = 0;
+                        int tindexJ = 0;
+                        
+                while(quatIter != quats.end() || transiter != translist1.end())
+                {
+                    
+                    float curtime = f->timeStop;
+                    if(quatIter != quats.end())
+                        curtime = std::min(curtime, *rtimeiter);
+                    if(transiter != translist1.end())
+                        curtime = std::min(curtime, *ttimeiter);
+                    bool rinterpolate = false;
+                    bool tinterpolate = false;
+                    
+                    if(ttimeiter != ttime.end())
+                        tinterpolate = curtime != *ttimeiter;
+                    if(rtimeiter != rtime.end())
+                        rinterpolate = curtime != *rtimeiter;
+                   
+                    if(curtime >= f->timeStop)
+                        break;
+
+                    // Get the latest quaternion, translation, and scale for the
+                    // current time
+                    while(quatIter != quats.end() && curtime >= *rtimeiter)
+                    {
+                        curquat = *quatIter;
+                        quatIter++; rtimeiter++;
+                    }
+                    while(transiter != translist1.end() && curtime >= *ttimeiter)
+                    {
+                        curtrans = *transiter;
+                        transiter++; ttimeiter++;
+                    }
+
+                    if(curtime < f->timeStart)
+                        continue;
+
+                    Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(curtime);
+                    if(rinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, rtime, rindexI, rindexJ, x);
+                        kframe->setRotation(Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true));
+                    }
+                    else
+                        kframe->setRotation(curquat);
+                    
+                    if(tinterpolate)
+                    {
+                        
+                        int slot = bone->getHandle();
+                        
+                        float x = 0;
+                        timeIndex(curtime, ttime,tindexI, tindexJ, x);
+
+                        Ogre::Vector3 v1 = translist1[tindexI];
+                        Ogre::Vector3 v2 = translist1[tindexJ];
+                        Ogre::Vector3 t = (v1 + (v2 - v1) * x);
+                        kframe->setTranslate(t);
+                        
+                    }
+                    else
+                        kframe->setTranslate(curtrans);
+
+                    kframe->setScale(Ogre::Vector3(curscale));
+                }
+            }
+            }
+        }
+        else if (animcore != 0){
+            Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
+             Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(0);
+             kframe->setRotation(convertRotation(node->trafo->rotation));
+             kframe->setTranslate(convertVector3(node->trafo->pos));
+             kframe->setScale(Ogre::Vector3(node->trafo->scale, node->trafo->scale, node->trafo->scale));
+        }
+        }
+    }
+      if (node->recType == RC_NiNode)
+    {
+        NodeList &list = ((NiNode*)node)->children;
+        int n = list.length();
+        for (int i = 0; i<n; i++)
+        {
+
+            if (list.has(i))
+                buildBones(&list[i],bone);
+        }
+    }
+}
+
+void SkeletonNIFLoader::loadResource(Resource *resource){
+   
+    animcore = 0;
+    mSkel = dynamic_cast<Skeleton*>(resource);
+    assert(mSkel);
+    vfs = new OgreVFS(resourceGroup);
+    resourceName = mSkel->getName();
+    std::cout << "Resource" << resourceName << "\n";
+    
+    
+    
+    if (!vfs->isFile(resourceName))
+    {
+        std::cout << "File "+resourceName+" not found.\n";
+        return;
+    }
+    NIFFile nif(vfs->open(resourceName), resourceName);
+     if (nif.numRecords() < 1)
+    {
+        std::cout << "Found no records in NIF.\n";
+        return;
+    }
+
+    // The first record is assumed to be the root node
+    Record *r = nif.getRecord(0);
+    assert(r != NULL);
+    Nif::Node *node = dynamic_cast<Nif::Node*>(r);
+    inTheSkeletonTree = false;
+    buildBones(node, 0);
+
+    bool hasAnim = false;
+    
+   
+}
+
+bool SkeletonNIFLoader::timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x ){
+        int count;
+        if ( (count = times.size()) > 0 )
+        {
+            if ( time <= times[0] )
+            {
+            i = j = 0;
+            x = 0.0;
+            return true;
+            }
+        if ( time >= times[count - 1] )
+        {
+            i = j = count - 1;
+            x = 0.0;
+            return true;
+        }
+
+        if ( i < 0 || i >= count )
+            i = 0;
+
+        float tI = times[i];
+        if ( time > tI )
+        {
+            j = i + 1;
+            float tJ;
+            while ( time >= ( tJ = times[j]) )
+            {
+                i = j++;
+                tI = tJ;
+            }
+            x = ( time - tI ) / ( tJ - tI );
+            return true;
+        }
+        else if ( time < tI )
+        {
+            j = i - 1;
+            float tJ;
+            while ( time <= ( tJ = times[j] ) )
+            {
+                i = j--;
+                tI = tJ;
+            }
+            x = ( time - tI ) / ( tJ - tI );
+            return true;
+        }
+        else
+        {
+            j = i;
+            x = 0.0;
+            return true;
+        }
+        }
+        else
+            return false;
+
+}
+Vector3 SkeletonNIFLoader::convertVector3(const Nif::Vector& vec)
+{
+    return Ogre::Vector3(vec.array);
+}
+
+Quaternion SkeletonNIFLoader::convertRotation(const Nif::Matrix& rot)
+{
+    Real matrix[3][3];
+
+    for (int i=0; i<3; i++)
+        for (int j=0; j<3; j++)
+            matrix[i][j] = rot.v[i].array[j];
+
+        return Quaternion(Matrix3(matrix));
+}
 
 /* More code currently not in use, from the old D source. This was
    used in the first attempt at loading NIF meshes, where each submesh
