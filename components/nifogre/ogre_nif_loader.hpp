@@ -115,7 +115,7 @@ private:
     very resource intensive, and can safely be done for a large number
     of meshes at load time.
  */
-class NIFLoader : Ogre::ManualResourceLoader
+class NIFLoader : public Ogre::ManualResourceLoader
 {
     public:
         static int numberOfMeshes;

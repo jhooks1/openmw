@@ -910,7 +910,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 }
 
                 //Check if the vertex is relativ, FIXME: Is there a better solution?
-                if (!seenYet[verIndex])
+                if (true)
                 {
                     
                     //apply transformation to the vertices
@@ -918,7 +918,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 					//absVertPos = absVertPos * (it->weights.ptr + i)->weight;
 					seenYet[verIndex] = true;
                     mBoundingBox.merge(vertexPosOriginal[verIndex]);
-                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]);
+                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]* ind.weight);
                     newVerts[verIndex] += c;
 					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
@@ -1244,7 +1244,7 @@ void NIFLoader::loadResource(Resource *resource)
    // needBoneAssignments.clear();
    mBoundingBox.setNull();
     mesh = 0;
-    mSkel.setNull();
+   
     flip = false;
     name = resource->getName();
     char suffix = name.at(name.length() - 2);
@@ -1423,6 +1423,7 @@ void NIFLoader::loadResource(Resource *resource)
     if(flip){
         mesh->_setBounds(mBoundingBox, false);
     }
+     mSkel.setNull();
 
 }
 
@@ -1456,11 +1457,11 @@ MeshPtr NIFLoader::load(const std::string &name, const std::string &skelName,
 
         //Ogre::ResourceGroupManager *resMgr = Ogre::ResourceGroupManager::getSingletonPtr();
         OgreVFS* vfs = new OgreVFS(group);
-        NIFFile nif(vfs->open(name), name);
+        NIFFile nif(vfs->open(name), nSkel);
         for(int i = 0; i < nif.numRecords(); i++){
             Nif::Node *node = dynamic_cast<Nif::Node*>(nif.getRecord(i));
             if(node != NULL && node->recType == RC_NiNode && (node->name == "Bip01" || node->name == "Root Bone")){  //root node, create a skeleton
-                theskel = SkeletonManager::getSingleton().create(name, group, true, SkeletonNIFLoader::getSingletonPtr());
+                theskel = SkeletonManager::getSingleton().create(nSkel, group, true, SkeletonNIFLoader::getSingletonPtr());
                 
                 break;          
 
