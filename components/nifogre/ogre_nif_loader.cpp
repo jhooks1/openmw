@@ -866,7 +866,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                 it != boneList.end(); it++)
         {
             Matrix4 mat = Matrix4();
-            
+            Matrix4 mat2 = Matrix4();
 
             mat.makeTransform(convertVector3(it->trafo->trans), Ogre::Vector3(it->trafo->scale,it->trafo->scale,it->trafo->scale), convertRotation(it->trafo->rotation));
             if(mSkel.isNull())
@@ -878,7 +878,8 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 			if(!mSkel->hasBone(shape->skin->bones[boneIndex].name.toString()))
 				std::cout << "We don't have this bone";
             bonePtr = mSkel->getBone(shape->skin->bones[boneIndex].name.toString());
-
+            mat2.makeTransform(bonePtr->_getDerivedPosition(), bonePtr->_getDerivedScale(), bonePtr->_getDerivedOrientation());
+           
             // final_vector = old_vector + old_rotation*new_vector*old_scale
 
 
@@ -909,16 +910,15 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     copy.vertsToWeights[verIndex].push_back(ind);
                 }
 
-                //Check if the vertex is relativ, FIXME: Is there a better solution?
-                if (true)
+                
                 {
                     
                     //apply transformation to the vertices
                     //Vector3 absVertPos = vecPos + vecRot * Vector3(ptr + verIndex *3);
 					//absVertPos = absVertPos * (it->weights.ptr + i)->weight;
-					seenYet[verIndex] = true;
+					
                     mBoundingBox.merge(vertexPosOriginal[verIndex]);
-                    Ogre::Vector3 c = (mat*vertexPosOriginal[verIndex]* ind.weight);
+                    Ogre::Vector3 c = ((mat*mat2) *vertexPosOriginal[verIndex]* ind.weight);
                     newVerts[verIndex] += c;
 					//mBoundingBox.merge(absVertPos);
                     //convert it back to float *
@@ -1338,7 +1338,7 @@ void NIFLoader::loadResource(Resource *resource)
 
     // Look it up
     resourceName = mesh->getName();
-    //std::cout << resourceName << "\n";
+    std::cout << resourceName << "\n";
 
     if (!vfs->isFile(resourceName))
     {
@@ -1554,6 +1554,15 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 std::cout << "We've seen this bone before\n";
                 bone = mSkel->getBone(name);
             }
+            bone->setPosition(convertVector3(node->trafo->pos));
+             bone->setOrientation(convertRotation(node->trafo->rotation));
+             bone->setBindingPose();
+            bone->setInitialState();
+            
+
+            const Ogre::Quaternion startquat = bone->getInitialOrientation();
+            const Ogre::Vector3 starttrans = bone->getInitialPosition();
+            const Ogre::Vector3 startscale = bone->getInitialScale();
           
             Nif::NiKeyframeController *f = 0;
             if(!node->controller.empty())
@@ -1581,9 +1590,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 }
                 
                 Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
-                Nif::Named *node2 = dynamic_cast<Nif::Named*> ( f->target.getPtr());
                 
-                //Ogre::Bone* bone = mSkel->getBone(node->name.toString());
                 
                
                 
@@ -1619,8 +1626,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 
                 if(data->getTtype() >= 1 && data->getTtype() <= 5 && data->getRtype() >= 1 && data->getRtype() <= 5)
                 {
-                    Ogre::Quaternion curquat(convertRotation(node->trafo->rotation));
-                    Ogre::Vector3 curtrans(convertVector3(node->trafo->pos));
+                    Ogre::Quaternion curquat(startquat.Inverse() * convertRotation(node->trafo->rotation) );
+                    Ogre::Vector3 curtrans(convertVector3(node->trafo->pos) - starttrans);
                     float curscale = 1.0f;
                     int rindexI = 0;
                         int rindexJ = 0;
@@ -1670,7 +1677,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                         
                         float x = 0;
                         timeIndex(curtime, rtime, rindexI, rindexJ, x);
-                        kframe->setRotation(Ogre::Quaternion::Slerp(x, quats[rindexI], quats[rindexJ], true));
+                        kframe->setRotation(Ogre::Quaternion::Slerp(x,  startquat.Inverse() * quats[rindexI], startquat.Inverse() * quats[rindexJ], true));
                     }
                     else
                         kframe->setRotation(curquat);
@@ -1683,8 +1690,8 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                         float x = 0;
                         timeIndex(curtime, ttime,tindexI, tindexJ, x);
 
-                        Ogre::Vector3 v1 = translist1[tindexI];
-                        Ogre::Vector3 v2 = translist1[tindexJ];
+                        Ogre::Vector3 v1 = translist1[tindexI] - starttrans;
+                        Ogre::Vector3 v2 = translist1[tindexJ] - starttrans;
                         Ogre::Vector3 t = (v1 + (v2 - v1) * x);
                         kframe->setTranslate(t);
                         
@@ -1697,11 +1704,12 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
             }
             }
         }
+        
         else if (animcore != 0){
             Ogre::NodeAnimationTrack* mTrack = animcore->createNodeTrack(bone->getHandle(), bone);
              Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(0);
-             kframe->setRotation(convertRotation(node->trafo->rotation));
-             kframe->setTranslate(convertVector3(node->trafo->pos));
+             kframe->setRotation(startquat.Inverse() * convertRotation(node->trafo->rotation) );
+             kframe->setTranslate(convertVector3(node->trafo->pos) - starttrans);
              kframe->setScale(Ogre::Vector3(node->trafo->scale, node->trafo->scale, node->trafo->scale));
         }
         }
