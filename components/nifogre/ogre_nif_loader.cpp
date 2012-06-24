@@ -931,9 +931,9 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     {
                         for(size_t j = 0;j < 3;j++)
                         {
-                       newNorms[verIndex][j] += mat[0][j]*vertexPosOriginal[verIndex][0] * ind.weight;
-                       newNorms[verIndex][j] += mat[1][j]*vertexPosOriginal[verIndex][1] * ind.weight;
-                       newNorms[verIndex][j] += mat[2][j]*vertexPosOriginal[verIndex][2] * ind.weight;
+                       newNorms[verIndex][j] += mat[0][j]*vertexNormalOriginal[verIndex][0] * ind.weight;
+                       newNorms[verIndex][j] += mat[1][j]*vertexNormalOriginal[verIndex][1] * ind.weight;
+                       newNorms[verIndex][j] += mat[2][j]*vertexNormalOriginal[verIndex][2] * ind.weight;
                         }
 
                     }
