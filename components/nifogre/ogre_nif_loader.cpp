@@ -1657,12 +1657,12 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                     // current time
                     while(quatIter != quats.end() && curtime >= *rtimeiter)
                     {
-                        curquat = *quatIter;
+                        curquat = startquat.Inverse() * *quatIter;
                         quatIter++; rtimeiter++;
                     }
                     while(transiter != translist1.end() && curtime >= *ttimeiter)
                     {
-                        curtrans = *transiter;
+                        curtrans = *transiter - starttrans;
                         transiter++; ttimeiter++;
                     }
 
