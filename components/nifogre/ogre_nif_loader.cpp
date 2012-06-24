@@ -931,9 +931,9 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     {
                         for(size_t j = 0;j < 3;j++)
                         {
-                       newNorms[verIndex][j] += mat[j][0]*vertexPosOriginal[verIndex][0] * ind.weight;
-                       newNorms[verIndex][j] += mat[j][1]*vertexPosOriginal[verIndex][1] * ind.weight;
-                       newNorms[verIndex][j] += mat[j][2]*vertexPosOriginal[verIndex][2] * ind.weight;
+                       newNorms[verIndex][j] += mat[0][j]*vertexPosOriginal[verIndex][0] * ind.weight;
+                       newNorms[verIndex][j] += mat[1][j]*vertexPosOriginal[verIndex][1] * ind.weight;
+                       newNorms[verIndex][j] += mat[2][j]*vertexPosOriginal[verIndex][2] * ind.weight;
                         }
 
                     }
@@ -941,7 +941,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
                     VertexBoneAssignment vba;
                     vba.boneIndex = bonePtr->getHandle();
                     vba.vertexIndex = verIndex;
-                    vba.weight = 1;
+                    vba.weight = ind.weight;
 
 
                     vertexBoneAssignments.push_back(vba);
@@ -1541,7 +1541,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                 if (parentBone)
                   parentBone->addChild(bone);
 
-                bone->setInheritOrientation(false);
+                bone->setInheritOrientation(true);
                 if(node->controller.empty()){
                     //std::cout << "Name:" << name << " has a controller\n";
                   // bone->setPosition(convertVector3(node->trafo->pos));
@@ -1556,6 +1556,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
             }
             bone->setPosition(convertVector3(node->trafo->pos));
              bone->setOrientation(convertRotation(node->trafo->rotation));
+             bone->setScale(node->trafo->scale, node->trafo->scale, node->trafo->scale);
              bone->setBindingPose();
             bone->setInitialState();
             
@@ -1563,6 +1564,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
             const Ogre::Quaternion startquat = bone->getInitialOrientation();
             const Ogre::Vector3 starttrans = bone->getInitialPosition();
             const Ogre::Vector3 startscale = bone->getInitialScale();
+
           
             Nif::NiKeyframeController *f = 0;
             if(!node->controller.empty())
@@ -1699,7 +1701,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
                     else
                         kframe->setTranslate(curtrans);
 
-                    kframe->setScale(Ogre::Vector3(curscale));
+                    kframe->setScale(Ogre::Vector3(curscale) / startscale);
                 }
             }
             }
@@ -1710,7 +1712,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
              Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(0);
              kframe->setRotation(startquat.Inverse() * convertRotation(node->trafo->rotation) );
              kframe->setTranslate(convertVector3(node->trafo->pos) - starttrans);
-             kframe->setScale(Ogre::Vector3(node->trafo->scale, node->trafo->scale, node->trafo->scale));
+             kframe->setScale(Ogre::Vector3(node->trafo->scale - startscale.x, node->trafo->scale - startscale.y, node->trafo->scale - startscale.z));
         }
         }
     }
