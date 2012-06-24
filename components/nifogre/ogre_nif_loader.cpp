@@ -1712,7 +1712,7 @@ void SkeletonNIFLoader::buildBones(Nif::Node *node, Ogre::Bone *parentBone){
              Ogre::TransformKeyFrame *kframe = mTrack->createNodeKeyFrame(0);
              kframe->setRotation(startquat.Inverse() * convertRotation(node->trafo->rotation) );
              kframe->setTranslate(convertVector3(node->trafo->pos) - starttrans);
-             kframe->setScale(Ogre::Vector3(node->trafo->scale - startscale.x, node->trafo->scale - startscale.y, node->trafo->scale - startscale.z));
+             kframe->setScale(Ogre::Vector3(node->trafo->scale) / startscale);
         }
         }
     }
