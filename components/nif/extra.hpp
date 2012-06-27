@@ -3,7 +3,7 @@
   Copyright (C) 2008-2010  Nicolay Korslund
   Email: < korslund@gmail.com >
   WWW: http://openmw.sourceforge.net/
-
+  
   This file (extra.h) is part of the OpenMW package.
 
   OpenMW is distributed as free software: you can redistribute it

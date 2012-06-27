@@ -28,6 +28,7 @@
 #include <iostream>
 #include <Ogre.h>
 
+
 namespace Nif
 {
 

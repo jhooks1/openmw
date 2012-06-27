@@ -34,9 +34,11 @@ namespace Nif
     parent node (unless it's the root), and transformation (location
     and rotation) relative to it's parent.
  */
+struct NiNode;
 class Node : public Named
 {
 public:
+  NiNode* parent;
   // Node flags. Interpretation depends somewhat on the type of node.
   int flags;
   const Transformation *trafo;
@@ -125,8 +127,8 @@ struct NiNode : Node
   void read(NIFFile *nif)
   {
     Node::read(nif);
-    children.read(nif);
-    effects.read(nif);
+    children.read(nif, this);
+    effects.read(nif, this);
   }
 };
 

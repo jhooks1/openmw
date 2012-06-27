@@ -36,6 +36,7 @@
 #include "record.hpp"
 #include "nif_types.hpp"
 
+
 using namespace Mangle::Stream;
 
 namespace Nif

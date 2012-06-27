@@ -833,10 +833,11 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 	}
     //use niskindata for the position of vertices.
     float *ptrNormals = (float*)data->normals.ptr;
+  
     if (!shape->skin.empty())
     {
 
-
+        
 
         // vector that stores if the position of a vertex is absolute
         std::vector<bool> vertexPosAbsolut(numVerts,false);
@@ -1109,11 +1110,11 @@ void NIFLoader::handleNode(Nif::Node *node, int flags,
 
             if(mOutputAnimFiles){
                 std::string cut = "";
-                for(unsigned int i = 0; i < name.length();  i++)
+                for(unsigned int i = 0; i < resourceName.length();  i++)
                 {
-                    if(!(name.at(i) == '\\' || name.at(i) == '/' || name.at(i) == '>' || name.at(i) == '<' || name.at(i) == '?' || name.at(i) == '*' || name.at(i) == '|' || name.at(i) == ':' || name.at(i) == '"'))
+                    if(!(resourceName.at(i) == '\\' || resourceName.at(i) == '/' || resourceName.at(i) == '>' || resourceName.at(i) == '<' || resourceName.at(i) == '?' || resourceName.at(i) == '*' || resourceName.at(i) == '|' || resourceName.at(i) == ':' || resourceName.at(i) == '"'))
                     {
-                        cut += name.at(i);
+                        cut += resourceName.at(i);
                     }
                 }
 
@@ -1244,10 +1245,10 @@ void NIFLoader::loadResource(Resource *resource)
    // needBoneAssignments.clear();
    mBoundingBox.setNull();
     mesh = 0;
-   
+   resourceName = resource->getName();
     flip = false;
-    name = resource->getName();
-    char suffix = name.at(name.length() - 2);
+    
+    char suffix = resourceName.at(resourceName.length() - 2);
     bool addAnim = true;
     bool hasAnim = false;
 	bool linkSkeleton = true;
@@ -1273,7 +1274,7 @@ void NIFLoader::loadResource(Resource *resource)
 		{
             //baddin = true;
 			bNiTri = true;
-			std::string sub = name.substr(name.length() - 6, 4);
+			std::string sub = resourceName.substr(resourceName.length() - 6, 4);
 
 			if(sub.compare("0000") != 0)
 			   addAnim = false;
@@ -1285,7 +1286,7 @@ void NIFLoader::loadResource(Resource *resource)
             //baddin = true;
 			linkSkeleton = false;
 			bNiTri = true;
-			std::string sub = name.substr(name.length() - 6, 4);
+			std::string sub = resourceName.substr(resourceName.length() - 6, 4);
 
 			//if(sub.compare("0000") != 0)
 			if(sub.compare("0000") != 0)
@@ -1293,7 +1294,7 @@ void NIFLoader::loadResource(Resource *resource)
             containsSkel = true;
 		}
 
-       switch(name.at(name.length() - 1))
+       switch(resourceName.at(resourceName.length() - 1))
 	{
 	    case '"':
 			triname = "tri chest";
@@ -1337,8 +1338,8 @@ void NIFLoader::loadResource(Resource *resource)
     assert(mesh);
 
     // Look it up
-    resourceName = mesh->getName();
-    std::cout << resourceName << "\n";
+    
+    
 
     if (!vfs->isFile(resourceName))
     {
@@ -1411,12 +1412,12 @@ void NIFLoader::loadResource(Resource *resource)
         mesh->_setBoundingSphereRadius(bounds.getRadius());
     }
     if(hasAnim && addAnim){
-        allanimmap[name] = allanim;
-        alltextmappings[name] = textmappings;
+        allanimmap[resourceName] = allanim;
+        alltextmappings[resourceName] = textmappings;
     }
     if(!mSkel.isNull() && shapes.size() > 0 && addAnim)
     {
-        allshapesmap[name] = shapes;
+        allshapesmap[resourceName] = shapes;
 
     }
 

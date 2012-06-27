@@ -24,12 +24,34 @@
 #ifndef _NIF_RECORD_PTR_H_
 #define _NIF_RECORD_PTR_H_
 
+
 #include "nif_file.hpp"
 #include <vector>
 
+
+
 namespace Nif
 {
-
+class Node;
+class NiNode;
+class Extra;
+class Property;
+class NiUVData;
+class NiPosData;
+class NiVisData;
+class Controller;
+class Controlled;
+class NiSkinData;
+class NiFloatData;
+class NiMorphData;
+class NiPixelData;
+class NiColorData;
+class NiKeyframeData;
+class NiTriShapeData;
+class NiSkinInstance;
+class NiSourceTexture;
+class NiRotatingParticlesData;
+class NiAutoNormalParticlesData;
 /** A reference to another record. It is read as an index from the
     NIF, and later looked up in the index table to get an actual
     pointer.
@@ -103,11 +125,12 @@ class RecordListT
 {
   typedef RecordPtrT<X> Ptr;
   std::vector<Ptr> list;
-
+  NiNode* parent;
  public:
 
-  void read(NIFFile *nif)
+  void read(NIFFile *nif, NiNode* _parent = NULL)
   {
+    parent = _parent;
     int len = nif->getInt();
     list.resize(len);
 
@@ -119,6 +142,10 @@ class RecordListT
   X& operator[](int index)
     {
       assert(index >= 0 && index < static_cast<int> (list.size()));
+      Node* node = dynamic_cast<Node*> (list[index].getPtr());
+      if(node != NULL){
+          node->parent = parent;
+      }
       return list[index].get();
     }
 
@@ -138,25 +165,7 @@ class RecordListT
 };
 
 
-class Node;
-class Extra;
-class Property;
-class NiUVData;
-class NiPosData;
-class NiVisData;
-class Controller;
-class Controlled;
-class NiSkinData;
-class NiFloatData;
-class NiMorphData;
-class NiPixelData;
-class NiColorData;
-class NiKeyframeData;
-class NiTriShapeData;
-class NiSkinInstance;
-class NiSourceTexture;
-class NiRotatingParticlesData;
-class NiAutoNormalParticlesData;
+
 
 typedef RecordPtrT<Node> NodePtr;
 typedef RecordPtrT<Extra> ExtraPtr;
