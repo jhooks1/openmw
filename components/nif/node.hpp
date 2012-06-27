@@ -49,6 +49,7 @@ public:
   const Vector *boundPos;
   const Matrix *boundRot;
   const Vector *boundXYZ; // Box size
+  Node(): parent(NULL){};
 
   void read(NIFFile *nif)
   {

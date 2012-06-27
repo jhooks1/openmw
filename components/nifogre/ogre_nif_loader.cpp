@@ -655,6 +655,7 @@ static void vectorMul(const Matrix &A, float *C)
 
 void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Transformation original, std::vector<std::string> boneSequence)
 {
+   
     assert(shape != NULL);
 
     bool saveTheShape = inTheSkeletonTree;
@@ -866,6 +867,12 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         for (std::vector<NiSkinData::BoneInfo>::iterator it = boneList.begin();
                 it != boneList.end(); it++)
         {
+           if(shape->skin->bones[boneIndex].parent == NULL)
+            {
+                std::cout << shape->skin->bones[boneIndex].name.toString() << "has no parent" << "\n";
+            }
+            else
+                std::cout << shape->skin->bones[boneIndex].name.toString() << "has a parent" << "\n";
             Matrix4 mat = Matrix4();
             Matrix4 mat2 = Matrix4();
 
