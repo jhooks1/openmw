@@ -652,6 +652,15 @@ static void vectorMul(const Matrix &A, float *C)
         C[i] = a*A.v[i].array[0] + b*A.v[i].array[1] + c*A.v[i].array[2];
 }
 
+Matrix4 NIFLoader::worldTransform(Nif::Node* node){
+    Matrix4 mat = Matrix4();
+    mat.makeTransform(convertVector3(node->trafo->pos), Ogre::Vector3(node->trafo->scale, node->trafo->scale, node->trafo->scale), convertRotation(node->trafo->rotation));
+         
+    if(node->parent != NULL){
+        mat = mat * worldTransform(node->parent);
+    }
+    return mat;
+}
 
 void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Transformation original, std::vector<std::string> boneSequence)
 {
@@ -867,14 +876,9 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
         for (std::vector<NiSkinData::BoneInfo>::iterator it = boneList.begin();
                 it != boneList.end(); it++)
         {
-           if(shape->skin->bones[boneIndex].parent == NULL)
-            {
-                std::cout << shape->skin->bones[boneIndex].name.toString() << "has no parent" << "\n";
-            }
-            else
-                std::cout << shape->skin->bones[boneIndex].name.toString() << "has a parent" << "\n";
+           
             Matrix4 mat = Matrix4();
-            Matrix4 mat2 = Matrix4();
+            Matrix4 mat2 = worldTransform(&shape->skin->bones[boneIndex]);
 
             mat.makeTransform(convertVector3(it->trafo->trans), Ogre::Vector3(it->trafo->scale,it->trafo->scale,it->trafo->scale), convertRotation(it->trafo->rotation));
             if(mSkel.isNull())
@@ -886,7 +890,7 @@ void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bou
 			if(!mSkel->hasBone(shape->skin->bones[boneIndex].name.toString()))
 				std::cout << "We don't have this bone";
             bonePtr = mSkel->getBone(shape->skin->bones[boneIndex].name.toString());
-            mat2.makeTransform(bonePtr->_getDerivedPosition(), bonePtr->_getDerivedScale(), bonePtr->_getDerivedOrientation());
+            
            
             // final_vector = old_vector + old_rotation*new_vector*old_scale
 

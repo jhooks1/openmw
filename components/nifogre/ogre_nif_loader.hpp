@@ -147,6 +147,8 @@ class NIFLoader : public Ogre::ManualResourceLoader
          bool timeIndex( float time, const std::vector<float> & times, int & i, int & j, float & x );
         void calculateTransform();
 
+        
+
 
         void warn(std::string msg);
         void fail(std::string msg);
@@ -176,6 +178,7 @@ class NIFLoader : public Ogre::ManualResourceLoader
         {
             return resourceName + ".skel";
         }
+        Ogre::Matrix4 worldTransform(Nif::Node* node);
 
         // This is the interface to the Ogre resource system. It allows us to
         // load NIFs from BSAs, in the file system and in any other place we
