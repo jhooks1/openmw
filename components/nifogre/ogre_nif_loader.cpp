@@ -662,6 +662,20 @@ Matrix4 NIFLoader::worldTransform(Nif::Node* node){
     return mat;
 }
 
+void NIFLoader::runThroughNodes(Nif::Node* node){
+    if (node->recType == RC_NiNode)
+    {
+        NodeList &list = ((NiNode*)node)->children;
+        int n = list.length();
+        for (int i = 0; i<n; i++)
+        {
+
+            if (list.has(i))
+                runThroughNodes(&list[i]);
+        }
+    }
+}
+
 void NIFLoader::handleNiTriShape(NiTriShape *shape, int flags, BoundsFinder &bounds, Transformation original, std::vector<std::string> boneSequence)
 {
    
@@ -1083,6 +1097,7 @@ void NIFLoader::calculateTransform()
 
         mTransform = transform;
 }
+
 void NIFLoader::handleNode(Nif::Node *node, int flags,
                            const Transformation *trafo, BoundsFinder &bounds, Ogre::Bone *parentBone, std::vector<std::string> boneSequence)
 {
@@ -1389,7 +1404,13 @@ void NIFLoader::loadResource(Resource *resource)
     // Handle the node
 	std::vector<std::string> boneSequence;
 
+    //Runs through the nodes, so all parent links are guaranteed to be established
+    //Would help if the nif file had the nodes in a bad order;  
+    //If we encounter a skinning list before the contained nodes, this should fix the problem
+    //Do we really need this though?
+    runThroughNodes(node);
 
+    //Handle the node and its children
     handleNode(node, 0, NULL, bounds, 0, boneSequence);
 
     Ogre::Animation* animcore = 0;

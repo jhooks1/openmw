@@ -179,7 +179,7 @@ class NIFLoader : public Ogre::ManualResourceLoader
             return resourceName + ".skel";
         }
         Ogre::Matrix4 worldTransform(Nif::Node* node);
-
+        void runThroughNodes(Nif::Node* node);
         // This is the interface to the Ogre resource system. It allows us to
         // load NIFs from BSAs, in the file system and in any other place we
         // tell Ogre to look (eg. in zip or rar files.) It's also used to
