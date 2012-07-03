@@ -125,14 +125,10 @@ class RecordListT
 {
   typedef RecordPtrT<X> Ptr;
   std::vector<Ptr> list;
-  NiNode* parent;
  public:
-     RecordListT():parent(NULL) {}
 
-  void read(NIFFile *nif, NiNode* _parent = NULL)
+  void read(NIFFile *nif)
   {
-    if(_parent != NULL)
-        parent = _parent;
     int len = nif->getInt();
     list.resize(len);
 
@@ -145,9 +141,7 @@ class RecordListT
     {
       assert(index >= 0 && index < static_cast<int> (list.size()));
       Node* node = dynamic_cast<Node*> (list[index].getPtr());
-      if(node != NULL && parent != NULL){
-          node->parent = parent;
-      }
+     
       return list[index].get();
     }
 

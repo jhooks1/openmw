@@ -128,8 +128,8 @@ struct NiNode : Node
   void read(NIFFile *nif)
   {
     Node::read(nif);
-    children.read(nif, this);
-    effects.read(nif, this);
+    children.read(nif);
+    effects.read(nif);
   }
 };
 
