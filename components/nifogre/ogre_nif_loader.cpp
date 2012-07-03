@@ -655,23 +655,28 @@ static void vectorMul(const Matrix &A, float *C)
 Matrix4 NIFLoader::worldTransform(Nif::Node* node){
     Matrix4 mat = Matrix4();
     mat.makeTransform(convertVector3(node->trafo->pos), Ogre::Vector3(node->trafo->scale, node->trafo->scale, node->trafo->scale), convertRotation(node->trafo->rotation));
-         
+    //std::cout << node->name.toString() << "->";  //Output the node tree
     if(node->parent != NULL){
         mat = mat * worldTransform(node->parent);
     }
+    //else
+        //std::cout << "END\n";
     return mat;
 }
 
 void NIFLoader::runThroughNodes(Nif::Node* node){
     if (node->recType == RC_NiNode)
     {
+        NiNode* ninode = dynamic_cast<Nif::NiNode*> (node);
         NodeList &list = ((NiNode*)node)->children;
         int n = list.length();
         for (int i = 0; i<n; i++)
         {
 
-            if (list.has(i))
+            if (list.has(i)){
+                list[i].parent = ninode;
                 runThroughNodes(&list[i]);
+            }
         }
     }
 }
@@ -1483,14 +1488,11 @@ MeshPtr NIFLoader::load(const std::string &name, const std::string &skelName,
             theskel = SkeletonPtr(ptrSkel);
            
             theskel->load();
-
     }
     else // Nope, create a new one.
     {
-
-        //Ogre::ResourceGroupManager *resMgr = Ogre::ResourceGroupManager::getSingletonPtr();
         OgreVFS* vfs = new OgreVFS(group);
-        NIFFile nif(vfs->open(name), nSkel);
+        NIFFile nif(vfs->open(nSkel), nSkel);
         for(int i = 0; i < nif.numRecords(); i++){
             Nif::Node *node = dynamic_cast<Nif::Node*>(nif.getRecord(i));
             if(node != NULL && node->recType == RC_NiNode && (node->name == "Bip01" || node->name == "Root Bone")){  //root node, create a skeleton
