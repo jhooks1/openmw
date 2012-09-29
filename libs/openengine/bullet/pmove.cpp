@@ -301,8 +301,8 @@ bool	PM_SlideMove( bool gravity )
             
             if(planes[i].x >= .70)
             {
-                pm->ps.velocity.z = 0;
-				return true;
+                /*pm->ps.velocity.z = 0;
+				return true;*/
             }
 			// see how hard we are hitting things
 			if ( -into > pml.impactSpeed )
@@ -437,8 +437,13 @@ int PM_StepSlideMove( bool gravity )
 	//VectorCopy (pm->ps->velocity, start_v);
 	start_v = pm->ps.velocity;
 
-	if ( PM_SlideMove( gravity ) == false )
-		return 1;		// we got exactly where we wanted to go first try	
+	if ( PM_SlideMove( gravity ) == false ){
+		return 1;		// we got exactly where we wanted to go first try
+    }
+    Ogre::Vector3 flatposition = pm->ps.origin;
+    Ogre::Vector3 change = flatposition - start_o;
+    change = Ogre::Vector3(change.x, change.y, 0);
+    float changemag = change.length();
 
 	
 	// down = start_o - vec3(0, 0, STEPSIZE)
@@ -457,10 +462,7 @@ int PM_StepSlideMove( bool gravity )
 
 	// never step up when you still have up velocity
 	//if ( pm->ps->velocity[2] > 0 && (trace.fraction == 1.0 || DotProduct(trace.plane.normal, up) < 0.7)) 
-	if (pm->ps.velocity.z > 0 && (
-		trace.fraction == 1.0 || trace.planenormal.dotProduct(up) < 0.7
-		) )
-		return 2;
+
 
 	// down_o = pm->ps->origin
 	//VectorCopy (pm->ps->origin, down_o);
@@ -515,6 +517,16 @@ int PM_StepSlideMove( bool gravity )
 		//VectorCopy (trace.endpos, pm->ps->origin);
 		pm->ps.origin = trace.endpos;
 
+    
+    Ogre::Vector3 change2 = pm->ps.origin - start_o;
+    change2 = Ogre::Vector3(change2.x, change.y, 0);
+    float changemag2 = change2.length();
+    
+    //Provides a very small amount of correction
+    if(changemag2 <= changemag)
+        pm->ps.origin = flatposition;
+    
+
 	if ( trace.fraction < 1.0 )
 		//PM_ClipVelocity( pm->ps->velocity, trace.plane.normal, pm->ps->velocity, OVERCLIP );
 		PM_ClipVelocity(pm->ps.velocity, trace.planenormal, pm->ps.velocity, OVERCLIP);
@@ -527,7 +539,7 @@ int PM_StepSlideMove( bool gravity )
 		delta = pm->ps.origin.z - start_o.z;
 		if ( delta > 2 ) 
 		{
-            pm->ps.counter = 10;
+            pm->ps.counter = 1;
 
             /*
 			if (gravity)
@@ -675,8 +687,8 @@ static void PM_Accelerate( Ogre::Vector3& wishdir, float wishspeed, float accel 
 	// pm->ps->velocity += accelspeed * wishdir
 	//for (i=0 ; i<3 ; i++)
 		//pm->ps->velocity[i] += accelspeed * wishdir[i];	
-	pm->ps.velocity += (wishdir * accelspeed);
-    //pm->ps.velocity = wishdir * wishspeed;  //New, for instant acceleration
+	//pm->ps.velocity += (wishdir * accelspeed);
+    pm->ps.velocity = wishdir * wishspeed;  //New, for instant acceleration
     
 }
 
